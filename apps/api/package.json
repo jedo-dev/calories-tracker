@@ -6,7 +6,8 @@
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "seed:products": "ts-node -r tsconfig-paths/register scripts/seed-products.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",

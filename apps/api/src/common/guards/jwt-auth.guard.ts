@@ -15,8 +15,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const path = request.url;
+    const method = request.method;
 
-    if (path === '/health' || path.startsWith('/auth/telegram')) {
+    if (
+      path === '/health' ||
+      path.startsWith('/auth/telegram') ||
+      (path.startsWith('/products') && method === 'GET')
+    ) {
       return true;
     }
 

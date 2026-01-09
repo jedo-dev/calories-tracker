@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 
 interface User {
@@ -17,24 +17,27 @@ export function useTelegramAuth() {
       try {
         const tg = (window as any).Telegram?.WebApp;
         if (!tg) {
-          setError('Telegram WebApp not available');
+          setError('Telegram WebApp not available. Open this app in Telegram.');
           setLoading(false);
           return;
         }
 
-        const initData = tg.initData;
-        if (!initData) {
-          setError('InitData not available');
+        const initData = tg.initData || '';
+
+        if (!initData || initData.trim() === '') {
+          setError('InitData not available. Open this app in Telegram WebApp.');
           setLoading(false);
           return;
         }
 
         const response = await apiClient.post('/auth/telegram', { initData });
+
         const { token, user: userData } = response.data;
 
         localStorage.setItem('token', token);
         setUser(userData);
       } catch (err: any) {
+        console.log(err);
         setError(err.response?.data?.message || err.message || 'Auth failed');
       } finally {
         setLoading(false);
@@ -46,4 +49,3 @@ export function useTelegramAuth() {
 
   return { user, loading, error };
 }
-
