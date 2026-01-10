@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import { useTelegramAuth } from '../hooks/useTelegramAuth';
+import { t } from '../i18n';
+import { useTheme } from '../theme/useTheme';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Text } from '../ui/Text';
 
 interface Entry {
   _id: string;
@@ -33,7 +39,9 @@ function formatDate(date: Date): string {
 }
 
 export function TodayPage() {
+  const { loading: loadingUser, error: errorUser } = useTelegramAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [date] = useState(formatDate(new Date()));
   const [entries, setEntries] = useState<Entry[]>([]);
   const [stats, setStats] = useState<DayStats | null>(null);
@@ -51,7 +59,7 @@ export function TodayPage() {
       setEntries(entriesRes.data);
       setStats(statsRes.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to load data');
+      setError(err.response?.data?.message || err.message || t('stats.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -62,135 +70,140 @@ export function TodayPage() {
   }, [date]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this entry?')) return;
+    if (!confirm(t('today.deleteConfirm'))) return;
     try {
       await apiClient.delete(`/entries/${id}`);
       await loadData();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete entry');
+      alert(err.response?.data?.message || t('today.deleteFailed'));
     }
   };
 
+  if (loadingUser) {
+    return (
+      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
+        <Text>{t('common.loading')}</Text>
+      </div>
+    );
+  }
+  if (errorUser) {
+    return (
+      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
+        <Text>{t('common.error')}: {errorUser}</Text>
+      </div>
+    );
+  }
   if (loading) {
-    return <div style={{ padding: '20px' }}>Loading...</div>;
+    return (
+      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
+        <Text>{t('common.loading')}</Text>
+      </div>
+    );
   }
 
   if (error) {
-    return <div style={{ padding: '20px', color: 'red' }}>Error ff: {error}</div>;
+    return (
+      <div style={{ padding: theme.spacing.lg }}>
+        <Text variant="h2" style={{ color: theme.palette.danger }}>
+          {t('common.error')}: {error}
+        </Text>
+      </div>
+    );
   }
 
+  const getEntriesCountText = (count: number) => {
+    if (count === 1) return t('today.entriesCount_one', { count });
+    if (count >= 2 && count <= 4) return t('today.entriesCount_few', { count });
+    return t('today.entriesCount_many', { count });
+  };
+
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>Today - {date}</h1>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
+
+
+
+      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
+        {t('today.dateTitle', { date })}
+      </Text>
 
       {stats && (
-        <div
-          style={{
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '15px',
-            marginBottom: '20px',
-            backgroundColor: '#f5f5f5',
-          }}
-        >
-          <h2>Totals</h2>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
-            {stats.totals.kcal.toFixed(1)} kcal
-          </div>
-          <div style={{ fontSize: '14px', color: '#666' }}>
-            P: {stats.totals.protein.toFixed(1)}g | F: {stats.totals.fat.toFixed(1)}g | C:{' '}
-            {stats.totals.carb.toFixed(1)}g
-          </div>
-          <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
-            {stats.entriesCount} entries
-          </div>
-        </div>
+        <Card style={{ marginBottom: theme.spacing.lg }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>
+            {t('today.totals')}
+          </Text>
+          <Text variant="h2" bold style={{ marginBottom: theme.spacing.md, fontSize: '24px' }}>
+            {t('totals.kcal', { value: stats.totals.kcal.toFixed(1) })}
+          </Text>
+          <Text muted style={{ marginBottom: theme.spacing.xs }}>
+            {t('totals.macros', {
+              protein: stats.totals.protein.toFixed(1),
+              fat: stats.totals.fat.toFixed(1),
+              carb: stats.totals.carb.toFixed(1),
+            })}
+          </Text>
+          <Text variant="small" muted style={{ marginTop: theme.spacing.sm }}>
+            {getEntriesCountText(stats.entriesCount)}
+          </Text>
+        </Card>
       )}
 
-      <div style={{ marginBottom: '20px' }}>
-        <button
-          onClick={() => navigate('/entry/new')}
-          style={{
-            width: '100%',
-            padding: '12px',
-            fontSize: '16px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          + Add Entry
-        </button>
+      <div style={{ marginBottom: theme.spacing.lg }}>
+        <Button onClick={() => navigate('/entry/new')}>{t('today.addEntry')}</Button>
       </div>
 
       <div>
-        <h2>Entries</h2>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>
+          {t('today.entries')}
+        </Text>
         {entries.length === 0 ? (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-            No entries for today
-          </div>
+          <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+            <Text muted>{t('today.noEntries')}</Text>
+          </Card>
         ) : (
           entries.map((entry) => (
-            <div
-              key={entry._id}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                padding: '15px',
-                marginBottom: '10px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+            <Card key={entry._id} style={{ marginBottom: theme.spacing.md }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: theme.spacing.md }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{entry.productName}</div>
-                  <div style={{ fontSize: '14px', color: '#666' }}>
-                    {entry.grams}g · {entry.kcal.toFixed(1)} kcal
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#999' }}>
-                    P: {entry.protein.toFixed(1)}g | F: {entry.fat.toFixed(1)}g | C:{' '}
-                    {entry.carb.toFixed(1)}g
-                  </div>
+                  <Text bold style={{ marginBottom: theme.spacing.xs }}>
+                    {entry.productName}
+                  </Text>
+                  <Text variant="small" style={{ marginBottom: theme.spacing.xs }}>
+                    {entry.grams}г · {t('totals.kcal', { value: entry.kcal.toFixed(1) })}
+                  </Text>
+                  <Text variant="small" muted>
+                    {t('totals.macros', {
+                      protein: entry.protein.toFixed(1),
+                      fat: entry.fat.toFixed(1),
+                      carb: entry.carb.toFixed(1),
+                    })}
+                  </Text>
                   {(entry.time || entry.mealType !== 'other') && (
-                    <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
+                    <Text variant="small" muted style={{ marginTop: theme.spacing.xs }}>
                       {entry.time && `${entry.time} `}
-                      {entry.mealType !== 'other' && entry.mealType}
-                    </div>
+                      {entry.mealType !== 'other' && t(`mealType.${entry.mealType}` as any)}
+                    </Text>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
+                <div style={{ display: 'flex', gap: theme.spacing.sm, flexDirection: 'column' }}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => navigate(`/entry/${entry._id}`)}
-                    style={{
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    style={{ width: 'auto', minWidth: '80px' }}
                   >
-                    Edit
-                  </button>
-                  <button
+                    {t('common.edit')}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
                     onClick={() => handleDelete(entry._id)}
-                    style={{
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    style={{ width: 'auto', minWidth: '80px' }}
                   >
-                    Delete
-                  </button>
+                    {t('common.delete')}
+                  </Button>
                 </div>
               </div>
-            </div>
+            </Card>
           ))
         )}
       </div>

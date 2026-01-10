@@ -1,5 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
+import { t } from '../i18n';
+import { useTheme } from '../theme/useTheme';
+import { Card } from '../ui/Card';
+import { Input } from '../ui/Input';
+import { Text } from '../ui/Text';
 
 interface Product {
   _id: string;
@@ -27,6 +32,7 @@ function useDebounce(value: string, delay: number) {
 }
 
 export function ProductsPage() {
+  const theme = useTheme();
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,7 +59,7 @@ export function ProductsPage() {
         });
         setProducts(response.data);
       } catch (err: any) {
-        setError(err.response?.data?.message || err.message || 'Failed to load products');
+        setError(err.response?.data?.message || err.message || t('products.loadFailed'));
         setProducts([]);
       } finally {
         setLoading(false);
@@ -68,55 +74,61 @@ export function ProductsPage() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>Products</h1>
-      <input
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
+      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
+        {t('products.title')}
+      </Text>
+
+      <Input
         type="text"
-        placeholder="Search products..."
+        placeholder={t('products.searchPlaceholder')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '10px',
-          fontSize: '16px',
-          marginBottom: '20px',
-          boxSizing: 'border-box',
-        }}
+        style={{ marginBottom: theme.spacing.lg }}
       />
 
-      {loading && <div>Loading...</div>}
-      {error && <div style={{ color: 'red' }}>Error: {error}</div>}
+      {loading && (
+        <Card style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+          <Text>{t('common.loading')}</Text>
+        </Card>
+      )}
+
+      {error && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text style={{ color: theme.palette.danger }}>
+            {t('common.error')}: {error}
+          </Text>
+        </Card>
+      )}
 
       {!loading && !error && products.length === 0 && debouncedSearch && (
-        <div>No products found</div>
+        <Card style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+          <Text muted>{t('products.noProductsFound')}</Text>
+        </Card>
       )}
 
       {!loading && !error && products.length > 0 && (
         <div>
           {products.map((product) => (
-            <div
+            <Card
               key={product._id}
               onClick={() => handleProductClick(product._id)}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                padding: '15px',
-                marginBottom: '10px',
-                cursor: 'pointer',
-              }}
+              style={{ marginBottom: theme.spacing.md }}
             >
-              <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+              <Text bold style={{ marginBottom: theme.spacing.sm }}>
                 {product.name}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                <div>Calories: {product.kcalPer100g} kcal/100g</div>
+              </Text>
+              <Text variant="small" muted>
+                <div>{t('products.calories', { value: product.kcalPer100g })}</div>
                 <div>
-                  P: {product.proteinPer100g.toFixed(1)}g | F:{' '}
-                  {product.fatPer100g.toFixed(1)}g | C:{' '}
-                  {product.carbPer100g.toFixed(1)}g
+                  {t('totals.macros', {
+                    protein: product.proteinPer100g.toFixed(1),
+                    fat: product.fatPer100g.toFixed(1),
+                    carb: product.carbPer100g.toFixed(1),
+                  })}
                 </div>
-              </div>
-            </div>
+              </Text>
+            </Card>
           ))}
         </div>
       )}

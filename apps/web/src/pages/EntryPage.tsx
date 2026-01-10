@@ -1,324 +1,234 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { apiClient } from '../api/client';
-import { useDebounce } from '../hooks/useDebounce';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../theme/useTheme';
+import { Button } from '../ui/Button';
+import { Text } from '../ui/Text';
 
-interface Product {
-  _id: string;
-  name: string;
-  kcalPer100g: number;
-  proteinPer100g: number;
-  fatPer100g: number;
-  carbPer100g: number;
+interface OnboardingSlide {
+  title: string;
+  description: string;
 }
 
-interface Entry {
-  _id: string;
-  date: string;
-  time?: string;
-  mealType: string;
-  productId?: string;
-  productName: string;
-  grams: number;
-  kcalPer100g?: number;
-  proteinPer100g?: number;
-  fatPer100g?: number;
-  carbPer100g?: number;
-}
-
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+const slides: OnboardingSlide[] = [
+  {
+    title: 'Введите свои параметры и цели',
+    description: 'Укажите вес, рост и желаемый результат — мы поможем отслеживать прогресс.',
+  },
+  {
+    title: 'Вносите ежедневно свои потребленные калории',
+    description: 'Добавляйте продукты и граммовку — калории и БЖУ посчитаются автоматически.',
+  },
+  {
+    title: 'Контролируйте показатели интерактивно',
+    description: 'Смотрите прогресс на графиках и соревнуйтесь с друзьями.',
+  },
+];
 
 export function EntryPage() {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const isEdit = !!id;
-
-  const [date, setDate] = useState(formatDate(new Date()));
-  const [time, setTime] = useState('');
-  const [mealType, setMealType] = useState('other');
-  const [productSearch, setProductSearch] = useState('');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [grams, setGrams] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const debouncedSearch = useDebounce(productSearch, 300);
+  const theme = useTheme();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg && tg.BackButton) {
-      tg.BackButton.show();
-      tg.BackButton.onClick(() => {
-        navigate(-1);
-      });
-      return () => {
-        tg.BackButton.hide();
-      };
+      tg.BackButton.hide();
     }
-  }, [navigate]);
+  }, []);
 
+  // Синхронизация индекса с реальным скроллом
   useEffect(() => {
-    if (isEdit) {
-      loadEntry();
-    }
-  }, [id]);
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-  const loadEntry = async () => {
-    if (!id) return;
-    setLoading(true);
-    try {
-      const response = await apiClient.get(`/entries/${id}`);
-      const entry: Entry = response.data;
-      setDate(entry.date);
-      setTime(entry.time || '');
-      setMealType(entry.mealType);
-      setGrams(entry.grams.toString());
-      if (entry.productId) {
-        setSelectedProduct({
-          _id: typeof entry.productId === 'string' ? entry.productId : entry.productId.toString(),
-          name: entry.productName,
-          kcalPer100g: entry.kcalPer100g || 0,
-          proteinPer100g: entry.proteinPer100g || 0,
-          fatPer100g: entry.fatPer100g || 0,
-          carbPer100g: entry.carbPer100g || 0,
-        } as Product);
-      }
-      setProductSearch(entry.productName);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load entry');
-    } finally {
-      setLoading(false);
-    }
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const slideWidth = container.clientWidth;
+      const index = Math.round(scrollLeft / slideWidth);
+      setCurrentIndex(index);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const scrollToSlide = (index: number) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const slideWidth = container.clientWidth;
+    container.scrollTo({
+      left: index * slideWidth,
+      behavior: 'smooth',
+    });
   };
 
-  useEffect(() => {
-    if (debouncedSearch.trim() && debouncedSearch.length >= 2) {
-      searchProducts();
+  const handleNext = () => {
+    if (currentIndex < slides.length - 1) {
+      scrollToSlide(currentIndex + 1);
     } else {
-      setProducts([]);
-    }
-  }, [debouncedSearch]);
-
-  const searchProducts = async () => {
-    try {
-      const response = await apiClient.get('/products', {
-        params: { search: debouncedSearch, limit: 20 },
-      });
-      setProducts(response.data);
-    } catch (err: any) {
-      console.error('Failed to search products', err);
-    }
-  };
-
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-    setProductSearch(product.name);
-    setProducts([]);
-  };
-
-  const handleSave = async () => {
-    if (!selectedProduct) {
-      alert('Please select a product');
-      return;
-    }
-    if (!grams || parseFloat(grams) <= 0) {
-      alert('Please enter grams > 0');
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      const data = {
-        date,
-        ...(time && { time }),
-        mealType,
-        productId: selectedProduct._id,
-        grams: parseFloat(grams),
-      };
-
-      if (isEdit) {
-        await apiClient.patch(`/entries/${id}`, data);
-      } else {
-        await apiClient.post('/entries', data);
-      }
-
       navigate('/today');
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to save entry');
-    } finally {
-      setSaving(false);
     }
   };
 
-  if (loading) {
-    return <div style={{ padding: '20px' }}>Loading...</div>;
-  }
+  const handleSkip = () => {
+    navigate('/today');
+  };
+
+  const handleDotClick = (index: number) => {
+    scrollToSlide(index);
+  };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>{isEdit ? 'Edit Entry' : 'Add Entry'}</h1>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: theme.palette.bg,
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+      }}
+    >
+      {/* Кнопка "Пропустить" */}
+      <button
+        onClick={handleSkip}
+        style={{
+          position: 'absolute',
+          top: theme.spacing.md,
+          right: theme.spacing.md,
+          zIndex: 10,
+          padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+          backgroundColor: 'transparent',
+          border: 'none',
+          color: theme.palette.textMuted,
+          fontSize: theme.typography.small.fontSize,
+          cursor: 'pointer',
+          fontWeight: '500',
+          transition: 'color 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = theme.palette.text;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = theme.palette.textMuted;
+        }}
+      >
+        Пропустить
+      </button>
 
-      {error && <div style={{ color: 'red', marginBottom: '15px' }}>Error: {error}</div>}
-
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Date (YYYY-MM-DD)
-        </label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px', boxSizing: 'border-box' }}
-        />
-      </div>
-
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Time (HH:mm) - Optional
-        </label>
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px', boxSizing: 'border-box' }}
-        />
-      </div>
-
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Meal Type
-        </label>
-        <select
-          value={mealType}
-          onChange={(e) => setMealType(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px', boxSizing: 'border-box' }}
-        >
-          <option value="other">Other</option>
-          <option value="breakfast">Breakfast</option>
-          <option value="lunch">Lunch</option>
-          <option value="dinner">Dinner</option>
-          <option value="snack">Snack</option>
-        </select>
-      </div>
-
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Product
-        </label>
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={productSearch}
-          onChange={(e) => setProductSearch(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px', boxSizing: 'border-box' }}
-        />
-        {products.length > 0 && (
+      {/* Слайдер */}
+      <div
+        ref={scrollContainerRef}
+        className="onboarding-slider"
+        style={{
+          flex: 1,
+          display: 'flex',
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          scrollSnapType: 'x mandatory',
+          scrollBehavior: 'smooth',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {slides.map((slide, index) => (
           <div
+            key={index}
             style={{
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              marginTop: '5px',
-              maxHeight: '200px',
-              overflowY: 'auto',
+              minWidth: '100%',
+              width: '100%',
+              flexShrink: 0,
+              scrollSnapAlign: 'start',
+              scrollSnapStop: 'always',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: theme.spacing.xl,
+              paddingTop: '48px',
+              boxSizing: 'border-box',
             }}
           >
-            {products.map((product) => (
-              <div
-                key={product._id}
-                onClick={() => handleProductSelect(product)}
+            <div
+              style={{
+                maxWidth: '100%',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                gap: theme.spacing.lg,
+              }}
+            >
+              <Text
+                variant="h1"
                 style={{
-                  padding: '10px',
-                  cursor: 'pointer',
-                  borderBottom: '1px solid #eee',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f0f0f0';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white';
+                  marginBottom: theme.spacing.sm,
+                  padding: `0 ${theme.spacing.md}`,
                 }}
               >
-                <div style={{ fontWeight: 'bold' }}>{product.name}</div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  {product.kcalPer100g} kcal/100g · P: {product.proteinPer100g.toFixed(1)}g | F:{' '}
-                  {product.fatPer100g.toFixed(1)}g | C: {product.carbPer100g.toFixed(1)}g
-                </div>
-              </div>
-            ))}
+                {slide.title}
+              </Text>
+              <Text
+                variant="body"
+                muted
+                style={{
+                  maxWidth: '400px',
+                  padding: `0 ${theme.spacing.md}`,
+                  lineHeight: '1.6',
+                }}
+              >
+                {slide.description}
+              </Text>
+            </div>
           </div>
-        )}
-        {selectedProduct && (
-          <div
+        ))}
+      </div>
+
+      {/* Pagination dots */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: theme.spacing.sm,
+          padding: theme.spacing.md,
+          paddingBottom: theme.spacing.lg,
+        }}
+      >
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => handleDotClick(index)}
+            aria-label={`Перейти на экран ${index + 1}`}
             style={{
-              marginTop: '10px',
-              padding: '10px',
-              backgroundColor: '#e7f3ff',
+              width: currentIndex === index ? '24px' : '8px',
+              height: '8px',
               borderRadius: '4px',
+              backgroundColor: currentIndex === index ? theme.palette.primary : theme.palette.border,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              padding: 0,
             }}
-          >
-            Selected: {selectedProduct.name}
-          </div>
-        )}
+          />
+        ))}
       </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Grams
-        </label>
-        <input
-          type="number"
-          step="0.01"
-          min="0.01"
-          placeholder="Enter grams"
-          value={grams}
-          onChange={(e) => setGrams(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px', boxSizing: 'border-box' }}
-        />
-      </div>
-
-      <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            flex: 1,
-            padding: '12px',
-            fontSize: '16px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={{
-            flex: 1,
-            padding: '12px',
-            fontSize: '16px',
-            backgroundColor: saving ? '#6c757d' : '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: saving ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {saving ? 'Saving...' : 'Save'}
-        </button>
+      {/* Кнопка "Далее" / "Начать" */}
+      <div
+        style={{
+          padding: theme.spacing.lg,
+          paddingTop: 0,
+          paddingBottom: theme.spacing.xl,
+        }}
+      >
+        <Button onClick={handleNext} size="lg">
+          {currentIndex === slides.length - 1 ? 'Начать' : 'Далее'}
+        </Button>
       </div>
     </div>
   );
 }
-
