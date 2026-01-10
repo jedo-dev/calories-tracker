@@ -13,6 +13,7 @@ export function useTelegramAuth() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    
     const initAuth = async () => {
       try {
         const tg = (window as any).Telegram?.WebApp;
@@ -31,7 +32,7 @@ export function useTelegramAuth() {
         }
 
         const response = await apiClient.post('/auth/telegram', { initData });
-
+        
         const { token, user: userData } = response.data;
 
         localStorage.setItem('token', token);

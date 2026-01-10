@@ -9,7 +9,7 @@ export function HomePage() {
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div>Error аа: {error}</div>;
   }
 
   if (user) {
@@ -21,7 +21,7 @@ export function HomePage() {
         {user.username && <p>Username: @{user.username}</p>}
         <div style={{ marginTop: '20px' }}>
           <Link
-            to="/products"
+            to="/today"
             style={{
               display: 'inline-block',
               padding: '10px 20px',
@@ -31,7 +31,7 @@ export function HomePage() {
               borderRadius: '4px',
             }}
           >
-            Go to Products
+            Go to today
           </Link>
         </div>
       </div>

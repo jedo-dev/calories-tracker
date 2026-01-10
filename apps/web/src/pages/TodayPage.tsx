@@ -76,7 +76,7 @@ export function TodayPage() {
   }
 
   if (error) {
-    return <div style={{ padding: '20px', color: 'red' }}>Error: {error}</div>;
+    return <div style={{ padding: '20px', color: 'red' }}>Error ff: {error}</div>;
   }
 
   return (
