@@ -7,6 +7,7 @@ import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Text } from '../ui/Text';
+import { Header } from '../widget/Header/Header';
 
 interface Entry {
   _id: string;
@@ -120,7 +121,7 @@ export function TodayPage() {
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
 
-
+      <Header />
 
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         {t('today.dateTitle', { date })}

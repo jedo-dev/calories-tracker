@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
 import { useTelegramAuth } from '../hooks/useTelegramAuth';
@@ -79,6 +79,10 @@ export function AddEntryPage() {
       loadEntry();
     }
   }, [id]);
+
+  if(localStorage.getItem('token')) {
+    return <Navigate to="/today" />;
+  }
 
   const loadEntry = async () => {
     if (!id) return;

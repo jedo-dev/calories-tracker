@@ -5,6 +5,7 @@ import { useTheme } from '../theme/useTheme';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
+import { Header } from '../widget/Header/Header';
 
 interface Product {
   _id: string;
@@ -75,9 +76,8 @@ export function ProductsPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
-        {t('products.title')}
-      </Text>
+      <Header />
+      
 
       <Input
         type="text"

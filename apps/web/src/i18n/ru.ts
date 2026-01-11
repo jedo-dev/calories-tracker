@@ -1,4 +1,8 @@
 export const ru = {
+  // App
+  app: {
+    name: 'FlareonFit',
+  },
   // Common
   common: {
     loading: 'Загрузка...',
