@@ -1,0 +1,221 @@
+import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { SocialService } from './social.service';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { UserStats, UserStatsDocument } from './schemas/user-stats.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
+import { Follow, FollowDocument } from './schemas/follow.schema';
+import { ActivityEvent, ActivityEventDocument } from './schemas/activity-event.schema';
+
+@Controller('social')
+@UseGuards(JwtAuthGuard)
+export class SocialController {
+  constructor(
+    private socialService: SocialService,
+    @InjectModel(UserStats.name) private userStatsModel: Model<UserStatsDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
+    @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
+  ) {}
+
+  @Get('me')
+  async getMe(@Request() req: any) {
+    const user = await this.userModel.findById(req.user.id).exec();
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const stats = await this.socialService.ensureUserStats(req.user.id);
+    this.socialService.maybeResetWeek(stats);
+
+    return {
+      user: {
+        id: user._id.toString(),
+        username: user.username,
+        displayName: user.displayName || user.firstName || user.username || 'User',
+        avatarEmoji: user.avatarEmoji || '🦊',
+      },
+      stats: {
+        xpTotal: stats.xpTotal,
+        xpWeek: stats.xpWeek,
+        weekKey: stats.weekKey,
+        currentStreak: stats.currentStreak,
+        bestStreak: stats.bestStreak,
+        lastLoggedDate: stats.lastLoggedDate,
+      },
+    };
+  }
+}
+
+@Controller('leaderboard')
+@UseGuards(JwtAuthGuard)
+export class LeaderboardController {
+  constructor(
+    @InjectModel(UserStats.name) private userStatsModel: Model<UserStatsDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
+    private socialService: SocialService,
+  ) {}
+
+  @Get('week/global')
+  async getGlobalLeaderboard(@Request() req: any) {
+    const weekKey = this.socialService.getWeekKey();
+    const statsList = await this.userStatsModel
+      .find({ weekKey })
+      .sort({ xpWeek: -1, updatedAt: -1 })
+      .limit(50)
+      .populate('userId', 'displayName username firstName avatarEmoji isPublicProfile')
+      .exec();
+
+    const publicStats = statsList
+      .filter((s: any) => {
+        const user = s.userId;
+        return user && user.isPublicProfile !== false;
+      })
+      .map((s: any, index: number) => {
+        const user = s.userId;
+        return {
+          rank: index + 1,
+          user: {
+            id: user._id.toString(),
+            displayName: user.displayName || user.firstName || user.username || 'User',
+            username: user.username,
+            avatarEmoji: user.avatarEmoji || '🦊',
+          },
+          xpWeek: s.xpWeek,
+        };
+      });
+
+    const myStats = statsList.find((s: any) => s.userId._id.toString() === req.user.id);
+    let me = null;
+    if (myStats) {
+      const myRank = publicStats.findIndex((s: any) => s.user.id === req.user.id) + 1;
+      if (myRank > 0) {
+        me = {
+          rank: myRank,
+          xpWeek: myStats.xpWeek,
+        };
+      }
+    }
+
+    return {
+      weekKey,
+      me,
+      items: publicStats,
+    };
+  }
+
+  @Get('week/friends')
+  async getFriendsLeaderboard(@Request() req: any) {
+    const weekKey = this.socialService.getWeekKey();
+    const followingIds = await this.followModel
+      .find({ followerId: new Types.ObjectId(req.user.id) })
+      .distinct('followingId')
+      .exec();
+
+    const userIds = [new Types.ObjectId(req.user.id), ...followingIds];
+
+    const statsList = await this.userStatsModel
+      .find({
+        userId: { $in: userIds },
+        weekKey,
+      })
+      .sort({ xpWeek: -1, updatedAt: -1 })
+      .populate('userId', 'displayName username firstName avatarEmoji isPublicProfile')
+      .exec();
+
+    const publicStats = statsList
+      .filter((s: any) => {
+        const user = s.userId;
+        return user && user.isPublicProfile !== false;
+      })
+      .map((s: any, index: number) => {
+        const user = s.userId;
+        return {
+          rank: index + 1,
+          user: {
+            id: user._id.toString(),
+            displayName: user.displayName || user.firstName || user.username || 'User',
+            username: user.username,
+            avatarEmoji: user.avatarEmoji || '🦊',
+          },
+          xpWeek: s.xpWeek,
+        };
+      });
+
+    const myStats = statsList.find((s: any) => s.userId._id.toString() === req.user.id);
+    let me = null;
+    if (myStats) {
+      const myRank = publicStats.findIndex((s: any) => s.user.id === req.user.id) + 1;
+      if (myRank > 0) {
+        me = {
+          rank: myRank,
+          xpWeek: myStats.xpWeek,
+        };
+      }
+    }
+
+    return {
+      weekKey,
+      me,
+      items: publicStats,
+    };
+  }
+}
+
+@Controller('feed')
+@UseGuards(JwtAuthGuard)
+export class FeedController {
+  constructor(
+    @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
+    @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+  ) {}
+
+  @Get()
+  async getFeed(@Request() req: any) {
+    const followingIds = await this.followModel
+      .find({ followerId: new Types.ObjectId(req.user.id) })
+      .distinct('followingId')
+      .exec();
+
+    if (followingIds.length === 0) {
+      return [];
+    }
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const events = await this.activityEventModel
+      .find({
+        userId: { $in: followingIds },
+        createdAt: { $gte: sevenDaysAgo },
+      })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .populate('userId', 'displayName username firstName avatarEmoji isPublicProfile')
+      .exec();
+
+    return events
+      .filter((e: any) => {
+        const user = e.userId;
+        return user && user.isPublicProfile !== false;
+      })
+      .map((e: any) => {
+        const user = e.userId;
+        return {
+          id: e._id.toString(),
+          type: e.type,
+          date: e.date,
+          user: {
+            id: user._id.toString(),
+            displayName: user.displayName || user.firstName || user.username || 'User',
+            avatarEmoji: user.avatarEmoji || '🦊',
+          },
+          payload: e.payload,
+          createdAt: e.createdAt,
+        };
+      });
+  }
+}

@@ -4,6 +4,7 @@ import { EntriesService } from './entries.service';
 import { EntriesController } from './entries.controller';
 import { Entry, EntrySchema } from './schemas/entry.schema';
 import { Product, ProductSchema } from '../products/schemas/product.schema';
+import { SocialModule } from '../social/social.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { Product, ProductSchema } from '../products/schemas/product.schema';
       { name: Entry.name, schema: EntrySchema },
       { name: Product.name, schema: ProductSchema },
     ]),
+    SocialModule,
   ],
   controllers: [EntriesController],
   providers: [EntriesService],

@@ -9,6 +9,8 @@ import { HealthModule } from './health/health.module';
 import { ProductsModule } from './products/products.module';
 import { StatsModule } from './stats/stats.module';
 import { UsersModule } from './users/users.module';
+import { SocialModule } from './social/social.module';
+import { FriendsModule } from './friends/friends.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { UsersModule } from './users/users.module';
     ProductsModule,
     EntriesModule,
     StatsModule,
+    SocialModule,
+    FriendsModule,
   ],
   providers: [
     {

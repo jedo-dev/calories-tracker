@@ -17,6 +17,15 @@ function getPageTitle(pathname: string): string {
   if (pathname.startsWith('/entry/')) {
     return t('entry.edit');
   }
+  if (pathname === '/league') {
+    return t('league.title');
+  }
+  if (pathname === '/friends') {
+    return t('friends.title');
+  }
+  if (pathname === '/feed') {
+    return t('feed.title');
+  }
   if (pathname === '/' || pathname === '/entry') {
     return t('app.name');
   }
@@ -39,7 +48,7 @@ export function Header() {
       <BurgerMenu onClick={() => handleClick(!isOpen)} isOpen={isOpen} />
 
       <h1 style={{ color: 'black', fontSize: '20px', fontWeight: 'bold' }}>{pageTitle}</h1>
-      <Drawer onClick={() => handleClick(!isOpen)} isOpen={isOpen} />
+      <Drawer isActive={location.pathname} onClick={() => handleClick(!isOpen)} isOpen={isOpen} />
     </div>
   );
 }

@@ -82,6 +82,10 @@ export function EntryPage() {
     scrollToSlide(index);
   };
 
+  if(!localStorage.getItem('token')) {
+    navigate('/home');
+  }
+
   return (
     <div
       style={{

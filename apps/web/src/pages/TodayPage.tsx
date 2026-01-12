@@ -32,6 +32,23 @@ interface DayStats {
   entriesCount: number;
 }
 
+interface SocialStats {
+  user: {
+    id: string;
+    username?: string;
+    displayName: string;
+    avatarEmoji: string;
+  };
+  stats: {
+    xpTotal: number;
+    xpWeek: number;
+    weekKey: string;
+    currentStreak: number;
+    bestStreak: number;
+    lastLoggedDate?: string;
+  };
+}
+
 function formatDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -46,6 +63,7 @@ export function TodayPage() {
   const [date] = useState(formatDate(new Date()));
   const [entries, setEntries] = useState<Entry[]>([]);
   const [stats, setStats] = useState<DayStats | null>(null);
+  const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,12 +71,14 @@ export function TodayPage() {
     setLoading(true);
     setError(null);
     try {
-      const [entriesRes, statsRes] = await Promise.all([
+      const [entriesRes, statsRes, socialRes] = await Promise.all([
         apiClient.get(`/entries?date=${date}`),
         apiClient.get(`/stats/day?date=${date}`),
+        apiClient.get('/social/me'),
       ]);
       setEntries(entriesRes.data);
       setStats(statsRes.data);
+      setSocialStats(socialRes.data);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || t('stats.loadFailed'));
     } finally {
@@ -123,9 +143,30 @@ export function TodayPage() {
 
       <Header />
 
+    
+
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         {t('today.dateTitle', { date })}
       </Text>
+
+      {socialStats && (
+        <Card style={{ marginBottom: theme.spacing.lg, backgroundColor: theme.palette.primary + '10' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: theme.spacing.md }}>
+            <div>
+              <Text variant="small" muted>Серия</Text>
+              <Text variant="h2" bold>
+                {socialStats.stats.currentStreak} дней 🔥
+              </Text>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <Text variant="small" muted>XP за неделю</Text>
+              <Text variant="h2" bold>
+                {socialStats.stats.xpWeek}
+              </Text>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {stats && (
         <Card style={{ marginBottom: theme.spacing.lg }}>

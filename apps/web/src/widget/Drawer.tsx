@@ -7,8 +7,16 @@ import { t } from '../i18n';
 import todayIcon from '../assets/home.png';
 //@ts-ignore
 import productsIcon from '../assets/products.png';
-export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean) => void, isOpen: boolean }) {
+//@ts-ignore
+import leagueIcon from '../assets/trophy.png';
+//@ts-ignore
+import friendsIcon from '../assets/friend.png';
+//@ts-ignore
+import feedIcon from '../assets/feed.png';
+import { useTheme } from '../theme/useTheme';
+export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (boolean: boolean) => void, isOpen: boolean, isActive: string }) {
   const [isVisible, setIsVisible] = useState(false);
+  const theme = useTheme();
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
@@ -62,7 +70,7 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start', margin: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'start', alignItems: 'center', }}>
               <img src={logo} alt="logo" width={100} height={100} />
-              <h1 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>{t('app.name')}</h1>
+              <h1 style={{ color: `white`, fontSize: '20px', fontWeight: 'bold' }}>{t('app.name')}</h1>
             </div>
             <div style={{ width: '100%', height: '1px', backgroundColor: 'white', margin: '10px 0' }}></div>
             <ul style={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start', gap: 10 }}>
@@ -72,8 +80,25 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
               </li>
               <li style={{ display: 'flex', justifyContent: 'start', alignItems: 'center', gap: 10 }}>
                 <img src={productsIcon} alt="products" width={20} height={20} />
-                <Link style={{ color: 'white', textDecoration: 'none' }} to="/products">{t('products.title')}</Link>
+                <Link style={{ color: `${isActive === '/products' ? theme.palette.primaryText : 'white'}`, textDecoration: 'none' }} to="/products">{t('products.title')}</Link>
               </li>
+              <li style={{ display: 'flex', justifyContent: 'start', alignItems: 'center', gap: 10 }}>
+
+                <img src={leagueIcon} alt="league" width={20} height={20} />
+                <Link style={{ color: 'white', textDecoration: 'none' }} to="/league"> {t('league.title')}</Link>
+
+
+              </li>
+              <li style={{ display: 'flex', justifyContent: 'start', alignItems: 'center', gap: 10 }}>
+                <img src={friendsIcon} alt="friends" width={20} height={20} />
+                <Link style={{ color: 'white', textDecoration: 'none' }} to="/friends"> {t('friends.title')}</Link>
+              </li>
+              <li style={{ display: 'flex', justifyContent: 'start', alignItems: 'center', gap: 10 }}>
+                <img src={feedIcon} alt="feed" width={20} height={20} />
+                <Link style={{ color: 'white', textDecoration: 'none' }} to="/feed"> {t('feed.title')}</Link>
+              </li>
+
+
             </ul>
             <span style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', marginTop: '20px' }}>
 

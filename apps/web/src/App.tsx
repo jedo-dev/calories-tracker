@@ -2,7 +2,10 @@ import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AddEntryPage } from './pages/AddEntryPage';
 import { EntryPage } from './pages/EntryPage';
+import { FeedPage } from './pages/FeedPage';
+import { FriendsPage } from './pages/FriendsPage';
 import { HomePage } from './pages/HomePage';
+import { LeaguePage } from './pages/LeaguePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { TodayPage } from './pages/TodayPage';
 import { useTheme } from './theme/useTheme';
@@ -21,11 +24,16 @@ function App() {
 
         <Route path="/" element={<EntryPage />} />
         <Route path="/entry" element={<EntryPage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/today" element={<TodayPage />} />
         <Route path="/entry/new" element={<AddEntryPage />} />
         <Route path="/entry/:id" element={<AddEntryPage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/league" element={<LeaguePage />} />
+        <Route path="/friends" element={<FriendsPage />} />
+        <Route path="/feed" element={<FeedPage />} />
         <Route path="*" element={<Navigate to="/today" replace />} />
+
       </Routes>
     </BrowserRouter>
   );

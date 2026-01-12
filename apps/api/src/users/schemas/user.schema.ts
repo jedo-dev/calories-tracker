@@ -8,7 +8,7 @@ export class User {
   @Prop({ required: true, unique: true, index: true })
   tgUserId: number;
 
-  @Prop()
+  @Prop({ sparse: true, index: true })
   username?: string;
 
   @Prop()
@@ -16,6 +16,15 @@ export class User {
 
   @Prop()
   lastName?: string;
+
+  @Prop()
+  displayName?: string;
+
+  @Prop({ default: true })
+  isPublicProfile: boolean;
+
+  @Prop({ default: '🦊' })
+  avatarEmoji: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

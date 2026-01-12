@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
 import { useTelegramAuth } from '../hooks/useTelegramAuth';

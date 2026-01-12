@@ -91,6 +91,19 @@ export const ru = {
     loadFailed: 'Не удалось загрузить продукты',
   },
 
+  // League
+  league: {
+    title: 'Лига',
+  },
+  // Friends
+  friends: {
+    title: 'Друзья',
+  },
+  // Feed
+  feed: {
+    title: 'Лента',
+  },
+
   // Stats
   stats: {
     loadFailed: 'Не удалось загрузить статистику',

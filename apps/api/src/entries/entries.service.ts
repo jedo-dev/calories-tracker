@@ -5,12 +5,14 @@ import { Entry, EntryDocument } from './schemas/entry.schema';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { UpdateEntryDto } from './dto/update-entry.dto';
 import { Product, ProductDocument } from '../products/schemas/product.schema';
+import { SocialService } from '../social/social.service';
 
 @Injectable()
 export class EntriesService {
   constructor(
     @InjectModel(Entry.name) private entryModel: Model<EntryDocument>,
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    private socialService: SocialService,
   ) {}
 
   private round(value: number): number {
@@ -63,7 +65,18 @@ export class EntriesService {
     };
 
     const entry = new this.entryModel(entryData);
-    return entry.save();
+    const savedEntry = await entry.save();
+
+    try {
+      const stats = await this.socialService.ensureUserStats(userId);
+      this.socialService.maybeResetWeek(stats);
+      await this.socialService.updateStreakIfFirstLogOfDay(userId, createEntryDto.date);
+      await this.socialService.grantXpForEntry(userId, createEntryDto.date);
+    } catch (err) {
+      console.error('Failed to grant XP/update streak:', err);
+    }
+
+    return savedEntry;
   }
 
   async listByDate(date: string, userId: string): Promise<EntryDocument[]> {
