@@ -80,9 +80,9 @@ export function AddEntryPage() {
     }
   }, [id]);
 
-  if(localStorage.getItem('token')) {
-    return <Navigate to="/today" />;
-  }
+  // if(localStorage.getItem('token')) {
+  //   return <Navigate to="/today" />;
+  // }
 
   const loadEntry = async () => {
     if (!id) return;
