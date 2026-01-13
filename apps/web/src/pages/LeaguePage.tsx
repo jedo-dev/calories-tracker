@@ -3,10 +3,9 @@ import { apiClient } from '../api/client';
 import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
+import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Text } from '../ui/Text';
-import { Button } from '../ui/Button';
-import { Header } from '../widget/Header/Header';
 
 interface LeaderboardItem {
   rank: number;
@@ -72,7 +71,7 @@ export function LeaguePage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
-     <Header />
+
 
       <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
         <Button

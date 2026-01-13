@@ -5,7 +5,6 @@ import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Card } from '../ui/Card';
 import { Text } from '../ui/Text';
-import { Header } from '../widget/Header/Header';
 
 interface FeedItem {
   id: string;
@@ -80,7 +79,6 @@ export function FeedPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
-      <Header />
 
       {loading && (
         <div style={{ textAlign: 'center', padding: theme.spacing.xl }}>

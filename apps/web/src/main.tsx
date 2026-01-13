@@ -7,7 +7,7 @@ import './index.css';
 const tg = (window as any).Telegram?.WebApp;
 if (tg) {
   tg.ready();
-  
+
   // Set header and background colors based on theme
   const themeParams = tg.themeParams;
   if (themeParams && themeParams.bg_color) {

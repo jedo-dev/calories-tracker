@@ -7,8 +7,7 @@ export function BurgerMenu({ onClick, isOpen = false }: { onClick: (boolean: boo
     <div
       onClick={() => onClick(!isOpen)}
       style={{
-        position: 'absolute',
-        right: '15px',
+       
         display: 'flex',
         flexDirection: 'column',
         gap: '3px',

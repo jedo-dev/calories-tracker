@@ -103,6 +103,9 @@ export const ru = {
   feed: {
     title: 'Лента',
   },
+  profile: {
+    title: 'Профиль',
+  },
 
   // Stats
   stats: {
