@@ -6,6 +6,7 @@ import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { DashboardRing } from '../ui/DashboardRing';
 import { Text } from '../ui/Text';
 
 interface Entry {
@@ -20,15 +21,26 @@ interface Entry {
   mealType: string;
 }
 
-interface DayStats {
+interface DashboardData {
   date: string;
-  totals: {
+  consumed: {
     kcal: number;
     protein: number;
     fat: number;
     carb: number;
   };
-  entriesCount: number;
+  targets: {
+    kcalTarget: number;
+    proteinTargetG: number;
+    fatTargetG: number;
+    carbTargetG: number;
+  } | null;
+  progress: {
+    kcalPct: number;
+    proteinPct: number;
+    fatPct: number;
+    carbPct: number;
+  } | null;
 }
 
 interface SocialStats {
@@ -55,13 +67,18 @@ function formatDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+function parseDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function TodayPage() {
   const { loading: loadingUser, error: errorUser } = useTelegramAuth();
   const navigate = useNavigate();
   const theme = useTheme();
-  const [date] = useState(formatDate(new Date()));
+  const [date, setDate] = useState(formatDate(new Date()));
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [stats, setStats] = useState<DayStats | null>(null);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,16 +87,16 @@ export function TodayPage() {
     setLoading(true);
     setError(null);
     try {
-      const [entriesRes, statsRes, socialRes] = await Promise.all([
+      const [entriesRes, dashboardRes, socialRes] = await Promise.all([
         apiClient.get(`/entries?date=${date}`),
-        apiClient.get(`/stats/day?date=${date}`),
+        apiClient.get(`/dashboard/day?date=${date}`),
         apiClient.get('/social/me'),
       ]);
       setEntries(entriesRes.data);
-      setStats(statsRes.data);
+      setDashboard(dashboardRes.data);
       setSocialStats(socialRes.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || t('stats.loadFailed'));
+      setError(err.response?.data?.message || err.message || t('dashboard.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -97,6 +114,16 @@ export function TodayPage() {
     } catch (err: any) {
       alert(err.response?.data?.message || t('today.deleteFailed'));
     }
+  };
+
+  const changeDate = (days: number) => {
+    const currentDate = parseDate(date);
+    currentDate.setDate(currentDate.getDate() + days);
+    setDate(formatDate(currentDate));
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDate(e.target.value);
   };
 
   if (loadingUser) {
@@ -139,13 +166,32 @@ export function TodayPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
-
-
-
-
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
-        {t('today.dateTitle', { date })}
-      </Text>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg, flexWrap: 'wrap', gap: theme.spacing.md }}>
+        <Text variant="h1" style={{ flex: 1, minWidth: '200px' }}>
+          {t('today.dateTitle', { date })}
+        </Text>
+        <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center' }}>
+          <Button variant="secondary" size="sm" onClick={() => changeDate(-1)} style={{ width: 'auto', minWidth: '40px' }}>
+            ←
+          </Button>
+          <input
+            type="date"
+            value={date}
+            onChange={handleDateChange}
+            style={{
+              padding: theme.spacing.sm,
+              fontSize: theme.typography.small.fontSize,
+              backgroundColor: theme.palette.surface,
+              color: theme.palette.text,
+              border: `1px solid ${theme.palette.border}`,
+              borderRadius: theme.radius.sm,
+            }}
+          />
+          <Button variant="secondary" size="sm" onClick={() => changeDate(1)} style={{ width: 'auto', minWidth: '40px' }}>
+            →
+          </Button>
+        </div>
+      </div>
 
       {socialStats && (
         <Card style={{ marginBottom: theme.spacing.lg, backgroundColor: theme.palette.primary + '10' }}>
@@ -166,24 +212,45 @@ export function TodayPage() {
         </Card>
       )}
 
-      {stats && (
+      {!dashboard?.targets && (
+        <Card style={{ marginBottom: theme.spacing.lg, backgroundColor: theme.palette.primary + '20', border: `2px solid ${theme.palette.primary}` }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>
+            {t('profile.fillProfileBanner')}
+          </Text>
+          <Button onClick={() => navigate('/profile')} style={{ marginTop: theme.spacing.md }}>
+            {t('profile.goToProfile')}
+          </Button>
+        </Card>
+      )}
+
+      {dashboard && dashboard.targets && dashboard.progress && (
+        <Card style={{ marginBottom: theme.spacing.lg, padding: theme.spacing.xl }}>
+          <DashboardRing
+            consumed={dashboard.consumed}
+            targets={dashboard.targets}
+            progress={dashboard.progress}
+          />
+        </Card>
+      )}
+
+      {dashboard && !dashboard.targets && (
         <Card style={{ marginBottom: theme.spacing.lg }}>
           <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>
             {t('today.totals')}
           </Text>
           <Text variant="h2" bold style={{ marginBottom: theme.spacing.md, fontSize: '24px' }}>
-            {t('totals.kcal', { value: stats.totals.kcal.toFixed(1) })}
+            {t('totals.kcal', { value: dashboard.consumed.kcal.toFixed(1) })}
           </Text>
-          <br/>
+          <br />
           <Text muted style={{ marginBottom: theme.spacing.xs }}>
             {t('totals.macros', {
-              protein: stats.totals.protein.toFixed(1),
-              fat: stats.totals.fat.toFixed(1),
-              carb: stats.totals.carb.toFixed(1),
+              protein: dashboard.consumed.protein.toFixed(1),
+              fat: dashboard.consumed.fat.toFixed(1),
+              carb: dashboard.consumed.carb.toFixed(1),
             })}
           </Text>
           <Text variant="small" muted style={{ marginTop: theme.spacing.sm }}>
-            {getEntriesCountText(stats.entriesCount)}
+            {getEntriesCountText(entries.length)}
           </Text>
         </Card>
       )}

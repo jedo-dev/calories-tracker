@@ -8,6 +8,7 @@ import { HomePage } from './pages/HomePage';
 import { LeaguePage } from './pages/LeaguePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { TodayPage } from './pages/TodayPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { useTheme } from './theme/useTheme';
 import { Footer } from './widget/Footer/Footer';
 import { Header } from './widget/Header/Header';
@@ -37,6 +38,7 @@ function App() {
         
           <Route path="/home" element={<HomePage />} />
           <Route path="/today" element={<TodayPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/entry/new" element={<AddEntryPage />} />
           <Route path="/entry/:id" element={<AddEntryPage />} />
           <Route path="/products" element={<ProductsPage />} />

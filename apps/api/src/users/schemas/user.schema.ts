@@ -25,7 +25,29 @@ export class User {
 
   @Prop({ default: '🦊' })
   avatarEmoji: string;
+
+  // Profile fields
+  @Prop({
+    type: {
+      weightKg: { type: Number },
+      heightCm: { type: Number },
+      age: { type: Number },
+      gender: { type: String, enum: ['male', 'female'] },
+      activityLevel: { type: String, enum: ['low', 'medium', 'high', 'very_high'] },
+      goal: { type: String, enum: ['lose', 'maintain', 'gain'] },
+      updatedAt: { type: Date },
+    },
+    required: false,
+  })
+  profile?: {
+    weightKg?: number;
+    heightCm?: number;
+    age?: number;
+    gender?: 'male' | 'female';
+    activityLevel?: 'low' | 'medium' | 'high' | 'very_high';
+    goal?: 'lose' | 'maintain' | 'gain';
+    updatedAt?: Date;
+  };
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-

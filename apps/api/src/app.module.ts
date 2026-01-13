@@ -11,6 +11,8 @@ import { StatsModule } from './stats/stats.module';
 import { UsersModule } from './users/users.module';
 import { SocialModule } from './social/social.module';
 import { FriendsModule } from './friends/friends.module';
+import { ProfileModule } from './profile/profile.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { FriendsModule } from './friends/friends.module';
     StatsModule,
     SocialModule,
     FriendsModule,
+    ProfileModule,
+    DashboardModule,
   ],
   providers: [
     {
