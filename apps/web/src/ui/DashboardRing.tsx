@@ -32,6 +32,34 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
   const strokeWidth = 12;
   const innerRadius = radius - strokeWidth / 2;
 
+
+  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+  const polarToCartesian = (cx: number, cy: number, r: number, angleDeg: number) => {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  };
+
+  /**
+   * Рисует дугу по стартовому углу и длине дуги (sweep) в градусах.
+   * sweepAngle > 0 — по часовой (clockwise)
+   */
+  const describeArc = (cx: number, cy: number, r: number, startAngle: number, sweepAngle: number) => {
+    const sweep = clamp(sweepAngle, 0, 359.999); // 360 SVG не любит
+    if (sweep <= 0.001) return '';
+
+    const endAngle = startAngle + sweep;
+
+    const start = polarToCartesian(cx, cy, r, startAngle);
+    const end = polarToCartesian(cx, cy, r, endAngle);
+
+    const largeArcFlag = sweep > 180 ? 1 : 0;
+    const sweepFlag = 1; // 1 = clockwise, 0 = counter-clockwise
+
+    return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`;
+  };
+
+
   // Calculate arc paths for each macro
   const getArcPath = (percentage: number, startAngle: number, endAngle: number, radius: number) => {
     const start = polarToCartesian(center, center, radius, endAngle);
@@ -40,13 +68,7 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
     return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
   };
 
-  const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
-    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-    return {
-      x: centerX + radius * Math.cos(angleInRadians),
-      y:( centerY + radius * Math.sin(angleInRadians)),
-    };
-  };
+
 
   // Angles for each ring (protein, fat, carb)
   const proteinStart = 0;
@@ -66,10 +88,15 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
   const carbAngle = carbStart + (carbEnd - carbStart) * carbProgress;
 
   // Colors from theme
-  const proteinColor = theme.palette.primary;
+  const proteinColor = theme.palette.success;
   const fatColor = theme.palette.secondary;
   const carbColor = theme.palette.success;
   const bgColor = theme.palette.border;
+
+  const proteinSweep = (proteinEnd - proteinStart) * Math.min(progress.proteinPct, 1);
+  const fatSweep = (fatEnd - fatStart) * Math.min(progress.fatPct, 1);
+  const carbSweep = (carbEnd - carbStart) * Math.min(progress.carbPct, 1);
+
 
   return (
     <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
@@ -102,33 +129,30 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
           strokeWidth={strokeWidth}
           opacity={0.2}
         />
-
-        {/* Protein arc */}
         <path
-          d={getArcPath(proteinProgress, proteinStart, proteinAngle, innerRadius)}
+          d={describeArc(center, center, innerRadius, proteinStart, proteinSweep)}
           fill="none"
           stroke={proteinColor}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
         />
 
-        {/* Fat arc */}
         <path
-          d={getArcPath(fatProgress, fatStart, fatAngle, innerRadius - strokeWidth - 4)}
+          d={describeArc(center, center, innerRadius - strokeWidth - 2, fatStart, fatSweep)}
           fill="none"
           stroke={fatColor}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
         />
 
-        {/* Carb arc */}
         <path
-          d={getArcPath(carbProgress, carbStart, carbAngle, innerRadius - strokeWidth * 2 - 8)}
+          d={describeArc(center, center, innerRadius - strokeWidth * 2 - 8, carbStart, carbSweep)}
           fill="none"
           stroke={carbColor}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
         />
+
       </svg>
 
       {/* Center content */}
