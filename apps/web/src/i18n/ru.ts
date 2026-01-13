@@ -141,6 +141,7 @@ export const ru = {
     target: "Норма",
     of: "из",
     protein: "Белки",
+    kcal: "ккал",
     fat: "Жиры",
     carb: "Углеводы",
     loadFailed: "Не удалось загрузить данные"

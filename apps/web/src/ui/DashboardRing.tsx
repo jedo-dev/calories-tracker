@@ -3,177 +3,175 @@ import { useTheme } from '../theme/useTheme';
 import { Text } from './Text';
 
 interface DashboardRingProps {
-  consumed: {
-    kcal: number;
-    protein: number;
-    fat: number;
-    carb: number;
-  };
-  targets: {
-    kcalTarget: number;
-    proteinTargetG: number;
-    fatTargetG: number;
-    carbTargetG: number;
-  };
-  progress: {
-    kcalPct: number;
-    proteinPct: number;
-    fatPct: number;
-    carbPct: number;
-  };
+  consumed: { kcal: number; protein: number; fat: number; carb: number };
+  targets: { kcalTarget: number; proteinTargetG: number; fatTargetG: number; carbTargetG: number };
+  progress: { kcalPct: number; proteinPct: number; fatPct: number; carbPct: number };
 }
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+const polarToCartesian = (cx: number, cy: number, r: number, angleDeg: number) => {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+};
+
+/**
+ * Дуга по часовой стрелке: startAngle + sweepAngle
+ * sweepAngle в градусах (0..360). 360 не рисуем (SVG баг).
+ */
+const describeArc = (cx: number, cy: number, r: number, startAngle: number, sweepAngle: number) => {
+  const sweep = clamp(sweepAngle, 0, 359.999);
+  if (sweep <= 0.001) return '';
+
+  const endAngle = startAngle + sweep;
+  const start = polarToCartesian(cx, cy, r, startAngle);
+  const end = polarToCartesian(cx, cy, r, endAngle);
+
+  const largeArcFlag = sweep > 180 ? 1 : 0;
+  const sweepFlag = 1; // clockwise
+
+  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`;
+};
+
+type ArcTrackProgress = {
+  key: string;
+  r: number;
+  color: string;
+  pct: number; // 0..1
+  start: number;
+  sweep: number;
+};
 
 export function DashboardRing({ consumed, targets, progress }: DashboardRingProps) {
   const theme = useTheme();
 
-  const size = 280;
-  const center = size / 2;
-  const radius = 100;
-  const strokeWidth = 12;
-  const innerRadius = radius - strokeWidth / 2;
+  const size = 320;
+  const cx = size / 2;
+  const cy = size / 2;
 
+  const stroke = 12;
 
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+  // ===== Геометрия “спидометра” =====
+  // Хочешь ровно полукруг? Поставь ARC_SWEEP = 180.
+  const ARC_START = -90; // где начинается дуга (градусы)
+  const ARC_SWEEP = 180; // длина дуги (градусы)
+  // Это дает дугу снизу-слева → вниз → снизу-справа, похожую на референс.
 
-  const polarToCartesian = (cx: number, cy: number, r: number, angleDeg: number) => {
-    const rad = ((angleDeg - 90) * Math.PI) / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-  };
+  const gapDeg = 6; // зазор между сегментами
 
-  /**
-   * Рисует дугу по стартовому углу и длине дуги (sweep) в градусах.
-   * sweepAngle > 0 — по часовой (clockwise)
-   */
-  const describeArc = (cx: number, cy: number, r: number, startAngle: number, sweepAngle: number) => {
-    const sweep = clamp(sweepAngle, 0, 359.999); // 360 SVG не любит
-    if (sweep <= 0.001) return '';
+  // Радиусы: внешний — калории, внутри — макросы
+  const rKcal = 118;
+  const rP = 98;
+  const rF = 78;
+  const rC = 58;
 
-    const endAngle = startAngle + sweep;
+  // Цвета из темы
+  const trackColor = theme.palette.border;
+  const trackOpacity = 0.22;
 
-    const start = polarToCartesian(cx, cy, r, startAngle);
-    const end = polarToCartesian(cx, cy, r, endAngle);
+  const kcalColor = theme.palette.success;
+  const proteinColor = theme.palette.success ?? theme.palette.primary;
+  const fatColor = theme.palette.success ?? theme.palette.textMuted;
+  const carbColor = theme.palette.success; // если есть отдельный цвет — подставь
 
-    const largeArcFlag = sweep > 180 ? 1 : 0;
-    const sweepFlag = 1; // 1 = clockwise, 0 = counter-clockwise
+  // ===== Сектора для макросов внутри общего диапазона =====
+  // Делим ARC_SWEEP на 3 сектора и оставляем gap между ними.
+  const sectorSize = ARC_SWEEP / 3;
+  const usableSector = sectorSize - gapDeg;
 
-    return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`;
-  };
+  const pStart = ARC_START + gapDeg / 2;
+  const fStart = ARC_START + sectorSize + gapDeg / 2;
+  const cStart = ARC_START + sectorSize * 2 + gapDeg / 2;
 
+  const pSweep = usableSector * clamp(progress.proteinPct, 0, 1);
+  const fSweep = usableSector * clamp(progress.fatPct, 0, 1);
+  const cSweep = usableSector * clamp(progress.carbPct, 0, 1);
 
-  // Calculate arc paths for each macro
-  const getArcPath = (percentage: number, startAngle: number, endAngle: number, radius: number) => {
-    const start = polarToCartesian(center, center, radius, endAngle);
-    const end = polarToCartesian(center, center, radius, startAngle);
-    const largeArcFlag = percentage > 0.5 ? 1 : 0;
-    return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
-  };
+  // Калории — полный диапазон ARC_SWEEP (track + progress)
+  const kcalSweep = ARC_SWEEP * clamp(progress.kcalPct, 0, 1);
 
+  const arcs: ArcTrackProgress[] = [
+    // kcal outer ring
+    { key: 'kcal', r: rKcal, color: kcalColor, pct: clamp(progress.kcalPct, 0, 1), start: ARC_START, sweep: kcalSweep },
 
-
-  // Angles for each ring (protein, fat, carb)
-  const proteinStart = 0;
-  const proteinEnd = 120;
-  const fatStart = 120;
-  const fatEnd = 240;
-  const carbStart = 240;
-  const carbEnd = 360;
-
-  const proteinProgress = Math.min(progress.proteinPct, 1);
-  const fatProgress = Math.min(progress.fatPct, 1);
-  const carbProgress = Math.min(progress.carbPct, 1);
-
-  const proteinAngle = proteinStart + (proteinEnd - proteinStart) * proteinProgress;
-  console.log('proteinAngle', proteinAngle);
-  const fatAngle = fatStart + (fatEnd - fatStart) * fatProgress;
-  const carbAngle = carbStart + (carbEnd - carbStart) * carbProgress;
-
-  // Colors from theme
-  const proteinColor = theme.palette.success;
-  const fatColor = theme.palette.secondary;
-  const carbColor = theme.palette.success;
-  const bgColor = theme.palette.border;
-
-  const proteinSweep = (proteinEnd - proteinStart) * Math.min(progress.proteinPct, 1);
-  const fatSweep = (fatEnd - fatStart) * Math.min(progress.fatPct, 1);
-  const carbSweep = (carbEnd - carbStart) * Math.min(progress.carbPct, 1);
-
+    // macros
+    { key: 'protein', r: rP, color: proteinColor, pct: clamp(progress.proteinPct, 0, 1), start: pStart, sweep: pSweep },
+    { key: 'fat', r: rF, color: fatColor, pct: clamp(progress.fatPct, 0, 1), start: fStart, sweep: fSweep },
+    { key: 'carb', r: rC, color: carbColor, pct: clamp(progress.carbPct, 0, 1), start: cStart, sweep: cSweep },
+  ];
 
   return (
     <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
       <svg width={size} height={size}>
-        {/* Background circles */}
-        <circle
-          cx={center}
-          cy={center}
-          r={innerRadius}
+        {/* TRACKS (норма) */}
+        {/* kcal track */}
+        <path
+          d={describeArc(cx, cy, rKcal, ARC_START, ARC_SWEEP)}
           fill="none"
-          stroke={bgColor}
-          strokeWidth={strokeWidth}
-          opacity={0.2}
+          stroke={trackColor}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          opacity={trackOpacity}
         />
-        <circle
-          cx={center}
-          cy={center}
-          r={innerRadius - strokeWidth - 4}
+        {/* macro tracks (по секторам) */}
+        <path
+          d={describeArc(cx, cy, rP, pStart, usableSector)}
           fill="none"
-          stroke={bgColor}
-          strokeWidth={strokeWidth}
-          opacity={0.2}
-        />
-        <circle
-          cx={center}
-          cy={center}
-          r={innerRadius - strokeWidth * 2 - 8}
-          fill="none"
-          stroke={bgColor}
-          strokeWidth={strokeWidth}
-          opacity={0.2}
+          stroke={trackColor}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          opacity={trackOpacity}
         />
         <path
-          d={describeArc(center, center, innerRadius, proteinStart, proteinSweep)}
+          d={describeArc(cx, cy, rF, fStart, usableSector)}
           fill="none"
-          stroke={proteinColor}
-          strokeWidth={strokeWidth}
+          stroke={trackColor}
+          strokeWidth={stroke}
           strokeLinecap="round"
+          opacity={trackOpacity}
         />
-
         <path
-          d={describeArc(center, center, innerRadius - strokeWidth - 2, fatStart, fatSweep)}
+          d={describeArc(cx, cy, rC, cStart, usableSector)}
           fill="none"
-          stroke={fatColor}
-          strokeWidth={strokeWidth}
+          stroke={trackColor}
+          strokeWidth={stroke}
           strokeLinecap="round"
+          opacity={trackOpacity}
         />
 
-        <path
-          d={describeArc(center, center, innerRadius - strokeWidth * 2 - 8, carbStart, carbSweep)}
-          fill="none"
-          stroke={carbColor}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-        />
-
+        {/* PROGRESS */}
+        {arcs.map((a) => (
+          <path
+            key={a.key}
+            d={describeArc(cx, cy, a.r, a.start, a.sweep)}
+            fill="none"
+            stroke={a.color}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+          />
+        ))}
       </svg>
 
       {/* Center content */}
       <div
         style={{
           position: 'absolute',
-          top: '50%',
+          top: '46%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
           textAlign: 'center',
+          width: '76%',
         }}
       >
-        <Text variant="h1" bold style={{ fontSize: '32px', marginBottom: theme.spacing.xs }}>
+        <Text variant="h1" bold style={{ fontSize: '38px', marginBottom: theme.spacing.xs }}>
           {Math.round(consumed.kcal)}
         </Text>
         <Text variant="small" muted>
-          {t('dashboard.of')} {targets.kcalTarget} ккал
+          {t('dashboard.of')} {Math.round(targets.kcalTarget)} {t('dashboard.kcal')}
         </Text>
       </div>
 
-      {/* Legend */}
+      {/* Macro legend */}
       <div
         style={{
           position: 'absolute',
@@ -182,31 +180,25 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
           right: 0,
           display: 'flex',
           justifyContent: 'space-around',
-          fontSize: '12px',
+          gap: theme.spacing.sm,
         }}
       >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: proteinColor, fontWeight: 'bold', marginBottom: theme.spacing.xs }}>
-            {t('dashboard.protein')}
-          </div>
+        <div style={{ textAlign: 'center', minWidth: 90 }}>
+          <div style={{ color: proteinColor, fontWeight: 700, marginBottom: theme.spacing.xs }}>{t('dashboard.protein')}</div>
           <Text variant="small" muted>
-            {consumed.protein.toFixed(0)}/{targets.proteinTargetG}г
+            {Math.round(consumed.protein)}/{Math.round(targets.proteinTargetG)}г
           </Text>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: fatColor, fontWeight: 'bold', marginBottom: theme.spacing.xs }}>
-            {t('dashboard.fat')}
-          </div>
+        <div style={{ textAlign: 'center', minWidth: 90 }}>
+          <div style={{ color: fatColor, fontWeight: 700, marginBottom: theme.spacing.xs }}>{t('dashboard.fat')}</div>
           <Text variant="small" muted>
-            {consumed.fat.toFixed(0)}/{targets.fatTargetG}г
+            {Math.round(consumed.fat)}/{Math.round(targets.fatTargetG)}г
           </Text>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: carbColor, fontWeight: 'bold', marginBottom: theme.spacing.xs }}>
-            {t('dashboard.carb')}
-          </div>
+        <div style={{ textAlign: 'center', minWidth: 90 }}>
+          <div style={{ color: carbColor, fontWeight: 700, marginBottom: theme.spacing.xs }}>{t('dashboard.carb')}</div>
           <Text variant="small" muted>
-            {consumed.carb.toFixed(0)}/{targets.carbTargetG}г
+            {Math.round(consumed.carb)}/{Math.round(targets.carbTargetG)}г
           </Text>
         </div>
       </div>
