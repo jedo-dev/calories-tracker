@@ -18,6 +18,9 @@ export class User {
   lastName?: string;
 
   @Prop()
+  createdAt: Date;
+
+  @Prop()
   displayName?: string;
 
   @Prop({ default: true })

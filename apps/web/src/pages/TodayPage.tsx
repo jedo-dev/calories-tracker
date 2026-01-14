@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import DayChanger from '../features/TodayComponents/DayChanger';
 import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
@@ -49,6 +50,7 @@ interface SocialStats {
     username?: string;
     displayName: string;
     avatarEmoji: string;
+    createdAt: Date;
   };
   stats: {
     xpTotal: number;
@@ -67,13 +69,11 @@ function formatDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function parseDate(dateStr: string): Date {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
+
 
 export function TodayPage() {
-  const { loading: loadingUser, error: errorUser } = useTelegramAuth();
+  const { user, loading: loadingUser, error: errorUser } = useTelegramAuth();
+  console.log(user)
   const navigate = useNavigate();
   const theme = useTheme();
   const [date, setDate] = useState(formatDate(new Date()));
@@ -116,15 +116,9 @@ export function TodayPage() {
     }
   };
 
-  const changeDate = (days: number) => {
-    const currentDate = parseDate(date);
-    currentDate.setDate(currentDate.getDate() + days);
-    setDate(formatDate(currentDate));
-  };
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDate(e.target.value);
-  };
+
+
 
   if (loadingUser) {
     return (
@@ -166,33 +160,8 @@ export function TodayPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg, flexWrap: 'wrap', gap: theme.spacing.md }}>
-        <Text variant="h1" style={{ flex: 1, minWidth: '200px' }}>
-          {t('today.dateTitle', { date })}
-        </Text>
-        <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center' }}>
-          <Button variant="secondary" size="sm" onClick={() => changeDate(-1)} style={{ width: 'auto', minWidth: '40px' }}>
-            ←
-          </Button>
-          <input
-            type="date"
-            value={date}
-            onChange={handleDateChange}
-            style={{
-              padding: theme.spacing.sm,
-              fontSize: theme.typography.small.fontSize,
-              backgroundColor: theme.palette.surface,
-              color: theme.palette.text,
-              border: `1px solid ${theme.palette.border}`,
-              borderRadius: theme.radius.sm,
-            }}
-          />
-          <Button variant="secondary" size="sm" onClick={() => changeDate(1)} style={{ width: 'auto', minWidth: '40px' }}>
-            →
-          </Button>
-        </div>
-      </div>
 
+      <DayChanger setDate={setDate} date={date} registrationDate={socialStats?.user.createdAt} />
       {socialStats && (
         <Card style={{ marginBottom: theme.spacing.lg, backgroundColor: theme.palette.primary + '10' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: theme.spacing.md }}>

@@ -16,3 +16,8 @@
   gap: 2px;
   flex-direction: column;
 }
+
+.footerWrapper{
+
+  margin-top:64px
+}

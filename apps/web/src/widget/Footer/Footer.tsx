@@ -23,7 +23,7 @@ export const Footer = () => {
   };
   const theme = useTheme();
   return (
-    <>
+    <div className={styles.footerWrapper}>
       <div className={styles.footer}>
         <div className={styles.footerItem}>
           <img src={leagueIcon} alt="league" width={30} height={30} onClick={() => navigate('/league')} />
@@ -84,6 +84,6 @@ export const Footer = () => {
         onClick={() => handleClick(!isOpen)}
         isOpen={isOpen}
       />
-    </>
+    </div>
   );
 };

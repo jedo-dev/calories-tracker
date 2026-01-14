@@ -28,7 +28,7 @@ function App() {
         <Route
           element={
             <div>
-              <Header />
+              
               <Outlet />
               <Footer />
             </div>

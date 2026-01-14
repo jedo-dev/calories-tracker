@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../theme/useTheme';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }
@@ -30,6 +30,10 @@ export function Button({
       backgroundColor: theme.palette.danger,
       color: theme.palette.dangerText,
     },
+    ghost: {
+      backgroundColor: 'unset',
+      color: theme.palette.secondaryText,
+    }
   };
 
   const sizeStyles = {

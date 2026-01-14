@@ -28,13 +28,14 @@ export class SocialController {
 
     const stats = await this.socialService.ensureUserStats(req.user.id);
     this.socialService.maybeResetWeek(stats);
-
+    
     return {
       user: {
         id: user._id.toString(),
         username: user.username,
         displayName: user.displayName || user.firstName || user.username || 'User',
         avatarEmoji: user.avatarEmoji || '🦊',
+        createdAt:user.createdAt,
       },
       stats: {
         xpTotal: stats.xpTotal,

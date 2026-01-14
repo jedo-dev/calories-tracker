@@ -60,14 +60,15 @@ const pallete = {
   gray_30: "#B4C2C6",
   gray_100: "#8C99A2",
   brown_50: "#B1B6AE",
-  green: "#53D46B"
+  green: "#53D46B",
+  white: "#ecf3f5"
 };
 
 export const lightTheme: Theme = {
   palette: {
     bg: pallete.blue,
     surface: pallete.gray_10,
-    text: pallete.gray_10,
+    text: pallete.white,
     textMuted: pallete.gray_30,
     primary: pallete.green,
     primaryText: pallete.blue,
