@@ -1,7 +1,7 @@
 import { useTheme } from "../../../theme/useTheme";
 import { Button } from "../../../ui/Button";
 
-const DayChanger = ({ date, setDate, registrationDate }: { registrationDate: Date, date: string, setDate: (date: string) => void }) => {
+const DayChanger = ({ date, setDate, registrationDate }: { registrationDate: Date | undefined, date: string, setDate: (date: string) => void }) => {
 
   const theme = useTheme()
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,11 +27,11 @@ const DayChanger = ({ date, setDate, registrationDate }: { registrationDate: Dat
   const isNeedTodisableBtn = (prev: Date, next: Date) => {
     return prev > next
   }
-  console.log(`registrationDate`, new Date(registrationDate)<new Date())
+  console.log(`registrationDate`, new Date(registrationDate || "") < new Date())
   return <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg, flexWrap: 'wrap', gap: theme.spacing.md }}>
 
     <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center', justifyContent: 'space-between', width: "100%" }}>
-      <Button variant="ghost" size='sm' disabled={isNeedTodisableBtn(new Date(registrationDate), new Date(date),)} onClick={() => changeDate(-1)} style={{ width: 'auto', minWidth: '40px' }}>
+      <Button variant="ghost" size='sm' disabled={isNeedTodisableBtn(new Date(registrationDate || ""), new Date(date),)} onClick={() => changeDate(-1)} style={{ width: 'auto', minWidth: '40px' }}>
         ←
       </Button>
 

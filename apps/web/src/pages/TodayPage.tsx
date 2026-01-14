@@ -193,7 +193,7 @@ export function TodayPage() {
       )}
 
       {dashboard && dashboard.targets && dashboard.progress && (
-        <Card style={{ marginBottom: theme.spacing.lg, padding: theme.spacing.xl }}>
+        <Card style={{ marginBottom: theme.spacing.lg, padding: theme.spacing.xl, backgroundColor: "unset", border: 'unset' }}>
           <DashboardRing
             consumed={dashboard.consumed}
             targets={dashboard.targets}
@@ -241,13 +241,13 @@ export function TodayPage() {
             <Card key={entry._id} style={{ marginBottom: theme.spacing.md }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: theme.spacing.md }}>
                 <div style={{ flex: 1 }}>
-                  <Text bold style={{ marginBottom: theme.spacing.xs }}>
+                  <Text muted  style={{ marginBottom: theme.spacing.xs,  }}>
                     {entry.productName}
                   </Text>
-                  <Text variant="small" style={{ marginBottom: theme.spacing.xs }}>
+                  <Text muted variant="small" style={{ marginBottom: theme.spacing.xs,}}>
                     {entry.grams}г · {t('totals.kcal', { value: entry.kcal.toFixed(1) })}
                   </Text>
-                  <Text variant="small" muted>
+                  <Text variant="small" muted >
                     {t('totals.macros', {
                       protein: entry.protein.toFixed(1),
                       fat: entry.fat.toFixed(1),
@@ -255,7 +255,7 @@ export function TodayPage() {
                     })}
                   </Text>
                   {(entry.time || entry.mealType !== 'other') && (
-                    <Text variant="small" muted style={{ marginTop: theme.spacing.xs }}>
+                    <Text variant="small" muted style={{ marginTop: theme.spacing.xs,color:theme.palette.primaryText }}>
                       {entry.time && `${entry.time} `}
                       {entry.mealType !== 'other' && t(`mealType.${entry.mealType}` as any)}
                     </Text>

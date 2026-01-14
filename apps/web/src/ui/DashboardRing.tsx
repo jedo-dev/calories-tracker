@@ -46,6 +46,7 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
   const theme = useTheme();
 
   const size = 320;
+  const asize = 220;
   const cx = size / 2;
   const cy = size / 2;
 
@@ -101,8 +102,8 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
   ];
 
   return (
-    <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
-      <svg width={size} height={size}>
+    <div style={{ position: 'relative', width: size, height: size / 2, margin: '0 auto' }}>
+      <svg width={size} height={size} style={{ transform: 'translate(0, -53px)' }}>
         {/* TRACKS (норма) */}
         {/* kcal track */}
         <path
@@ -156,18 +157,19 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
       <div
         style={{
           position: 'absolute',
-          top: '46%',
+          top: '55%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
           textAlign: 'center',
           width: '76%',
         }}
       >
-        <Text variant="h1" bold style={{ fontSize: '38px', marginBottom: theme.spacing.xs }}>
+        <Text variant="h1" bold style={{ fontSize: '26px', marginBottom: theme.spacing.xs,color:theme.palette.secondaryText }}>
           {Math.round(consumed.kcal)}
         </Text>
+        <br />
         <Text variant="small" muted>
-          {t('dashboard.of')} {Math.round(targets.kcalTarget)} {t('dashboard.kcal')}
+          {t('dashboard.of')}  {Math.round(targets.kcalTarget)} {t('dashboard.kcal')}
         </Text>
       </div>
 
@@ -175,7 +177,7 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
       <div
         style={{
           position: 'absolute',
-          bottom: theme.spacing.md,
+          bottom: '-4px',
           left: 0,
           right: 0,
           display: 'flex',
