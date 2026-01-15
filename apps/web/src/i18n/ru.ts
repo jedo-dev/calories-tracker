@@ -145,5 +145,18 @@ export const ru = {
     fat: "Жиры",
     carb: "Углеводы",
     loadFailed: "Не удалось загрузить данные"
+  },
+
+  // Command Center
+  commandCenter: {
+    addEntry: "Добавить запись",
+    selectDate: "Выбрать дату",
+    favoriteProducts: "Избранные продукты",
+    streak: "Серия",
+    xpWeek: "XP за неделю",
+    days: "{count} дней",
+    days_one: "{count} день",
+    days_few: "{count} дня",
+    days_many: "{count} дней"
   }
 };

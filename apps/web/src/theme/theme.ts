@@ -221,7 +221,6 @@ export function getThemeFromTelegram(telegramThemeParams?: any): Theme | null {
       text: textColor,
       textMuted: hintColor || baseTheme.palette.textMuted,
       primary: linkColor || buttonColor || baseTheme.palette.primary,
-      primaryText: buttonTextColor || baseTheme.palette.primaryText,
       surface: isDark ? "#2d2d2d" : "#f5f5f5"
     }
   };

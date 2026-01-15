@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../theme/useTheme';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'primaryReverse';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }
@@ -21,6 +21,10 @@ export function Button({
     primary: {
       backgroundColor: theme.palette.primary,
       color: theme.palette.primaryText,
+    },
+    primaryReverse: {
+      backgroundColor: theme.palette.primaryText,
+      color: theme.palette.primary,
     },
     secondary: {
       backgroundColor: theme.palette.secondary,
