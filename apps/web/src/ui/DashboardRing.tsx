@@ -103,7 +103,7 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
 
   return (
     <div style={{ position: 'relative', width: size, height: size / 2, margin: '0 auto' }}>
-      <svg width={size} height={size} style={{ transform: 'translate(0, -53px)' }}>
+      <svg width={size} height={160} style={{ transform: 'translate(0, -53px)' }}>
         {/* TRACKS (норма) */}
         {/* kcal track */}
         <path
@@ -164,7 +164,7 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
           width: '76%',
         }}
       >
-        <Text variant="h1" bold style={{ fontSize: '26px', marginBottom: theme.spacing.xs,color:theme.palette.secondaryText }}>
+        <Text variant="h1" bold style={{ fontSize: '26px', marginBottom: theme.spacing.xs, color: theme.palette.secondaryText }}>
           {Math.round(consumed.kcal)}
         </Text>
         <br />

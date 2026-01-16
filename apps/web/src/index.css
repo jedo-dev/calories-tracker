@@ -34,3 +34,15 @@ body {
 .onboarding-slider::-webkit-scrollbar {
   display: none; /* Chrome/Safari/Webkit */
 }
+
+@keyframes pulse-text {
+  from {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

@@ -8,6 +8,7 @@ import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { DashboardRing } from '../ui/DashboardRing';
+import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 
 interface Entry {
@@ -136,9 +137,7 @@ export function TodayPage() {
   }
   if (loading) {
     return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.loading')}</Text>
-      </div>
+      <Loader />
     );
   }
 
@@ -224,7 +223,7 @@ export function TodayPage() {
         </Card>
       )}
 
-      <div style={{ marginBottom: theme.spacing.lg }}>
+      <div style={{ marginBottom: theme.spacing.lg, zIndex: 10 }}>
         <Button onClick={() => navigate('/entry/new')}>{t('today.addEntry')}</Button>
       </div>
 
@@ -241,10 +240,10 @@ export function TodayPage() {
             <Card key={entry._id} style={{ marginBottom: theme.spacing.md }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: theme.spacing.md }}>
                 <div style={{ flex: 1 }}>
-                  <Text muted  style={{ marginBottom: theme.spacing.xs,  }}>
+                  <Text muted style={{ marginBottom: theme.spacing.xs, }}>
                     {entry.productName}
                   </Text>
-                  <Text muted variant="small" style={{ marginBottom: theme.spacing.xs,}}>
+                  <Text muted variant="small" style={{ marginBottom: theme.spacing.xs, }}>
                     {entry.grams}г · {t('totals.kcal', { value: entry.kcal.toFixed(1) })}
                   </Text>
                   <Text variant="small" muted >
@@ -255,7 +254,7 @@ export function TodayPage() {
                     })}
                   </Text>
                   {(entry.time || entry.mealType !== 'other') && (
-                    <Text variant="small" muted style={{ marginTop: theme.spacing.xs,color:theme.palette.primaryText }}>
+                    <Text variant="small" muted style={{ marginTop: theme.spacing.xs, color: theme.palette.primaryText }}>
                       {entry.time && `${entry.time} `}
                       {entry.mealType !== 'other' && t(`mealType.${entry.mealType}` as any)}
                     </Text>
@@ -274,7 +273,7 @@ export function TodayPage() {
                     variant="danger"
                     size="sm"
                     onClick={() => handleDelete(entry._id)}
-                    style={{ width: 'auto', minWidth: '80px' }}
+                    style={{ width: 'auto', minWidth: '80px', }}
                   >
                     {t('common.delete')}
                   </Button>
