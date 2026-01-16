@@ -27,7 +27,6 @@ const DayChanger = ({ date, setDate, registrationDate }: { registrationDate: Dat
   const isNeedTodisableBtn = (prev: Date, next: Date) => {
     return prev > next
   }
-  console.log(`registrationDate`, new Date(registrationDate || "") < new Date())
   return <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg, flexWrap: 'wrap', gap: theme.spacing.md }}>
 
     <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center', justifyContent: 'space-between', width: "100%" }}>

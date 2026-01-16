@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import DayChanger from '../features/TodayComponents/DayChanger';
+import FoodList from '../features/TodayComponents/FoodList';
 import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
@@ -11,7 +12,7 @@ import { DashboardRing } from '../ui/DashboardRing';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 
-interface Entry {
+export interface Entry {
   _id: string;
   productName: string;
   grams: number;
@@ -227,62 +228,10 @@ export function TodayPage() {
         <Button onClick={() => navigate('/entry/new')}>{t('today.addEntry')}</Button>
       </div>
 
-      <div>
-        <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>
-          {t('today.entries')}
-        </Text>
-        {entries.length === 0 ? (
-          <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-            <Text muted>{t('today.noEntries')}</Text>
-          </Card>
-        ) : (
-          entries.map((entry) => (
-            <Card key={entry._id} style={{ marginBottom: theme.spacing.md }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: theme.spacing.md }}>
-                <div style={{ flex: 1 }}>
-                  <Text muted style={{ marginBottom: theme.spacing.xs, }}>
-                    {entry.productName}
-                  </Text>
-                  <Text muted variant="small" style={{ marginBottom: theme.spacing.xs, }}>
-                    {entry.grams}г · {t('totals.kcal', { value: entry.kcal.toFixed(1) })}
-                  </Text>
-                  <Text variant="small" muted >
-                    {t('totals.macros', {
-                      protein: entry.protein.toFixed(1),
-                      fat: entry.fat.toFixed(1),
-                      carb: entry.carb.toFixed(1),
-                    })}
-                  </Text>
-                  {(entry.time || entry.mealType !== 'other') && (
-                    <Text variant="small" muted style={{ marginTop: theme.spacing.xs, color: theme.palette.primaryText }}>
-                      {entry.time && `${entry.time} `}
-                      {entry.mealType !== 'other' && t(`mealType.${entry.mealType}` as any)}
-                    </Text>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: theme.spacing.sm, flexDirection: 'column' }}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate(`/entry/${entry._id}`)}
-                    style={{ width: 'auto', minWidth: '80px' }}
-                  >
-                    {t('common.edit')}
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(entry._id)}
-                    style={{ width: 'auto', minWidth: '80px', }}
-                  >
-                    {t('common.delete')}
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+      <FoodList
+        entries={entries}
+        handleDelete={handleDelete}
+      />
     </div>
   );
 }

@@ -13,6 +13,13 @@ export interface Theme {
     success: string;
     successText: string;
     border: string;
+    blue: string;
+    gray_10: string;
+    gray_30: string;
+    gray_100: string;
+    brown_50: string;
+    green: string;
+    white: string;
   };
   spacing: {
     xs: string;
@@ -78,7 +85,8 @@ export const lightTheme: Theme = {
     dangerText: "#ffffff",
     success: pallete.green,
     successText: "#ffffff",
-    border: pallete.gray_100
+    border: pallete.gray_100,
+    ...pallete
   },
   spacing: {
     xs: "4px",
@@ -134,7 +142,8 @@ export const darkTheme: Theme = {
     dangerText: "#ffffff",
     success: "#28a745",
     successText: "#ffffff",
-    border: "#404040"
+    border: "#404040",
+    ...pallete
   },
   spacing: {
     xs: "4px",
@@ -221,7 +230,8 @@ export function getThemeFromTelegram(telegramThemeParams?: any): Theme | null {
       text: textColor,
       textMuted: hintColor || baseTheme.palette.textMuted,
       primary: linkColor || buttonColor || baseTheme.palette.primary,
-      surface: isDark ? "#2d2d2d" : "#f5f5f5"
+      surface: isDark ? "#2d2d2d" : "#f5f5f5",
+      ...pallete
     }
   };
 }

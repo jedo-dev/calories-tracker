@@ -53,7 +53,7 @@ export const ru = {
     protein: "Б: {value}г",
     fat: "Ж: {value}г",
     carb: "У: {value}г",
-    macros: "Б: {protein}г | Ж: {fat}г | У: {carb}г"
+    macros: "К: {kcal} | Б: {protein} | Ж: {fat} | У: {carb}"
   },
 
   // Entry
