@@ -7,6 +7,7 @@ import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
+import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 
 interface User {
@@ -112,9 +113,7 @@ export function FriendsPage() {
 
   if (loadingUser) {
     return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.loading')}</Text>
-      </div>
+      <Loader />
     );
   }
 
@@ -141,10 +140,10 @@ export function FriendsPage() {
           <Text variant="h2" style={{ fontSize: '24px' }}>
             {user.avatarEmoji}
           </Text>
-          <div style={{ flex: 1 }}>
-            <Text bold>{user.displayName}</Text>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Text bold style={{ color: theme.palette.blue }}>{user.displayName}</Text>
             {user.username && (
-              <Text variant="small" muted>@{user.username}</Text>
+              <Text variant="small" muted style={{ fontSize: '12px' }}>@{user.username}</Text>
             )}
           </div>
           {tab === 'search' && (

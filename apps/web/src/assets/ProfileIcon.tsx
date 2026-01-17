@@ -1,0 +1,3 @@
+const ProfileIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width={30} height={30} viewBox="0 0 24 24"><g fill="none" stroke="#fff" strokeDasharray={22} strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}><path d="M6 19v-1c0 -2.21 1.79 -4 4 -4h4c2.21 0 4 1.79 4 4v1"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="22;0"></animate></path><path strokeDashoffset={22} d="M12 11c-1.66 0 -3 -1.34 -3 -3c0 -1.66 1.34 -3 3 -3c1.66 0 3 1.34 3 3c0 1.66 -1.34 3 -3 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.3s" dur="0.3s" to={0}></animate></path></g></svg>
+)
+export default ProfileIcon

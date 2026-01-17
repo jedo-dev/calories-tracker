@@ -7,6 +7,7 @@ import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
+import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 
 interface ProfileData {
@@ -82,11 +83,9 @@ export function ProfilePage() {
     }));
   };
 
-  if (loadingUser) {
+  if (loadingUser || loading) {
     return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.loading')}</Text>
-      </div>
+      <Loader />
     );
   }
 
@@ -94,14 +93,6 @@ export function ProfilePage() {
     return (
       <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
         <Text>{t('common.error')}: {errorUser}</Text>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.loading')}</Text>
       </div>
     );
   }
@@ -120,111 +111,112 @@ export function ProfilePage() {
 
       <form onSubmit={handleSubmit}>
         <Card style={{ marginBottom: theme.spacing.md }}>
-          <Input
-            label={t('profile.weight')}
-            type="number"
-            value={formData.weightKg || ''}
-            onChange={(e) => handleChange('weightKg', e.target.value ? parseFloat(e.target.value) : undefined)}
-            min={30}
-            max={300}
-            step={0.1}
-          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '4px', rowGap: '4px' }}>
+            <Input
+              label={t('profile.weight')}
+              type="number"
+              value={formData.weightKg || ''}
+              onChange={(e) => handleChange('weightKg', e.target.value ? parseFloat(e.target.value) : undefined)}
+              min={30}
+              max={300}
+              step={0.1}
+            />
+
+            <Input
+              label={t('profile.height')}
+              type="number"
+              value={formData.heightCm || ''}
+              onChange={(e) => handleChange('heightCm', e.target.value ? parseFloat(e.target.value) : undefined)}
+              min={120}
+              max={230}
+              step={1}
+            />
+            <Input
+              label={t('profile.age')}
+              type="number"
+              value={formData.age || ''}
+              onChange={(e) => handleChange('age', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+              min={10}
+              max={100}
+              step={1}
+            />
+            <div> <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.blue }}>
+              {t('profile.gender')}
+            </label>
+              <select
+                value={formData.gender || ''}
+                onChange={(e) => handleChange('gender', e.target.value || undefined)}
+                style={{
+                  width: '100%',
+                  padding: '7.5px',
+                  fontSize: theme.typography.body.fontSize,
+                  backgroundColor: theme.palette.white,
+                  color: theme.palette.text,
+                  border: `1px solid ${theme.palette.border}`,
+                  borderRadius: theme.radius.sm,
+                }}
+              >
+                <option value="">—</option>
+                <option value="male">{t('profile.gender_male')}</option>
+                <option value="female">{t('profile.gender_female')}</option>
+              </select></div>
+          </div>
+          <div style={{ display: "flex", gap: '4px', marginTop: '4px', width: '100%', flexDirection: 'column' }}>
+            <div>    <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.blue }}>
+              {t('profile.activityLevel')}
+            </label>
+              <select
+                value={formData.activityLevel || ''}
+                onChange={(e) => handleChange('activityLevel', e.target.value || undefined)}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.sm,
+                  fontSize: theme.typography.body.fontSize,
+                  backgroundColor: theme.palette.white,
+                  color: theme.palette.text,
+                  border: `1px solid ${theme.palette.border}`,
+                  borderRadius: theme.radius.sm,
+                }}
+              >
+                <option value="">—</option>
+                <option value="low">{t('profile.activityLevel_low')}</option>
+                <option value="medium">{t('profile.activityLevel_medium')}</option>
+                <option value="high">{t('profile.activityLevel_high')}</option>
+                <option value="very_high">{t('profile.activityLevel_very_high')}</option>
+              </select></div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.blue }}>
+                {t('profile.goal')}
+              </label>
+              <select
+                value={formData.goal || 'maintain'}
+                onChange={(e) => handleChange('goal', e.target.value as 'lose' | 'maintain' | 'gain')}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.sm,
+                  fontSize: theme.typography.body.fontSize,
+                  backgroundColor: theme.palette.white,
+                  color: theme.palette.text,
+                  border: `1px solid ${theme.palette.border}`,
+                  borderRadius: theme.radius.sm,
+                }}
+              >
+                <option value="lose">{t('profile.goal_lose')}</option>
+                <option value="maintain">{t('profile.goal_maintain')}</option>
+                <option value="gain">{t('profile.goal_gain')}</option>
+              </select>
+            </div>
+          </div>
         </Card>
 
-        <Card style={{ marginBottom: theme.spacing.md }}>
-          <Input
-            label={t('profile.height')}
-            type="number"
-            value={formData.heightCm || ''}
-            onChange={(e) => handleChange('heightCm', e.target.value ? parseFloat(e.target.value) : undefined)}
-            min={120}
-            max={230}
-            step={1}
-          />
-        </Card>
 
-        <Card style={{ marginBottom: theme.spacing.md }}>
-          <Input
-            label={t('profile.age')}
-            type="number"
-            value={formData.age || ''}
-            onChange={(e) => handleChange('age', e.target.value ? parseInt(e.target.value, 10) : undefined)}
-            min={10}
-            max={100}
-            step={1}
-          />
-        </Card>
 
-        <Card style={{ marginBottom: theme.spacing.md }}>
-          <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
-            {t('profile.gender')}
-          </label>
-          <select
-            value={formData.gender || ''}
-            onChange={(e) => handleChange('gender', e.target.value || undefined)}
-            style={{
-              width: '100%',
-              padding: theme.spacing.sm,
-              fontSize: theme.typography.body.fontSize,
-              backgroundColor: theme.palette.bg,
-              color: theme.palette.text,
-              border: `1px solid ${theme.palette.border}`,
-              borderRadius: theme.radius.sm,
-            }}
-          >
-            <option value="">—</option>
-            <option value="male">{t('profile.gender_male')}</option>
-            <option value="female">{t('profile.gender_female')}</option>
-          </select>
-        </Card>
 
-        <Card style={{ marginBottom: theme.spacing.md }}>
-          <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
-            {t('profile.activityLevel')}
-          </label>
-          <select
-            value={formData.activityLevel || ''}
-            onChange={(e) => handleChange('activityLevel', e.target.value || undefined)}
-            style={{
-              width: '100%',
-              padding: theme.spacing.sm,
-              fontSize: theme.typography.body.fontSize,
-              backgroundColor: theme.palette.bg,
-              color: theme.palette.text,
-              border: `1px solid ${theme.palette.border}`,
-              borderRadius: theme.radius.sm,
-            }}
-          >
-            <option value="">—</option>
-            <option value="low">{t('profile.activityLevel_low')}</option>
-            <option value="medium">{t('profile.activityLevel_medium')}</option>
-            <option value="high">{t('profile.activityLevel_high')}</option>
-            <option value="very_high">{t('profile.activityLevel_very_high')}</option>
-          </select>
-        </Card>
 
-        <Card style={{ marginBottom: theme.spacing.lg }}>
-          <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
-            {t('profile.goal')}
-          </label>
-          <select
-            value={formData.goal || 'maintain'}
-            onChange={(e) => handleChange('goal', e.target.value as 'lose' | 'maintain' | 'gain')}
-            style={{
-              width: '100%',
-              padding: theme.spacing.sm,
-              fontSize: theme.typography.body.fontSize,
-              backgroundColor: theme.palette.bg,
-              color: theme.palette.text,
-              border: `1px solid ${theme.palette.border}`,
-              borderRadius: theme.radius.sm,
-            }}
-          >
-            <option value="lose">{t('profile.goal_lose')}</option>
-            <option value="maintain">{t('profile.goal_maintain')}</option>
-            <option value="gain">{t('profile.goal_gain')}</option>
-          </select>
-        </Card>
+
+
+
 
         <Button type="submit" disabled={saving}>
           {saving ? t('common.saving') : t('profile.save')}

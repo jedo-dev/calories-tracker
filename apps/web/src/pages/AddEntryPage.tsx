@@ -133,7 +133,7 @@ export function AddEntryPage() {
 
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
-    setProductSearch(product.name);
+    setProductSearch('');
     setProducts([]);
   };
 
@@ -263,22 +263,29 @@ export function AddEntryPage() {
                 style={{
                   padding: theme.spacing.sm,
                   cursor: 'pointer',
-                  borderBottom: `1px solid ${theme.palette.border}`,
+                  backgroundColor: selectedProduct?._id === product._id ? theme.palette.gray_100 : 'transparent',
+                  borderBottom: `1px solid ${selectedProduct?._id === product._id ? theme.palette.blue : theme.palette.border}`,
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.palette.surface;
+                  if (selectedProduct?._id !== product._id) {
+                    e.currentTarget.style.backgroundColor = theme.palette.white;
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
+                  if (selectedProduct?._id !== product._id) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
                 }}
               >
-                <Text bold>{product.name}</Text>
-                <Text variant="small" muted>
-                  {t('products.calories', { value: product.kcalPer100g })} · {t('totals.macros', {
-                    protein: product.proteinPer100g.toFixed(1),
-                    fat: product.fatPer100g.toFixed(1),
-                    carb: product.carbPer100g.toFixed(1),
-                  })}
+                <Text bold style={{ color: theme.palette.blue }}>{product.name}</Text>
+                <Text variant="small" muted>{t('totals.macros', {
+                  kcal: product.kcalPer100g.toFixed(1),
+                  protein: product.proteinPer100g.toFixed(1),
+                  fat: product.fatPer100g.toFixed(1),
+                  carb: product.carbPer100g.toFixed(1),
+                })}
                 </Text>
               </div>
             ))}

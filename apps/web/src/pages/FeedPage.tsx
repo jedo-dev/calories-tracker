@@ -4,6 +4,7 @@ import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Card } from '../ui/Card';
+import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 
 interface FeedItem {
@@ -61,11 +62,9 @@ export function FeedPage() {
     loadFeed();
   }, []);
 
-  if (loadingUser) {
+  if (loadingUser || loading) {
     return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.loading')}</Text>
-      </div>
+      <Loader />
     );
   }
 
@@ -80,11 +79,7 @@ export function FeedPage() {
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
 
-      {loading && (
-        <div style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <Text>{t('common.loading')}</Text>
-        </div>
-      )}
+
 
       {error && (
         <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.danger + '20' }}>
@@ -101,7 +96,7 @@ export function FeedPage() {
           ) : (
             feed.map((item) => (
               <Card key={item.id} style={{ marginBottom: theme.spacing.sm }}>
-                <Text>{formatFeedText(item)}</Text>
+                <Text style={{ color: theme.palette.blue }}>{formatFeedText(item)}</Text><br />
                 <Text variant="small" muted style={{ marginTop: theme.spacing.xs }}>
                   {item.date}
                 </Text>

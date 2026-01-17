@@ -114,13 +114,13 @@ export function ProductsPage() {
               onClick={() => handleProductClick(product._id)}
               style={{ marginBottom: theme.spacing.md }}
             >
-              <Text bold style={{ marginBottom: theme.spacing.sm }}>
+              <Text bold style={{ marginBottom: theme.spacing.sm, color: theme.palette.blue }}>
                 {product.name}
               </Text>
               <Text variant="small" muted>
-                <div>{t('products.calories', { value: product.kcalPer100g })}</div>
                 <div>
                   {t('totals.macros', {
+                    kcal: product.kcalPer100g.toFixed(1),
                     protein: product.proteinPer100g.toFixed(1),
                     fat: product.fatPer100g.toFixed(1),
                     carb: product.carbPer100g.toFixed(1),

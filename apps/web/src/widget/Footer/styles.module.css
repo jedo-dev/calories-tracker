@@ -15,9 +15,20 @@
   align-items: center;
   gap: 2px;
   flex-direction: column;
+  cursor: pointer;
+  color: "#8c99a2";
+  &:hover {
+    svg {
+      scale: 1.05;
+    }
+  }
+  &:active {
+    svg {
+      scale: 0.95;
+    }
+  }
 }
 
-.footerWrapper{
-
-  margin-top:64px
+.footerWrapper {
+  margin-top: 64px;
 }

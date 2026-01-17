@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 
 interface LeaderboardItem {
@@ -53,11 +54,9 @@ export function LeaguePage() {
     loadLeaderboard();
   }, [mode]);
 
-  if (loadingUser) {
+  if (loadingUser || loading) {
     return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.loading')}</Text>
-      </div>
+      <Loader />
     );
   }
 
@@ -68,7 +67,6 @@ export function LeaguePage() {
       </div>
     );
   }
-
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
 
@@ -90,11 +88,7 @@ export function LeaguePage() {
         </Button>
       </div>
 
-      {loading && (
-        <div style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <Text>{t('common.loading')}</Text>
-        </div>
-      )}
+
 
       {error && (
         <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.danger + '20' }}>
@@ -123,19 +117,19 @@ export function LeaguePage() {
             data.items.map((item) => (
               <Card key={item.user.id} style={{ marginBottom: theme.spacing.sm }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
-                  <Text variant="h2" style={{ minWidth: '40px' }}>
+                  <Text variant="h2" style={{ minWidth: '40px', color: theme.palette.brown_50 }}>
                     #{item.rank}
                   </Text>
                   <Text variant="h2" style={{ fontSize: '24px' }}>
                     {item.user.avatarEmoji}
                   </Text>
-                  <div style={{ flex: 1 }}>
-                    <Text bold>{item.user.displayName}</Text>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <Text style={{ color: theme.palette.blue }} bold>{item.user.displayName}</Text>
                     {item.user.username && (
-                      <Text variant="small" muted>@{item.user.username}</Text>
+                      <Text variant="small" style={{ fontSize: '12px' }} muted>@{item.user.username}</Text>
                     )}
                   </div>
-                  <Text bold>{item.xpWeek} XP</Text>
+                  <Text style={{ color: theme.palette.blue }} bold>{item.xpWeek} XP</Text>
                 </div>
               </Card>
             ))

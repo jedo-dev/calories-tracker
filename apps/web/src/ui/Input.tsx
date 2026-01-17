@@ -15,8 +15,8 @@ export function Input({ label, style, ...props }: InputProps) {
         width: '100%',
         padding: theme.spacing.sm,
         fontSize: theme.typography.body.fontSize,
-        backgroundColor: theme.palette.bg,
-        color: theme.palette.text,
+        backgroundColor: theme.palette.white,
+        color: theme.palette.blue,
         border: `1px solid ${theme.palette.border}`,
         borderRadius: theme.radius.sm,
         boxSizing: 'border-box',
@@ -33,7 +33,7 @@ export function Input({ label, style, ...props }: InputProps) {
             display: 'block',
             marginBottom: theme.spacing.xs,
             fontWeight: '600',
-            color: theme.palette.text,
+            color: theme.palette.blue,
             fontSize: theme.typography.body.fontSize,
           }}
         >

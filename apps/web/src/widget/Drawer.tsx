@@ -172,7 +172,7 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
         {/* User Status Block */}
         {socialStats && (
           <div
-            onClick={() => handleNavigate('/profile')}
+            onClick={() => handleNavigate('/today')}
             style={{
               padding: theme.spacing.md,
               backgroundColor: theme.palette.bg,
@@ -228,29 +228,30 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
             style={{
               gridColumn: '1 / -1',
               minHeight: '48px',
-              color: theme.palette.text,
+              color: theme.palette.white,
             }}
           >
             {t('commandCenter.addEntry')}
           </Button>
           <Button
-            variant="primaryReverse"
+            variant="primary"
+
             onClick={handleSelectDate}
-            style={{ minHeight: '48px' }}
+            style={{ minHeight: '48px', backgroundColor: theme.palette.white,color: theme.palette.blue }}
           >
-            📅 {t('commandCenter.selectDate')}
+            {t('commandCenter.selectDate')}
           </Button>
           <Button
             variant="secondary"
             onClick={() => handleNavigate('/products?tab=favorites')}
-            style={{ minHeight: '48px' }}
+            style={{ minHeight: '48px', backgroundColor: theme.palette.gray_100,color: theme.palette.white }}
           >
-            ⭐ {t('commandCenter.favoriteProducts')}
+            {t('commandCenter.favoriteProducts')}
           </Button>
         </div>
 
         {/* Navigation */}
-        <div
+        {/* <div
           style={{
             marginBottom: theme.spacing.lg,
           }}
@@ -291,7 +292,7 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
               <span>{item.title}</span>
             </button>
           ))}
-        </div>
+        </div> */}
 
         {/* Footer */}
         <div
