@@ -110,7 +110,7 @@ export function EntryPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 64px)',
         backgroundColor: theme.palette.bg,
         display: 'flex',
         flexDirection: 'column',

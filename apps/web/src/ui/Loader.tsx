@@ -6,7 +6,7 @@ const Loader = () => {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 64px)',
         backgroundColor: theme.palette.bg,
         display: 'flex',
         flexDirection: 'column',
@@ -24,7 +24,7 @@ const Loader = () => {
         animationName: "pulse-text",
         animationDuration: "2s",
         animationIterationCount: "infinite"
-      }}>{t('common.loading')}...</div>
+      }}>{t('common.loading')}</div>
       <style>{`
         @keyframes rotate-loader {
           from {

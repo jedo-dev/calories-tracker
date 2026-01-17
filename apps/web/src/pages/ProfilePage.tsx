@@ -107,7 +107,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         {t('profile.title')}
       </Text>
