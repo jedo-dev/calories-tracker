@@ -6,20 +6,16 @@ import { Drawer } from "../Drawer";
 import styles from "./styles.module.css";
 
 //@ts-ignore
-//@ts-ignore
-//@ts-ignore
-//@ts-ignore
 import BellIcon from "../../assets/BellIcon";
 import ProfileIcon from "../../assets/ProfileIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
 import StarIcon from "../../assets/StarIcon";
 import { t } from "../../i18n";
+
 function isActive(pathname: string, rule: string): boolean {
-  if (pathname === rule) {
-    return true;
-  }
-  return false;
+  return pathname === rule;
 }
+
 export const Footer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -29,89 +25,63 @@ export const Footer = () => {
   };
 
   const theme = useTheme();
+
+  const items = [
+    { icon: <StarIcon />, label: t("league.title"), path: "/league" },
+    { icon: <BellIcon />, label: t("feed.title"), path: "/feed" },
+    { icon: <ProfileIcon />, label: t("friends.title"), path: "/friends" },
+    { icon: <SettingsIcon />, label: t("profile.title"), path: "/profile" },
+  ];
+
+  const leftItems = items.slice(0, 2);
+  const rightItems = items.slice(2, 4);
+
   return (
     <div className={styles.footerWrapper}>
       <div className={styles.footer}>
-        <div
-          className={styles.footerItem}
-          onClick={() => {
-            navigate("/league");
-          }}
-        >
-          <StarIcon />
-
-          <span
-            style={{
-              color: `${theme.palette.gray_100}`,
-              textDecoration: "none",
-              opacity: isActive(location.pathname, "/league") ? 1 : 0.5
-            }}
+        {leftItems.map((item) => (
+          <div
+            key={item.path}
+            className={styles.footerItem}
+            onClick={() => navigate(item.path)}
           >
-            {t("league.title")}
-          </span>
-        </div>
-
-        <div
-          className={styles.footerItem}
-          onClick={() => {
-            navigate("/feed");
-          }}
-        >
-          <BellIcon />
-          <span
-            style={{
-              color: `${theme.palette.gray_100}`,
-              textDecoration: "none",
-              opacity: isActive(location.pathname, "/feed") ? 1 : 0.5
-            }}
-          >
-            {t("feed.title")}
-          </span>
-        </div>
-
+            {item.icon}
+            <span
+              style={{
+                color: theme.palette.gray_100,
+                textDecoration: "none",
+                opacity: isActive(location.pathname, item.path) ? 1 : 0.5,
+              }}
+            >
+              {item.label}
+            </span>
+          </div>
+        ))}
 
         <div className={styles.footerItem}>
           <BurgerMenu onClick={() => handleClick(!isOpen)} isOpen={isOpen} />
         </div>
 
-        <div
-          className={styles.footerItem}
-          onClick={() => {
-            navigate("/friends");
-          }}
-        >
-          <ProfileIcon />
-          <span
-            style={{
-              color: `${theme.palette.gray_100}`,
-              textDecoration: "none",
-              opacity: isActive(location.pathname, "/friends") ? 1 : 0.5
-            }}
+        {rightItems.map((item) => (
+          <div
+            key={item.path}
+            className={styles.footerItem}
+            onClick={() => navigate(item.path)}
           >
-            {t("friends.title")}
-          </span>
-        </div>
-
-        <div
-          className={styles.footerItem}
-          onClick={() => {
-            navigate("/profile");
-          }}
-        >
-          <SettingsIcon />
-          <span
-            style={{
-              color: `${theme.palette.gray_100}`,
-              textDecoration: "none",
-              opacity: isActive(location.pathname, "/profile") ? 1 : 0.5
-            }}
-          >
-            {t("profile.title")}
-          </span>
-        </div>
+            {item.icon}
+            <span
+              style={{
+                color: theme.palette.gray_100,
+                textDecoration: "none",
+                opacity: isActive(location.pathname, item.path) ? 1 : 0.5,
+              }}
+            >
+              {item.label}
+            </span>
+          </div>
+        ))}
       </div>
       <Drawer
-        isActive={location.pathname}
         onClick={() => handleClick(!isOpen)}
         isOpen={isOpen}
       />

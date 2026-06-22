@@ -13,6 +13,7 @@ import { SocialModule } from './social/social.module';
 import { FriendsModule } from './friends/friends.module';
 import { ProfileModule } from './profile/profile.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { WorkoutModule } from './workouts/workout.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     FriendsModule,
     ProfileModule,
     DashboardModule,
+    WorkoutModule,
   ],
   providers: [
     {

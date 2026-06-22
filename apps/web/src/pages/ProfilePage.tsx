@@ -130,7 +130,7 @@ export function ProfilePage() {
               max={100}
               step={1}
             />
-            <div> <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.blue }}>
+            <div> <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
               {t('profile.gender')}
             </label>
               <select
@@ -152,7 +152,7 @@ export function ProfilePage() {
               </select></div>
           </div>
           <div style={{ display: "flex", gap: '4px', marginTop: '4px', width: '100%', flexDirection: 'column' }}>
-            <div>    <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.blue }}>
+            <div>    <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
               {t('profile.activityLevel')}
             </label>
               <select
@@ -176,7 +176,7 @@ export function ProfilePage() {
               </select></div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.blue }}>
+              <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
                 {t('profile.goal')}
               </label>
               <select

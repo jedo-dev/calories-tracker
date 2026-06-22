@@ -63,7 +63,7 @@ export interface Theme {
 
 const pallete = {
   blue: "#0D2231",
-  gray_10: "E3EDF5",
+  gray_10: "#E3EDF5",
   gray_30: "#B4C2C6",
   gray_100: "#8C99A2",
   brown_50: "#B1B6AE",
@@ -74,18 +74,18 @@ const pallete = {
 export const lightTheme: Theme = {
   palette: {
     bg: pallete.blue,
-    surface: pallete.gray_10,
-    text: pallete.white,
-    textMuted: pallete.gray_30,
+    surface: "#1A3A4A",
+    text: "#ffffff",
+    textMuted: "#94A3B8",
     primary: pallete.green,
-    primaryText: pallete.blue,
-    secondary: pallete.brown_50,
-    secondaryText: "#b3deff",
-    danger: pallete.brown_50,
+    primaryText: "#0D2231",
+    secondary: "#2A4A5A",
+    secondaryText: "#ffffff",
+    danger: "#E53E3E",
     dangerText: "#ffffff",
     success: pallete.green,
-    successText: "#ffffff",
-    border: pallete.gray_100,
+    successText: "#0D2231",
+    border: "#2A4A5A",
     ...pallete
   },
   spacing: {
@@ -216,9 +216,6 @@ export function getThemeFromTelegram(telegramThemeParams?: any): Theme | null {
   const buttonColor = telegramThemeParams.button_color
     ? `#${telegramThemeParams.button_color.toString(16).padStart(6, "0")}`
     : null;
-  const buttonTextColor = telegramThemeParams.button_text_color
-    ? `#${telegramThemeParams.button_text_color.toString(16).padStart(6, "0")}`
-    : null;
 
   if (!bgColor || !textColor) return null;
 
@@ -230,7 +227,7 @@ export function getThemeFromTelegram(telegramThemeParams?: any): Theme | null {
       text: textColor,
       textMuted: hintColor || baseTheme.palette.textMuted,
       primary: linkColor || buttonColor || baseTheme.palette.primary,
-      surface: isDark ? "#2d2d2d" : "#f5f5f5",
+      surface: isDark ? "#2d2d2d" : "#1A3A4A",
       ...pallete
     }
   };

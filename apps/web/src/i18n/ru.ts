@@ -142,6 +142,48 @@ export const ru = {
     title: "Лента",
     noEvents: "Нет событий"
   },
+  // Workout
+  workout: {
+    title: "Тренировки",
+    categories: "Категории",
+    exercises: "Упражнения",
+    startWorkout: "Начать тренировку",
+    continueWorkout: "Продолжить",
+    finishWorkout: "Завершить тренировку",
+    cancelWorkout: "Отменить",
+    activeWorkout: "Активная тренировка",
+    history: "История",
+    noHistory: "Нет записей тренировок",
+    addExercise: "Добавить упражнение",
+    sets: "Подходы",
+    reps: "Повторения",
+    weight: "Вес (кг)",
+    duration: "Время (сек)",
+    calories: "Калории",
+    totalCalories: "Сожжено ккал",
+    totalDuration: "Длительность",
+    exerciseCount: "Упражнений",
+    noExercises: "Упражнения не добавлены",
+    confirmFinish: "Завершить тренировку?",
+    confirmCancel: "Отменить тренировку?",
+    workoutSaved: "Тренировка сохранена",
+    strength: "Сила",
+    cardio: "Кардио",
+    flexibility: "Гибкость",
+    beginner: "Начинающий",
+    intermediate: "Средний",
+    advanced: "Продвинутый",
+    noEquipment: "Без оборудования",
+    muscleGroups: "Группы мышц",
+    difficulty: "Сложность",
+    equipment: "Оборудование",
+    burned: "Сожжено",
+    min: "мин",
+    sec: "сек",
+    selectCategory: "Выберите категорию",
+    todayWorkouts: "Тренировки сегодня",
+    noWorkoutsToday: "Нет тренировок сегодня",
+  },
   profile: {
     title: "Профиль",
     weight: "Вес (кг)",
@@ -165,11 +207,6 @@ export const ru = {
     loadFailed: "Не удалось загрузить профиль",
     fillProfileBanner: "Заполните профиль для расчета нормы",
     goToProfile: "Перейти к профилю"
-  },
-
-  // Stats
-  stats: {
-    loadFailed: "Не удалось загрузить статистику"
   },
 
   // Dashboard

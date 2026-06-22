@@ -131,7 +131,7 @@ export function FriendsPage() {
             {user.avatarEmoji}
           </Text>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <Text bold style={{ color: theme.palette.blue }}>{user.displayName}</Text>
+            <Text bold style={{ color: theme.palette.text }}>{user.displayName}</Text>
             {user.username && (
               <Text variant="small" muted style={{ fontSize: '12px' }}>@{user.username}</Text>
             )}

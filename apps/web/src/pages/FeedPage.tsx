@@ -86,7 +86,7 @@ export function FeedPage() {
           ) : (
             feed.map((item) => (
               <Card key={item.id} style={{ marginBottom: theme.spacing.sm }}>
-                <Text style={{ color: theme.palette.blue }}>{formatFeedText(item)}</Text><br />
+                <Text style={{ color: theme.palette.text }}>{formatFeedText(item)}</Text><br />
                 <Text variant="small" muted style={{ marginTop: theme.spacing.xs }}>
                   {item.date}
                 </Text>

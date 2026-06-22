@@ -244,7 +244,7 @@ export function AddEntryPage() {
                   padding: theme.spacing.sm,
                   cursor: 'pointer',
                   backgroundColor: selectedProduct?._id === product._id ? theme.palette.gray_100 : 'transparent',
-                  borderBottom: `1px solid ${selectedProduct?._id === product._id ? theme.palette.blue : theme.palette.border}`,
+                  borderBottom: `1px solid ${selectedProduct?._id === product._id ? theme.palette.text : theme.palette.border}`,
                   display: 'flex',
                   flexDirection: 'column',
                 }}
@@ -259,7 +259,7 @@ export function AddEntryPage() {
                   }
                 }}
               >
-                <Text bold style={{ color: theme.palette.blue }}>{product.name}</Text>
+                <Text bold style={{ color: theme.palette.text }}>{product.name}</Text>
                 <Text variant="small" muted>{t('totals.macros', {
                   kcal: product.kcalPer100g.toFixed(1),
                   protein: product.proteinPer100g.toFixed(1),

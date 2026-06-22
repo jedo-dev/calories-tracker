@@ -5,14 +5,7 @@ import logo from '../assets/logo.png';
 import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 //@ts-ignore
-import leagueIcon from '../assets/trophy.png';
-//@ts-ignore
-import friendsIcon from '../assets/friend.png';
-//@ts-ignore
-import feedIcon from '../assets/feed.png';
-//@ts-ignore
 import { apiClient } from '../api/client';
-import productsIcon from '../assets/products.png';
 import { useTheme } from '../theme/useTheme';
 import { BottomSheet } from '../ui/BottomSheet';
 import { Button } from '../ui/Button';
@@ -33,7 +26,7 @@ interface SocialStats {
   };
 }
 
-export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (boolean: boolean) => void, isOpen: boolean, isActive: string }) {
+export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean) => void, isOpen: boolean }) {
   const theme = useTheme();
   const { logout } = useAuth();
   const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
@@ -41,7 +34,6 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
 
   useEffect(() => {
     if (isOpen) {
-      // Загрузка данных пользователя
       loadSocialStats();
     }
   }, [isOpen]);
@@ -83,14 +75,6 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
     dateInput.click();
   };
 
-  const navigationItems = [
-    { title: t('league.title'), icon: leagueIcon, link: '/league', emoji: '🏆' },
-    { title: t('friends.title'), icon: friendsIcon, link: '/friends', emoji: '👥' },
-    { title: t('feed.title'), icon: feedIcon, link: '/feed', emoji: '📰' },
-    { title: t('products.title'), icon: productsIcon, link: '/products', emoji: '🛒' },
-    { title: t('profile.title'), icon: null, link: '/profile', emoji: '👤' },
-  ];
-
   return (
     <BottomSheet
       isOpen={isOpen}
@@ -129,7 +113,7 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
               <img src={logo} alt="logo" width={40} height={40} style={{ borderRadius: theme.radius.md }} />
               <h1
                 style={{
-                  color: theme.palette.primaryText,
+                  color: theme.palette.text,
                   fontSize: theme.typography.h2.fontSize,
                   fontWeight: theme.typography.h2.fontWeight,
                   margin: 0,
@@ -143,7 +127,7 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
               style={{
                 background: 'none',
                 border: 'none',
-                color: theme.palette.primaryText,
+                color: theme.palette.text,
                 fontSize: '24px',
                 cursor: 'pointer',
                 padding: theme.spacing.sm,
@@ -177,7 +161,7 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
             onClick={() => handleNavigate('/today')}
             style={{
               padding: theme.spacing.md,
-              backgroundColor: theme.palette.bg,
+              backgroundColor: theme.palette.surface,
               borderRadius: theme.radius.md,
               marginBottom: theme.spacing.lg,
               cursor: 'pointer',
@@ -191,12 +175,13 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
                 alignItems: 'center',
               }}
             >
-              <span style={{ fontSize: '20px' }}>🔥</span>
+              <span style={{ fontSize: '24px' }}>🔥</span>
               <div style={{ flex: 1 }}>
                 <div
                   style={{
-                    color: theme.palette.primaryText,
+                    color: theme.palette.text,
                     fontSize: theme.typography.body.fontSize,
+                    fontWeight: '600',
                     marginBottom: theme.spacing.xs,
                   }}
                 >
@@ -204,7 +189,7 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
                 </div>
                 <div
                   style={{
-                    color: theme.palette.primaryText,
+                    color: theme.palette.textMuted,
                     fontSize: theme.typography.small.fontSize,
                   }}
                 >
@@ -220,88 +205,42 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: theme.spacing.md,
-            marginBottom: theme.spacing.lg,
+            gap: theme.spacing.sm,
+            marginBottom: theme.spacing.md,
           }}
         >
           <Button
-            variant="primaryReverse"
+            variant="primary"
             onClick={handleAddEntry}
             style={{
               gridColumn: '1 / -1',
               minHeight: '48px',
-              color: theme.palette.white,
             }}
           >
-            {t('commandCenter.addEntry')}
-          </Button>
-          <Button
-            variant="primary"
-
-            onClick={handleSelectDate}
-            style={{ minHeight: '48px', backgroundColor: theme.palette.white,color: theme.palette.blue }}
-          >
-            {t('commandCenter.selectDate')}
+            + {t('commandCenter.addEntry')}
           </Button>
           <Button
             variant="secondary"
-            onClick={() => handleNavigate('/products?tab=favorites')}
-            style={{ minHeight: '48px', backgroundColor: theme.palette.gray_100,color: theme.palette.white }}
+            onClick={handleSelectDate}
+            style={{ minHeight: '44px' }}
           >
-            {t('commandCenter.favoriteProducts')}
+            📅 {t('commandCenter.selectDate')}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => handleNavigate('/workouts')}
+            style={{ minHeight: '44px' }}
+          >
+            🏋️ {t('workout.title')}
           </Button>
         </div>
 
-        {/* Navigation */}
-        {/* <div
-          style={{
-            marginBottom: theme.spacing.lg,
-          }}
-        >
-          {navigationItems.map((item) => (
-            <button
-              key={item.link}
-              onClick={() => handleNavigate(item.link)}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: theme.spacing.md,
-                padding: theme.spacing.md,
-                background: 'none',
-                border: 'none',
-                color: isActive === item.link ? theme.palette.secondaryText : theme.palette.text,
-                fontSize: theme.typography.body.fontSize,
-                cursor: 'pointer',
-                textAlign: 'left',
-                borderRadius: theme.radius.sm,
-                marginBottom: theme.spacing.xs,
-              }}
-              onMouseEnter={(e) => {
-                if (isActive !== item.link) {
-                  e.currentTarget.style.backgroundColor = theme.palette.bg;
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              {item.icon ? (
-                <img src={item.icon} alt={item.title} width={20} height={20} />
-              ) : (
-                <span style={{ fontSize: '20px' }}>{item.emoji}</span>
-              )}
-              <span>{item.title}</span>
-            </button>
-          ))}
-        </div> */}
-
-        {/* Footer */}
+        {/* Logout */}
         <div
           style={{
             paddingTop: theme.spacing.md,
             borderTop: `1px solid ${theme.palette.border}`,
-            textAlign: 'center',
+            marginTop: theme.spacing.md,
           }}
         >
           <button
@@ -319,19 +258,20 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
               cursor: 'pointer',
               fontSize: theme.typography.body.fontSize,
               width: '100%',
-              marginBottom: theme.spacing.md,
             }}
           >
             {t('auth.logout')}
           </button>
-          <span
+          <div
             style={{
               color: theme.palette.textMuted,
               fontSize: theme.typography.small.fontSize,
+              textAlign: 'center',
+              marginTop: theme.spacing.sm,
             }}
           >
             version: {__APP_VERSION__}
-          </span>
+          </div>
         </div>
       </div>
     </BottomSheet>

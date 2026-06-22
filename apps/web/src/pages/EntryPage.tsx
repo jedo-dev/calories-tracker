@@ -6,28 +6,25 @@ import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 
-interface OnboardingSlide {
-  title: string;
-  description: string;
-}
-
-const slides: OnboardingSlide[] = [
+const slides = [
   {
-    title: 'Введите свои параметры и цели',
-    description: 'Укажите вес, рост и желаемый результат — мы поможем отслеживать прогресс.',
+    emoji: '🎯',
+    title: 'Ставь цели',
+    description: 'Укажи вес, рост и желаемый результат — мы рассчитаем норму калорий.',
   },
   {
-    title: 'Вносите ежедневно свои потребленные калории',
-    description: 'Добавляйте продукты и граммовку — калории и БЖУ посчитаются автоматически.',
+    emoji: '📊',
+    title: 'Считай калории',
+    description: 'Добавляй продукты — калории и БЖУ посчитаются автоматически.',
   },
   {
-    title: 'Контролируйте показатели интерактивно',
-    description: 'Смотрите прогресс на графиках и соревнуйтесь с друзьями.',
+    emoji: '🏋️',
+    title: 'Тренируйся',
+    description: 'Выбирай программы тренировок — мы посчитаем сожжённые калории.',
   },
 ];
 
 export function EntryPage() {
-
   const navigate = useNavigate();
   const theme = useTheme();
   const { user, loading } = useAuth();
@@ -40,7 +37,6 @@ export function EntryPage() {
     }
   }, [user, loading, navigate]);
 
-  // Синхронизация индекса с реальным скроллом
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -53,84 +49,37 @@ export function EntryPage() {
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-    };
+    return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollToSlide = (index: number) => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
-    const slideWidth = container.clientWidth;
-    container.scrollTo({
-      left: index * slideWidth,
-      behavior: 'smooth',
-    });
+    container.scrollTo({ left: index * container.clientWidth, behavior: 'smooth' });
   };
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
       scrollToSlide(currentIndex + 1);
     } else {
-      navigate('/today');
+      navigate('/login');
     }
   };
 
-  const handleSkip = () => {
-    navigate('/today');
-  };
-
-  const handleDotClick = (index: number) => {
-    scrollToSlide(index);
-  };
-
-
-  if (loading) {
-    return <Loader />
-  }
+  if (loading) return <Loader />;
 
   return (
     <div
       style={{
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: '100vh',
         backgroundColor: theme.palette.bg,
         display: 'flex',
         flexDirection: 'column',
-        position: 'relative',
       }}
     >
-      {/* Кнопка "Пропустить" */}
-      <button
-        onClick={handleSkip}
-        style={{
-          position: 'absolute',
-          top: theme.spacing.md,
-          right: theme.spacing.md,
-          zIndex: 10,
-          padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-          backgroundColor: 'transparent',
-          border: 'none',
-          color: theme.palette.textMuted,
-          fontSize: theme.typography.small.fontSize,
-          cursor: 'pointer',
-          fontWeight: '500',
-          transition: 'color 0.2s',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = theme.palette.text;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = theme.palette.textMuted;
-        }}
-      >
-        Пропустить
-      </button>
-
-      {/* Слайдер */}
+      {/* Slides */}
       <div
         ref={scrollContainerRef}
-        className="onboarding-slider"
         style={{
           flex: 1,
           display: 'flex',
@@ -139,6 +88,7 @@ export function EntryPage() {
           scrollSnapType: 'x mandatory',
           scrollBehavior: 'smooth',
           WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
         }}
       >
         {slides.map((slide, index) => (
@@ -146,71 +96,50 @@ export function EntryPage() {
             key={index}
             style={{
               minWidth: '100%',
-              width: '100%',
               flexShrink: 0,
               scrollSnapAlign: 'start',
-              scrollSnapStop: 'always',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               padding: theme.spacing.xl,
-              paddingTop: '48px',
-              boxSizing: 'border-box',
+              gap: theme.spacing.lg,
             }}
           >
-            <div
+            <div style={{ fontSize: '72px', marginBottom: theme.spacing.md }}>
+              {slide.emoji}
+            </div>
+            <Text variant="h1" style={{ textAlign: 'center', color: theme.palette.text }}>
+              {slide.title}
+            </Text>
+            <Text
+              variant="body"
               style={{
-                maxWidth: '100%',
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
                 textAlign: 'center',
-                gap: theme.spacing.lg,
+                color: theme.palette.textMuted,
+                maxWidth: '320px',
+                lineHeight: '1.6',
               }}
             >
-              <Text
-                variant="h1"
-                style={{
-                  marginBottom: theme.spacing.sm,
-                  padding: `0 ${theme.spacing.md}`,
-                }}
-              >
-                {slide.title}
-              </Text>
-              <Text
-                variant="body"
-                muted
-                style={{
-                  maxWidth: '400px',
-                  padding: `0 ${theme.spacing.md}`,
-                  lineHeight: '1.6',
-                }}
-              >
-                {slide.description}
-              </Text>
-            </div>
+              {slide.description}
+            </Text>
           </div>
         ))}
       </div>
 
-      {/* Pagination dots */}
+      {/* Dots */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'center',
-          alignItems: 'center',
           gap: theme.spacing.sm,
           padding: theme.spacing.md,
-          paddingBottom: theme.spacing.lg,
         }}
       >
         {slides.map((_, index) => (
           <button
             key={index}
-            onClick={() => handleDotClick(index)}
-            aria-label={`Перейти на экран ${index + 1}`}
+            onClick={() => scrollToSlide(index)}
             style={{
               width: currentIndex === index ? '24px' : '8px',
               height: '8px',
@@ -218,23 +147,20 @@ export function EntryPage() {
               backgroundColor: currentIndex === index ? theme.palette.primary : theme.palette.border,
               border: 'none',
               cursor: 'pointer',
-              transition: 'all 0.3s ease',
+              transition: 'all 0.3s',
               padding: 0,
             }}
           />
         ))}
       </div>
 
-      {/* Кнопка "Далее" / "Начать" */}
-      <div
-        style={{
-          padding: theme.spacing.lg,
-          paddingTop: 0,
-          paddingBottom: theme.spacing.xl,
-        }}
-      >
+      {/* Actions */}
+      <div style={{ padding: theme.spacing.lg, display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
         <Button onClick={handleNext} size="lg">
           {currentIndex === slides.length - 1 ? 'Начать' : 'Далее'}
+        </Button>
+        <Button variant="ghost" onClick={() => navigate('/login')} size="md">
+          Уже есть аккаунт? Войти
         </Button>
       </div>
     </div>

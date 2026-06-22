@@ -29,14 +29,16 @@ export function Button({
     secondary: {
       backgroundColor: theme.palette.secondary,
       color: theme.palette.secondaryText,
+      border: `1px solid ${theme.palette.border}`,
     },
     danger: {
       backgroundColor: theme.palette.danger,
       color: theme.palette.dangerText,
     },
     ghost: {
-      backgroundColor: 'unset',
-      color: theme.palette.secondaryText,
+      backgroundColor: 'transparent',
+      color: theme.palette.text,
+      border: `1px solid ${theme.palette.border}`,
     }
   };
 
@@ -62,13 +64,13 @@ export function Button({
       style={{
         ...variantStyles[variant],
         ...sizeStyles[size],
-        border: 'none',
         borderRadius: theme.radius.md,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        fontWeight: '500',
+        fontWeight: '600',
         transition: 'opacity 0.2s',
-        opacity: disabled ? 0.6 : 1,
+        opacity: disabled ? 0.5 : 1,
         width: '100%',
+        letterSpacing: '0.02em',
         ...style,
       }}
     >

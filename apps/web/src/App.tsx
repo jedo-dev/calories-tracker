@@ -12,6 +12,9 @@ import { LeaguePage } from './pages/LeaguePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { TodayPage } from './pages/TodayPage';
+import { WorkoutsPage } from './pages/WorkoutsPage';
+import { ExercisesPage } from './pages/ExercisesPage';
+import { ActiveWorkoutPage } from './pages/ActiveWorkoutPage';
 import { useTheme } from './theme/useTheme';
 import { Footer } from './widget/Footer/Footer';
 
@@ -50,6 +53,9 @@ function App() {
             <Route path="/league" element={<LeaguePage />} />
             <Route path="/friends" element={<FriendsPage />} />
             <Route path="/feed" element={<FeedPage />} />
+            <Route path="/workouts" element={<WorkoutsPage />} />
+            <Route path="/workout/category/:categoryId" element={<ExercisesPage />} />
+            <Route path="/workout/:sessionId" element={<ActiveWorkoutPage />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Route>
         </Routes>

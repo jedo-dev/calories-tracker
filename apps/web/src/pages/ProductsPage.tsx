@@ -114,7 +114,7 @@ export function ProductsPage() {
               onClick={() => handleProductClick(product._id)}
               style={{ marginBottom: theme.spacing.md }}
             >
-              <Text bold style={{ marginBottom: theme.spacing.sm, color: theme.palette.blue }}>
+              <Text bold style={{ marginBottom: theme.spacing.sm, color: theme.palette.text }}>
                 {product.name}
               </Text>
               <Text variant="small" muted>

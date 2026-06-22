@@ -7,7 +7,9 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "node dist/main.js",
-    "seed:products": "ts-node -r tsconfig-paths/register scripts/seed-products.ts"
+    "seed:products": "ts-node -r tsconfig-paths/register scripts/seed-products.ts",
+    "seed:workouts": "ts-node -r tsconfig-paths/register scripts/seed-workouts.ts",
+    "seed:products-ru": "ts-node -r tsconfig-paths/register scripts/seed-products-ru.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",

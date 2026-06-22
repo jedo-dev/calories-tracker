@@ -115,12 +115,12 @@ export function LeaguePage() {
                     {item.user.avatarEmoji}
                   </Text>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Text style={{ color: theme.palette.blue }} bold>{item.user.displayName}</Text>
+                    <Text style={{ color: theme.palette.text }} bold>{item.user.displayName}</Text>
                     {item.user.username && (
                       <Text variant="small" style={{ fontSize: '12px' }} muted>@{item.user.username}</Text>
                     )}
                   </div>
-                  <Text style={{ color: theme.palette.blue }} bold>{item.xpWeek} XP</Text>
+                  <Text style={{ color: theme.palette.text }} bold>{item.xpWeek} XP</Text>
                 </div>
               </Card>
             ))
