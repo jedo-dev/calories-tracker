@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
-import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -19,7 +18,6 @@ interface User {
 }
 
 export function FriendsPage() {
-  const { loading: loadingUser, error: errorUser } = useTelegramAuth();
   const theme = useTheme();
   const [tab, setTab] = useState<'search' | 'following' | 'followers'>('search');
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,17 +109,9 @@ export function FriendsPage() {
     }
   };
 
-  if (loadingUser) {
+  if (loading) {
     return (
       <Loader />
-    );
-  }
-
-  if (errorUser) {
-    return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.error')}: {errorUser}</Text>
-      </div>
     );
   }
 
@@ -129,7 +119,7 @@ export function FriendsPage() {
     if (users.length === 0) {
       return (
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <Text muted>Нет данных</Text>
+          <Text muted>{t('friends.noData')}</Text>
         </Card>
       );
     }
@@ -152,7 +142,7 @@ export function FriendsPage() {
               size="sm"
               onClick={() => user.isFollowing ? handleUnfollow(user.id) : handleFollow(user.id)}
             >
-              {user.isFollowing ? 'Отписаться' : 'Подписаться'}
+              {user.isFollowing ? t('friends.unfollow') : t('friends.follow')}
             </Button>
           )}
         </div>
@@ -170,21 +160,21 @@ export function FriendsPage() {
           onClick={() => setTab('search')}
           style={{ flex: 1 }}
         >
-          Поиск
+          {t('friends.search')}
         </Button>
         <Button
           variant={tab === 'following' ? 'primary' : 'secondary'}
           onClick={() => setTab('following')}
           style={{ flex: 1 }}
         >
-          Подписки
+          {t('friends.following')}
         </Button>
         <Button
           variant={tab === 'followers' ? 'primary' : 'secondary'}
           onClick={() => setTab('followers')}
           style={{ flex: 1 }}
         >
-          Подписчики
+          {t('friends.followers')}
         </Button>
       </div>
 
@@ -192,8 +182,8 @@ export function FriendsPage() {
         <div style={{ marginBottom: theme.spacing.lg }}>
           <Input
             type="text"
-            label="Поиск пользователей"
-            placeholder="Введите имя или username"
+            label={t('friends.searchUsers')}
+            placeholder={t('friends.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

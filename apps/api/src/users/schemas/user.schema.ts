@@ -5,8 +5,14 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
+  @Prop({ sparse: true, unique: true, index: true })
+  tgUserId?: number;
+
   @Prop({ required: true, unique: true, index: true })
-  tgUserId: number;
+  email: string;
+
+  @Prop({ required: true })
+  password: string;
 
   @Prop({ sparse: true, index: true })
   username?: string;

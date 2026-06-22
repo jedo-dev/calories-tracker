@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import DayChanger from '../features/TodayComponents/DayChanger';
 import FoodList from '../features/TodayComponents/FoodList';
-import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -74,8 +73,6 @@ function formatDate(date: Date): string {
 
 
 export function TodayPage() {
-  const { user, loading: loadingUser, error: errorUser } = useTelegramAuth();
-  console.log(user)
   const navigate = useNavigate();
   const theme = useTheme();
   const [date, setDate] = useState(formatDate(new Date()));
@@ -122,20 +119,6 @@ export function TodayPage() {
 
 
 
-  if (loadingUser) {
-    return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.loading')}</Text>
-      </div>
-    );
-  }
-  if (errorUser) {
-    return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.error')}: {errorUser}</Text>
-      </div>
-    );
-  }
   if (loading) {
     return (
       <Loader />
@@ -166,13 +149,13 @@ export function TodayPage() {
         <Card style={{ marginBottom: theme.spacing.lg, backgroundColor: theme.palette.primary + '10' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: theme.spacing.md }}>
             <div>
-              <Text variant="small" muted>Серия</Text>
+              <Text variant="small" muted>{t('commandCenter.streak')}</Text>
               <Text variant="h2" bold>
-                {socialStats.stats.currentStreak} дней 🔥
+                {t('today.streakDays', { count: socialStats.stats.currentStreak })} 🔥
               </Text>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <Text variant="small" muted>XP за неделю</Text>
+              <Text variant="small" muted>{t('today.xpWeek')}</Text>
               <Text variant="h2" bold>
                 {socialStats.stats.xpWeek}
               </Text>

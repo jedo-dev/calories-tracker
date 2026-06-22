@@ -16,6 +16,28 @@ export const ru = {
     search: "Поиск..."
   },
 
+  // Auth
+  auth: {
+    login: "Войти",
+    loginTitle: "Вход",
+    loginLoading: "Вход...",
+    loginFailed: "Ошибка входа",
+    register: "Зарегистрироваться",
+    registerTitle: "Регистрация",
+    registerLoading: "Регистрация...",
+    registerFailed: "Ошибка регистрации",
+    noAccount: "Нет аккаунта?",
+    hasAccount: "Уже есть аккаунт?",
+    email: "Email",
+    emailPlaceholder: "your@email.com",
+    password: "Пароль",
+    passwordPlaceholder: "Введите пароль",
+    passwordMinLength: "Минимум 6 символов",
+    username: "Имя пользователя",
+    usernamePlaceholder: "username",
+    logout: "Выйти"
+  },
+
   // Home
   home: {
     title: "Вход выполнен",
@@ -41,6 +63,8 @@ export const ru = {
     addEntry: "+ Добавить запись",
     deleteConfirm: "Удалить эту запись?",
     deleteFailed: "Не удалось удалить запись",
+    streakDays: "{count} дней",
+    xpWeek: "XP за неделю",
     entriesCount: "{count} записей",
     entriesCount_one: "{count} запись",
     entriesCount_few: "{count} записи",
@@ -95,15 +119,28 @@ export const ru = {
 
   // League
   league: {
-    title: "Лига"
+    title: "Лига",
+    friends: "Друзья",
+    global: "Глобальный",
+    noData: "Нет данных",
+    me: "Ты"
   },
   // Friends
   friends: {
-    title: "Друзья"
+    title: "Друзья",
+    search: "Поиск",
+    following: "Подписки",
+    followers: "Подписчики",
+    searchUsers: "Поиск пользователей",
+    searchPlaceholder: "Введите имя или username",
+    noData: "Нет данных",
+    unfollow: "Отписаться",
+    follow: "Подписаться"
   },
   // Feed
   feed: {
-    title: "Лента"
+    title: "Лента",
+    noEvents: "Нет событий"
   },
   profile: {
     title: "Профиль",

@@ -20,6 +20,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (
       path === '/health' ||
       path.startsWith('/auth/telegram') ||
+      path.startsWith('/auth/register') ||
+      path.startsWith('/auth/login') ||
       (path.startsWith('/products') && method === 'GET')
     ) {
       return true;

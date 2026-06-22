@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 //@ts-ignore
 import logo from '../assets/logo.png';
+import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 //@ts-ignore
 import leagueIcon from '../assets/trophy.png';
@@ -34,6 +35,7 @@ interface SocialStats {
 
 export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (boolean: boolean) => void, isOpen: boolean, isActive: string }) {
   const theme = useTheme();
+  const { logout } = useAuth();
   const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
   const navigate = useNavigate();
 
@@ -302,6 +304,26 @@ export function Drawer({ onClick, isOpen = false, isActive = '' }: { onClick: (b
             textAlign: 'center',
           }}
         >
+          <button
+            onClick={() => {
+              logout();
+              handleClose();
+              navigate('/login');
+            }}
+            style={{
+              background: 'none',
+              border: `1px solid ${theme.palette.danger}`,
+              color: theme.palette.danger,
+              padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
+              borderRadius: theme.radius.md,
+              cursor: 'pointer',
+              fontSize: theme.typography.body.fontSize,
+              width: '100%',
+              marginBottom: theme.spacing.md,
+            }}
+          >
+            {t('auth.logout')}
+          </button>
           <span
             style={{
               color: theme.palette.textMuted,

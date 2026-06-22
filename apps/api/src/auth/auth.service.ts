@@ -1,6 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 
@@ -26,6 +27,56 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
+
+  async register(email: string, password: string, username?: string) {
+    const existing = await this.usersService.findByEmail(email);
+    if (existing) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await this.usersService.create({
+      email,
+      password: hashedPassword,
+      username: username || email.split('@')[0],
+    });
+
+    const payload = { sub: user._id.toString(), email: user.email };
+    const token = this.jwtService.sign(payload);
+
+    return {
+      token,
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        username: user.username,
+      },
+    };
+  }
+
+  async login(email: string, password: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = { sub: user._id.toString(), email: user.email };
+    const token = this.jwtService.sign(payload);
+
+    return {
+      token,
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        username: user.username,
+      },
+    };
+  }
 
   async verifyTelegramInitData(initData: string): Promise<TelegramUser> {
     const botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
@@ -106,6 +157,7 @@ export class AuthService {
     }
     return {
       id: user._id.toString(),
+      email: user.email,
       tgUserId: user.tgUserId,
       username: user.username,
       firstName: user.firstName,
@@ -113,4 +165,3 @@ export class AuthService {
     };
   }
 }
-

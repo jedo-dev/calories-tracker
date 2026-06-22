@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
-import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -29,7 +28,6 @@ interface LeaderboardResponse {
 }
 
 export function LeaguePage() {
-  const { loading: loadingUser, error: errorUser } = useTelegramAuth();
   const theme = useTheme();
   const [mode, setMode] = useState<'friends' | 'global'>('friends');
   const [data, setData] = useState<LeaderboardResponse | null>(null);
@@ -54,19 +52,12 @@ export function LeaguePage() {
     loadLeaderboard();
   }, [mode]);
 
-  if (loadingUser || loading) {
+  if (loading) {
     return (
       <Loader />
     );
   }
 
-  if (errorUser) {
-    return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.error')}: {errorUser}</Text>
-      </div>
-    );
-  }
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
 
@@ -77,14 +68,14 @@ export function LeaguePage() {
           onClick={() => setMode('friends')}
           style={{ flex: 1 }}
         >
-          Друзья
+          {t('league.friends')}
         </Button>
         <Button
           variant={mode === 'global' ? 'primary' : 'secondary'}
           onClick={() => setMode('global')}
           style={{ flex: 1 }}
         >
-          Глобальный
+          {t('league.global')}
         </Button>
       </div>
 
@@ -101,7 +92,7 @@ export function LeaguePage() {
           {data.me && (
             <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '20', border: `2px solid ${theme.palette.primary}` }}>
               <Text bold style={{ marginBottom: theme.spacing.xs }}>
-                Ты
+                {t('league.me')}
               </Text>
               <Text>
                 #{data.me.rank} · {data.me.xpWeek} XP
@@ -111,7 +102,7 @@ export function LeaguePage() {
 
           {data.items.length === 0 ? (
             <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-              <Text muted>Нет данных</Text>
+              <Text muted>{t('league.noData')}</Text>
             </Card>
           ) : (
             data.items.map((item) => (

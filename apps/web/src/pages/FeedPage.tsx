@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
-import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Card } from '../ui/Card';
@@ -39,7 +38,6 @@ function formatFeedText(item: FeedItem): string {
 }
 
 export function FeedPage() {
-  const { loading: loadingUser, error: errorUser } = useTelegramAuth();
   const theme = useTheme();
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,17 +60,9 @@ export function FeedPage() {
     loadFeed();
   }, []);
 
-  if (loadingUser || loading) {
+  if (loading) {
     return (
       <Loader />
-    );
-  }
-
-  if (errorUser) {
-    return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.error')}: {errorUser}</Text>
-      </div>
     );
   }
 
@@ -91,7 +81,7 @@ export function FeedPage() {
         <>
           {feed.length === 0 ? (
             <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-              <Text muted>Нет событий</Text>
+              <Text muted>{t('feed.noEvents')}</Text>
             </Card>
           ) : (
             feed.map((item) => (

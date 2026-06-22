@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
-import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -41,8 +40,6 @@ function formatDate(date: Date): string {
 }
 
 export function AddEntryPage() {
-  const { loading: loadingUser, error: errorUser } = useTelegramAuth();
-
   const navigate = useNavigate();
   const theme = useTheme();
   const { id } = useParams();
@@ -62,27 +59,10 @@ export function AddEntryPage() {
   const debouncedSearch = useDebounce(productSearch, 300);
 
   useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg && tg.BackButton) {
-      tg.BackButton.show();
-      tg.BackButton.onClick(() => {
-        navigate(-1);
-      });
-      return () => {
-        tg.BackButton.hide();
-      };
-    }
-  }, [navigate]);
-
-  useEffect(() => {
     if (isEdit) {
       loadEntry();
     }
   }, [id]);
-
-  // if(localStorage.getItem('token')) {
-  //   return <Navigate to="/today" />;
-  // }
 
   const loadEntry = async () => {
     if (!id) return;
@@ -173,7 +153,7 @@ export function AddEntryPage() {
     }
   };
 
-  if (loading || loadingUser) {
+  if (loading) {
     return (
       <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
         <Text>{t('common.loading')}</Text>
@@ -187,10 +167,10 @@ export function AddEntryPage() {
         {isEdit ? t('entry.edit') : t('entry.add')}
       </Text>
 
-      {error || errorUser && (
+      {error && (
         <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.danger + '20' }}>
           <Text style={{ color: theme.palette.danger }}>
-            {t('common.error')}: {error || errorUser}
+            {t('common.error')}: {error}
           </Text>
         </Card>
       )}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
@@ -30,32 +30,15 @@ export function EntryPage() {
 
   const navigate = useNavigate();
   const theme = useTheme();
+  const { user, loading } = useAuth();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsloading] = useState(true)
 
   useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg && tg.BackButton) {
-      tg.BackButton.hide();
+    if (!loading && user) {
+      navigate('/today');
     }
-  }, []);
-  useEffect(() => {
-
-    const load = async () => {
-
-      try {
-        const data = await apiClient.get('/social/me')
-        await navigate('/today')
-        setIsloading(false)
-      } catch (err) {
-        setIsloading(false)
-      }
-    }
-    setTimeout(() => {
-      load()
-    }, 2000);
-  }, []);
+  }, [user, loading, navigate]);
 
   // Синхронизация индекса с реальным скроллом
   useEffect(() => {
@@ -103,7 +86,7 @@ export function EntryPage() {
   };
 
 
-  if (isLoading) {
+  if (loading) {
     return <Loader />
   }
 

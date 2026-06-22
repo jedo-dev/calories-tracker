@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
-import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -20,7 +19,6 @@ interface ProfileData {
 }
 
 export function ProfilePage() {
-  const { loading: loadingUser, error: errorUser } = useTelegramAuth();
   const navigate = useNavigate();
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
@@ -83,17 +81,9 @@ export function ProfilePage() {
     }));
   };
 
-  if (loadingUser || loading) {
+  if (loading) {
     return (
       <Loader />
-    );
-  }
-
-  if (errorUser) {
-    return (
-      <div style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
-        <Text>{t('common.error')}: {errorUser}</Text>
-      </div>
     );
   }
 
