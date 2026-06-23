@@ -23,6 +23,11 @@ export class ProductsController {
     return this.productsService.findAll(query);
   }
 
+  @Get('barcode/:barcode')
+  async findByBarcode(@Param('barcode') barcode: string) {
+    return this.productsService.findByBarcode(barcode);
+  }
+
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.productsService.findById(id);

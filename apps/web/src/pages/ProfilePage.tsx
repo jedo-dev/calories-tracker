@@ -179,6 +179,17 @@ export function ProfilePage() {
       {prediction?.available && (
         <Card style={{ marginBottom: theme.spacing.md, borderLeft: `3px solid ${prediction.pace === 'too_fast' ? '#FFA500' : prediction.pace === 'stalled' ? theme.palette.danger : theme.palette.success}` }}>
           <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>🔮 Прогноз</Text>
+          {prediction.outlierWarning && (
+            <div style={{ 
+              padding: theme.spacing.sm, 
+              marginBottom: theme.spacing.sm, 
+              backgroundColor: '#FFA500' + '20', 
+              borderRadius: theme.radius.sm,
+              border: '1px solid #FFA500'
+            }}>
+              <Text variant="small" style={{ color: '#FFA500' }}>⚠️ {prediction.outlierWarning}</Text>
+            </div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text variant="small" muted>Тренд за неделю</Text>

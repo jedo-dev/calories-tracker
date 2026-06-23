@@ -5,6 +5,14 @@ export class CreateProductDto {
   @IsNotEmpty()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  brand?: string;
+
+  @IsString()
+  @IsOptional()
+  barcode?: string;
+
   @IsNumber()
   @Min(0)
   @Max(10000)

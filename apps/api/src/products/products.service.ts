@@ -51,6 +51,14 @@ export class ProductsService {
     return this.productModel.findById(id).exec();
   }
 
+  async findByBarcode(barcode: string): Promise<any> {
+    const product = await this.productModel.findOne({ barcode }).exec();
+    if (!product) {
+      return { found: false, barcode };
+    }
+    return { found: true, ...product.toObject() };
+  }
+
   async create(createProductDto: CreateProductDto, userId?: string): Promise<ProductDocument> {
     const nameNormalized = this.normalizeName(createProductDto.name);
     const productData: any = {
@@ -62,6 +70,15 @@ export class ProductsService {
       carbPer100g: createProductDto.carbPer100g || 0,
       source: 'USER',
     };
+
+    if (createProductDto.barcode) {
+      productData.barcode = createProductDto.barcode;
+      productData.source = 'BARCODE';
+    }
+
+    if (createProductDto.brand) {
+      productData.brand = createProductDto.brand;
+    }
 
     if (userId) {
       productData.createdBy = userId;

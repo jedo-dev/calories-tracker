@@ -12,6 +12,8 @@ import { Text } from '../ui/Text';
 interface Product {
   _id: string;
   name: string;
+  brand?: string;
+  barcode?: string;
   kcalPer100g: number;
   proteinPer100g: number;
   fatPer100g: number;
@@ -55,6 +57,21 @@ export function AddEntryPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Barcode state
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeSearching, setBarcodeSearching] = useState(false);
+  const [barcodeNotFound, setBarcodeNotFound] = useState(false);
+  const [notFoundBarcode, setNotFoundBarcode] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    brand: '',
+    kcalPer100g: '',
+    proteinPer100g: '',
+    fatPer100g: '',
+    carbPer100g: '',
+  });
 
   const debouncedSearch = useDebounce(productSearch, 300);
 
@@ -108,6 +125,73 @@ export function AddEntryPage() {
       setProducts(response.data);
     } catch (err: any) {
       console.error('Failed to search products', err);
+    }
+  };
+
+  const handleBarcodeSearch = async () => {
+    if (!barcodeInput.trim()) return;
+    setBarcodeSearching(true);
+    setBarcodeNotFound(false);
+    setNotFoundBarcode('');
+    setError(null);
+
+    try {
+      const response = await apiClient.get(`/products/barcode/${barcodeInput.trim()}`);
+      const data = response.data;
+
+      if (data.found) {
+        setSelectedProduct({
+          _id: data._id,
+          name: data.name,
+          brand: data.brand,
+          barcode: data.barcode,
+          kcalPer100g: data.kcalPer100g,
+          proteinPer100g: data.proteinPer100g,
+          fatPer100g: data.fatPer100g,
+          carbPer100g: data.carbPer100g,
+        });
+        setBarcodeInput('');
+        setBarcodeNotFound(false);
+      } else {
+        setBarcodeNotFound(true);
+        setNotFoundBarcode(barcodeInput);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Ошибка поиска по штрихкоду');
+    } finally {
+      setBarcodeSearching(false);
+    }
+  };
+
+  const handleCreateFromBarcode = async () => {
+    if (!newProduct.name || !newProduct.kcalPer100g) {
+      setError('Заполните название и калорийность');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const response = await apiClient.post('/products', {
+        name: newProduct.name,
+        brand: newProduct.brand || undefined,
+        barcode: notFoundBarcode,
+        kcalPer100g: parseFloat(newProduct.kcalPer100g),
+        proteinPer100g: newProduct.proteinPer100g ? parseFloat(newProduct.proteinPer100g) : 0,
+        fatPer100g: newProduct.fatPer100g ? parseFloat(newProduct.fatPer100g) : 0,
+        carbPer100g: newProduct.carbPer100g ? parseFloat(newProduct.carbPer100g) : 0,
+      });
+
+      setSelectedProduct(response.data);
+      setShowCreateForm(false);
+      setBarcodeNotFound(false);
+      setBarcodeInput('');
+      setNewProduct({ name: '', brand: '', kcalPer100g: '', proteinPer100g: '', fatPer100g: '', carbPer100g: '' });
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Ошибка создания продукта');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -172,6 +256,105 @@ export function AddEntryPage() {
           <Text style={{ color: theme.palette.danger }}>
             {t('common.error')}: {error}
           </Text>
+        </Card>
+      )}
+
+      {/* Barcode Scanner Section */}
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>📷 Штрихкод</Text>
+        <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+          <Input
+            type="text"
+            placeholder="Введите штрихкод"
+            value={barcodeInput}
+            onChange={(e) => setBarcodeInput(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <Button
+            onClick={handleBarcodeSearch}
+            disabled={barcodeSearching || !barcodeInput.trim()}
+            style={{ minWidth: '100px' }}
+          >
+            {barcodeSearching ? 'Поиск...' : 'Найти'}
+          </Button>
+        </div>
+
+        {barcodeNotFound && (
+          <div style={{ marginTop: theme.spacing.sm }}>
+            <Text variant="small" muted>
+              Продукт со штрихкодом {notFoundBarcode} не найден
+            </Text>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCreateForm(true)}
+              style={{ marginTop: theme.spacing.xs }}
+            >
+              Создать продукт
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* Create Product from Barcode Form */}
+      {showCreateForm && barcodeNotFound && (
+        <Card style={{ marginBottom: theme.spacing.md, border: `2px solid ${theme.palette.primary}` }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>Создать продукт</Text>
+          <Text variant="small" muted style={{ marginBottom: theme.spacing.sm }}>
+            Штрихкод: {notFoundBarcode}
+          </Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+            <Input
+              label="Название *"
+              value={newProduct.name}
+              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+              placeholder="Йогурт натуральный"
+            />
+            <Input
+              label="Бренд"
+              value={newProduct.brand}
+              onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value })}
+              placeholder="Danone"
+            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
+              <Input
+                label="Калории на 100г *"
+                type="number"
+                value={newProduct.kcalPer100g}
+                onChange={(e) => setNewProduct({ ...newProduct, kcalPer100g: e.target.value })}
+                placeholder="60"
+              />
+              <Input
+                label="Белки на 100г"
+                type="number"
+                value={newProduct.proteinPer100g}
+                onChange={(e) => setNewProduct({ ...newProduct, proteinPer100g: e.target.value })}
+                placeholder="4.3"
+              />
+              <Input
+                label="Жиры на 100г"
+                type="number"
+                value={newProduct.fatPer100g}
+                onChange={(e) => setNewProduct({ ...newProduct, fatPer100g: e.target.value })}
+                placeholder="1.5"
+              />
+              <Input
+                label="Углеводы на 100г"
+                type="number"
+                value={newProduct.carbPer100g}
+                onChange={(e) => setNewProduct({ ...newProduct, carbPer100g: e.target.value })}
+                placeholder="6.2"
+              />
+            </div>
+            <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+              <Button variant="ghost" onClick={() => { setShowCreateForm(false); setBarcodeNotFound(false); }} style={{ flex: 1 }}>
+                Отмена
+              </Button>
+              <Button onClick={handleCreateFromBarcode} disabled={saving} style={{ flex: 1 }}>
+                {saving ? 'Создание...' : 'Создать'}
+              </Button>
+            </div>
+          </div>
         </Card>
       )}
 

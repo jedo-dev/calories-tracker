@@ -109,8 +109,8 @@ export function WorkoutsPage() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <Text bold>{s.name || t('workout.activeWorkout')}</Text>
-                      <Text variant="small" muted>
+                      <Text bold style={{ display: 'block' }}>{s.name || t('workout.activeWorkout')}</Text>
+                      <Text variant="small" muted style={{ display: 'block' }}>
                         {s.exerciseCount} {t('workout.exerciseCount').toLowerCase()} · {formatDuration(s.totalDurationSec)}
                       </Text>
                     </div>
@@ -170,8 +170,8 @@ export function WorkoutsPage() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <Text bold>{s.name || t('workout.activeWorkout')}</Text>
-                    <Text variant="small" muted>
+                    <Text bold style={{ display: 'block' }}>{s.name || t('workout.activeWorkout')}</Text>
+                    <Text variant="small" muted style={{ display: 'block' }}>
                       {s.exerciseCount} {t('workout.exerciseCount').toLowerCase()} · {formatDuration(s.totalDurationSec)}
                     </Text>
                   </div>

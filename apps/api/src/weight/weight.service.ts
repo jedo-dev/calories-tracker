@@ -51,14 +51,46 @@ export class WeightService {
     }
 
     const sorted = entries.reverse();
-    const latest = sorted[sorted.length - 1];
+    
+    // Filter outliers: remove values that differ more than 10% from median
+    const weights = sorted.map(e => e.weightKg).sort((a, b) => a - b);
+    const median = weights[Math.floor(weights.length / 2)];
+    const filtered = sorted.filter(e => {
+      const deviation = Math.abs(e.weightKg - median) / median;
+      return deviation < 0.1; // Allow max 10% deviation
+    });
+
+    // Also filter by daily change: max 2kg per day
+    const cleanEntries: typeof sorted = [filtered[0]];
+    for (let i = 1; i < filtered.length; i++) {
+      const prev = cleanEntries[cleanEntries.length - 1];
+      const curr = filtered[i];
+      const dayDiff = Math.abs(
+        (new Date(curr.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const weightDiff = Math.abs(curr.weightKg - prev.weightKg);
+      const dailyChange = dayDiff > 0 ? weightDiff / dayDiff : 0;
+      
+      if (dailyChange <= 2) { // Max 2kg per day change
+        cleanEntries.push(curr);
+      }
+    }
+
+    if (cleanEntries.length < 2) {
+      return { available: false, reason: 'Not enough valid data after filtering outliers' };
+    }
+
+    const latest = cleanEntries[cleanEntries.length - 1];
     const currentWeight = latest.weightKg;
     const targetWeight = user.profile.targetWeightKg;
-    const startWeight = user.profile.startWeightKg || sorted[0].weightKg;
+    const startWeight = user.profile.startWeightKg || cleanEntries[0].weightKg;
 
-    const weightDiff = currentWeight - sorted[0].weightKg;
-    const daysDiff = sorted.length > 1 
-      ? (new Date(sorted[sorted.length - 1].date).getTime() - new Date(sorted[0].date).getTime()) / (1000 * 60 * 60 * 24)
+    const hasOutliers = cleanEntries.length < sorted.length;
+    const outlierWarning = hasOutliers ? 'Обнаружены неточные данные. Прогноз может быть менее точным.' : null;
+
+    const weightDiff = currentWeight - cleanEntries[0].weightKg;
+    const daysDiff = cleanEntries.length > 1 
+      ? (new Date(cleanEntries[cleanEntries.length - 1].date).getTime() - new Date(cleanEntries[0].date).getTime()) / (1000 * 60 * 60 * 24)
       : 7;
     const weeklyTrend = daysDiff > 0 ? (weightDiff / daysDiff) * 7 : 0;
 
@@ -105,7 +137,8 @@ export class WeightService {
       estimatedDays,
       estimatedDate,
       progressPct,
-      daysTracked: entries.length,
+      daysTracked: cleanEntries.length,
+      outlierWarning,
     };
   }
 }

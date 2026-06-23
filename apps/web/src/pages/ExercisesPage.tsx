@@ -38,6 +38,8 @@ export function ExercisesPage() {
   const [categoryName, setCategoryName] = useState('');
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     loadExercises();
@@ -48,9 +50,10 @@ export function ExercisesPage() {
     try {
       const res = await apiClient.get('/workouts/exercises', { params: { categoryId } });
       setExercises(res.data);
+      // Select first 4 exercises by default
+      const defaultSelected = new Set<string>(res.data.slice(0, 4).map((e: Exercise) => e._id));
+      setSelectedIds(defaultSelected);
       if (res.data.length > 0) {
-        // Try to get category name from the first exercise's populated data
-        // or we can fetch categories
         const catRes = await apiClient.get('/workouts/categories');
         const cat = catRes.data.find((c: any) => c._id === categoryId);
         if (cat) setCategoryName(cat.name);
@@ -62,17 +65,47 @@ export function ExercisesPage() {
     }
   };
 
+  const toggleExercise = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   const handleStartWorkout = async () => {
+    if (selectedIds.size === 0) return;
+    setStarting(true);
     try {
       const today = formatDate(new Date());
-      const res = await apiClient.post('/workouts/sessions', {
+      const sessionRes = await apiClient.post('/workouts/sessions', {
         date: today,
         categoryId,
         name: categoryName,
       });
-      navigate(`/workout/${res.data._id}`);
+      const sessionId = sessionRes.data._id;
+
+      // Add selected exercises to session
+      const addPromises = exercises
+        .filter((ex) => selectedIds.has(ex._id))
+        .map((ex) =>
+          apiClient.post(`/workouts/sessions/${sessionId}/exercises`, {
+            exerciseId: ex._id,
+            sets: ex.defaultSets,
+            reps: ex.defaultReps,
+            durationSec: ex.defaultDurationSec,
+          })
+        );
+      await Promise.all(addPromises);
+      navigate(`/workout/${sessionId}`);
     } catch (err) {
       console.error('Failed to start workout', err);
+    } finally {
+      setStarting(false);
     }
   };
 
@@ -93,19 +126,61 @@ export function ExercisesPage() {
         {categoryName || t('workout.exercises')}
       </Text>
 
-      <Button onClick={handleStartWorkout} size="lg" style={{ marginBottom: theme.spacing.lg }}>
-        {t('workout.startWorkout')}
-      </Button>
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
+          <Text variant="small" muted>Выбрано: {selectedIds.size}</Text>
+        </div>
+        <Button
+          onClick={handleStartWorkout}
+          size="lg"
+          disabled={selectedIds.size === 0 || starting}
+          style={{ width: '100%' }}
+        >
+          {starting ? 'Создание...' : `Начать с выбранными (${selectedIds.size})`}
+        </Button>
+      </Card>
 
-      {exercises.map((ex) => (
-        <Card key={ex._id} style={{ marginBottom: theme.spacing.md, padding: 0, overflow: 'hidden' }}>
-          <div
-            style={{ cursor: 'pointer', padding: theme.spacing.md }}
-            onClick={() => setExpandedId(expandedId === ex._id ? null : ex._id)}
+      {exercises.map((ex) => {
+        const isSelected = selectedIds.has(ex._id);
+        return (
+          <Card
+            key={ex._id}
+            style={{
+              marginBottom: theme.spacing.md,
+              padding: 0,
+              overflow: 'hidden',
+              border: isSelected ? `2px solid ${theme.palette.primary}` : `1px solid ${theme.palette.border}`,
+            }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ flex: 1 }}>
-                <Text bold style={{ color: theme.palette.text }}>{ex.name}</Text>
+            <div style={{ display: 'flex', alignItems: 'center', padding: theme.spacing.md, gap: theme.spacing.sm }}>
+              <button
+                onClick={() => toggleExercise(ex._id)}
+                aria-label={isSelected ? `Снять выделение с ${ex.name}` : `Выбрать ${ex.name}`}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '4px',
+                  border: `2px solid ${isSelected ? theme.palette.primary : theme.palette.border}`,
+                  backgroundColor: isSelected ? theme.palette.primary : 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  color: 'white',
+                  fontSize: '14px',
+                }}
+              >
+                {isSelected && '✓'}
+              </button>
+              <div
+                style={{ flex: 1, cursor: 'pointer' }}
+                onClick={() => setExpandedId(expandedId === ex._id ? null : ex._id)}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text bold style={{ color: theme.palette.text }}>{ex.name}</Text>
+                  <Text variant="small" muted>{expandedId === ex._id ? '▲' : '▼'}</Text>
+                </div>
                 <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: theme.spacing.xs, flexWrap: 'wrap' }}>
                   <span style={{
                     fontSize: '11px',
@@ -127,57 +202,55 @@ export function ExercisesPage() {
                   </span>
                 </div>
               </div>
-              <Text variant="small" muted>{expandedId === ex._id ? '▲' : '▼'}</Text>
             </div>
-          </div>
 
-          {expandedId === ex._id && (
-            <div style={{ borderTop: `1px solid ${theme.palette.border}` }}>
-              {/* GIF */}
-              <div style={{ textAlign: 'center', padding: theme.spacing.md, backgroundColor: theme.palette.surface }}>
-                <img
-                  src={ex.gifUrl}
-                  alt={ex.name}
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '250px',
-                    borderRadius: theme.radius.md,
-                    objectFit: 'contain',
-                  }}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </div>
+            {expandedId === ex._id && (
+              <div style={{ borderTop: `1px solid ${theme.palette.border}` }}>
+                <div style={{ textAlign: 'center', padding: theme.spacing.md, backgroundColor: theme.palette.surface }}>
+                  <img
+                    src={ex.gifUrl}
+                    alt={ex.name}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '250px',
+                      borderRadius: theme.radius.md,
+                      objectFit: 'contain',
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
 
-              <div style={{ padding: theme.spacing.md }}>
-                {ex.description && (
-                  <Text muted style={{ marginBottom: theme.spacing.sm }}>{ex.description}</Text>
-                )}
+                <div style={{ padding: theme.spacing.md }}>
+                  {ex.description && (
+                    <Text muted style={{ marginBottom: theme.spacing.sm }}>{ex.description}</Text>
+                  )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
-                  <div>
-                    <Text variant="small" muted>{t('workout.sets')}</Text>
-                    <Text bold>{ex.defaultSets}</Text>
-                  </div>
-                  <div>
-                    <Text variant="small" muted>{t('workout.reps')}</Text>
-                    <Text bold>{ex.defaultDurationSec ? `${ex.defaultDurationSec}${t('workout.sec')}` : ex.defaultReps}</Text>
-                  </div>
-                  <div>
-                    <Text variant="small" muted>{t('workout.muscleGroups')}</Text>
-                    <Text variant="small">{ex.muscleGroups.join(', ')}</Text>
-                  </div>
-                  <div>
-                    <Text variant="small" muted>{t('workout.equipment')}</Text>
-                    <Text variant="small">{ex.equipment || t('workout.noEquipment')}</Text>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
+                    <div>
+                      <Text variant="small" muted>{t('workout.sets')}</Text>
+                      <Text bold>{ex.defaultSets}</Text>
+                    </div>
+                    <div>
+                      <Text variant="small" muted>{t('workout.reps')}</Text>
+                      <Text bold>{ex.defaultDurationSec ? `${ex.defaultDurationSec}${t('workout.sec')}` : ex.defaultReps}</Text>
+                    </div>
+                    <div>
+                      <Text variant="small" muted>{t('workout.muscleGroups')}</Text>
+                      <Text variant="small">{ex.muscleGroups.join(', ')}</Text>
+                    </div>
+                    <div>
+                      <Text variant="small" muted>{t('workout.equipment')}</Text>
+                      <Text variant="small">{ex.equipment || t('workout.noEquipment')}</Text>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </Card>
-      ))}
+            )}
+          </Card>
+        );
+      })}
     </div>
   );
 }
