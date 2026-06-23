@@ -18,4 +18,4 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package*.json ./
 RUN mkdir -p uploads
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
