@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import emptyTemplates from '../assets/03_empty_states/empty_templates.jpg';
 import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { EmptyState } from '../ui/EmptyState';
 import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
@@ -185,10 +187,10 @@ export function TemplatesPage() {
 
       {/* Templates list */}
       {templates.length === 0 ? (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <div style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>📋</div>
-          <Text muted>{t('template.noTemplates')}</Text>
-        </Card>
+        <EmptyState
+          image={emptyTemplates}
+          title={t('template.noTemplates')}
+        />
       ) : (
         templates.map((tpl) => (
           <Card key={tpl._id} style={{ marginBottom: theme.spacing.md }}>

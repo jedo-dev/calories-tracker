@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
+import emptyLeague from '../assets/03_empty_states/empty_league.jpg';
+import rankBronze from '../assets/07_achievements/rank_bronze.jpg';
+import rankSilver from '../assets/07_achievements/rank_silver.jpg';
+import rankGold from '../assets/07_achievements/rank_gold.jpg';
+import rankDiamond from '../assets/07_achievements/rank_diamond.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -118,13 +123,15 @@ export function LeaguePage() {
                   border: `2px solid ${data.me.league.color}`,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  gap: '8px'
                 }}>
-                  <span style={{ fontSize: '16px' }}>
-                    {data.me.league.name === 'Diamond' ? '💎' : 
-                     data.me.league.name === 'Gold' ? '🥇' : 
-                     data.me.league.name === 'Silver' ? '🥈' : '🥉'}
-                  </span>
+                  <img 
+                    src={data.me.league.name === 'Diamond' ? rankDiamond : 
+                         data.me.league.name === 'Gold' ? rankGold : 
+                         data.me.league.name === 'Silver' ? rankSilver : rankBronze} 
+                    alt={data.me.league.name} 
+                    style={{ width: '24px', height: '24px', objectFit: 'contain' }} 
+                  />
                   <Text bold style={{ color: data.me.league.color }}>{data.me.league.name}</Text>
                 </div>
               </div>
@@ -170,6 +177,7 @@ export function LeaguePage() {
 
           {data.items.length === 0 ? (
             <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+              <img src={emptyLeague} alt="" style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: theme.spacing.md, opacity: 0.8 }} />
               <Text muted>{t('league.noData')}</Text>
             </Card>
           ) : (

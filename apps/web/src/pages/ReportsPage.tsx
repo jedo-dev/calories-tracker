@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
+import emptyReports from '../assets/03_empty_states/empty_reports.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 
@@ -109,9 +111,10 @@ export function ReportsPage() {
 
       {/* Stats grid */}
       {daysWithData === 0 ? (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <Text muted>{t('report.noData')}</Text>
-        </Card>
+        <EmptyState
+          image={emptyReports}
+          title={t('report.noData')}
+        />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
           <Card style={{ textAlign: 'center' }}>

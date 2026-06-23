@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
+import emptyProducts from '../assets/03_empty_states/empty_products.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Card } from '../ui/Card';
+import { EmptyState } from '../ui/EmptyState';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
 
@@ -81,18 +83,18 @@ export function ProductsPage() {
       )}
 
       {!loading && !error && !debouncedSearch.trim() && (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <div style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>🔍</div>
-          <Text muted>Начните вводить название продукта</Text>
-          <Text variant="small" muted style={{ marginTop: theme.spacing.sm }}>Например: курица, рис, яблоко</Text>
-        </Card>
+        <EmptyState
+          image={emptyProducts}
+          title="Начните вводить название продукта"
+          description="Например: курица, рис, яблоко"
+        />
       )}
 
       {!loading && !error && debouncedSearch.trim() && products.length === 0 && (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <div style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>😕</div>
-          <Text muted>{t('products.noProductsFound')}</Text>
-        </Card>
+        <EmptyState
+          image={emptyProducts}
+          title={t('products.noProductsFound')}
+        />
       )}
 
       {!loading && !error && products.length > 0 && (

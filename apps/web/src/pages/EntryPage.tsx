@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import onboardingGoals from '../assets/09_onboarding/onboarding_1_goals.jpg';
+import onboardingTracking from '../assets/09_onboarding/onboarding_2_tracking.jpg';
+import onboardingWorkouts from '../assets/09_onboarding/onboarding_3_workouts.jpg';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
@@ -8,16 +11,19 @@ import { Text } from '../ui/Text';
 
 const slides = [
   {
+    image: onboardingGoals,
     emoji: '🎯',
     title: 'Ставь цели',
     description: 'Укажи вес, рост и желаемый результат — мы рассчитаем норму калорий.',
   },
   {
+    image: onboardingTracking,
     emoji: '📊',
     title: 'Считай калории',
     description: 'Добавляй продукты — калории и БЖУ посчитаются автоматически.',
   },
   {
+    image: onboardingWorkouts,
     emoji: '🏋️',
     title: 'Тренируйся',
     description: 'Выбирай программы тренировок — мы посчитаем сожжённые калории.',
@@ -106,9 +112,16 @@ export function EntryPage() {
               gap: theme.spacing.lg,
             }}
           >
-            <div style={{ fontSize: '72px', marginBottom: theme.spacing.md }}>
-              {slide.emoji}
-            </div>
+            <img 
+              src={slide.image} 
+              alt={slide.title} 
+              style={{ 
+                width: '200px', 
+                height: '200px', 
+                objectFit: 'contain', 
+                marginBottom: theme.spacing.md 
+              }} 
+            />
             <Text variant="h1" style={{ textAlign: 'center', color: theme.palette.text }}>
               {slide.title}
             </Text>

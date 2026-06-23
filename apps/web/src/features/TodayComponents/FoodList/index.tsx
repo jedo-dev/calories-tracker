@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import DeleteIcon from "../../../assets/DeleteIcon.tsx"
 import EditIcon from '../../../assets/EditIcon.tsx'
+import emptyFood from '../../../assets/03_empty_states/empty_food.jpg'
 import { t } from "../../../i18n"
 import { Entry } from "../../../pages/TodayPage"
 import { useTheme } from "../../../theme/useTheme"
@@ -22,6 +23,7 @@ const FoodList = ({ entries, handleDelete }: Props) => {
       </Text>
       {entries.length === 0 ? (
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+          <img src={emptyFood} alt="" style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: theme.spacing.md, opacity: 0.8 }} />
           <Text muted>{t('today.noEntries')}</Text>
         </Card>
       ) : (

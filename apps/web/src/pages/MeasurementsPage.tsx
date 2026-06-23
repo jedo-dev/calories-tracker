@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
+import emptyMeasurements from '../assets/03_empty_states/empty_measurements.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { EmptyState } from '../ui/EmptyState';
 import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
@@ -92,10 +94,10 @@ export function MeasurementsPage() {
       )}
 
       {history.length === 0 ? (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <div style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>📏</div>
-          <Text muted>{t('measurement.noHistory')}</Text>
-        </Card>
+        <EmptyState
+          image={emptyMeasurements}
+          title={t('measurement.noHistory')}
+        />
       ) : (
         history.map((m) => (
           <Card key={m._id} style={{ marginBottom: theme.spacing.sm }}>

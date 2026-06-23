@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import goalLoseWeight from '../assets/13_goals/goal_lose_weight.jpg';
+import goalMaintain from '../assets/13_goals/goal_maintain.jpg';
+import goalGainWeight from '../assets/13_goals/goal_gain_weight.jpg';
+import activityLow from '../assets/12_activity/activity_low.jpg';
+import activityMedium from '../assets/12_activity/activity_medium.jpg';
+import activityHigh from '../assets/12_activity/activity_high.jpg';
+import activityVeryHigh from '../assets/12_activity/activity_very_high.jpg';
+import mascotFoxMain from '../assets/08_mascot/mascot_fox_main.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -109,7 +117,11 @@ export function ProfilePage() {
       {user && (
         <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '10' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
-            <div style={{ fontSize: '48px' }}>{user.avatarEmoji || '🦊'}</div>
+            <img 
+              src={mascotFoxMain} 
+              alt="FlareonFit" 
+              style={{ width: '64px', height: '64px', objectFit: 'contain', borderRadius: '50%' }} 
+            />
             <div>
               <Text variant="h2" bold>{user.displayName || user.username || 'User'}</Text>
               {user.username && (
@@ -123,9 +135,17 @@ export function ProfilePage() {
       {/* Goal Card */}
       {formData.goal && (
         <Card style={{ marginBottom: theme.spacing.md }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>
-            {formData.goal === 'lose' ? '🎯 Похудение' : formData.goal === 'gain' ? '💪 Набор веса' : '⚖️ Поддержание'}
-          </Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md, marginBottom: theme.spacing.sm }}>
+            <img 
+              src={formData.goal === 'lose' ? goalLoseWeight : formData.goal === 'gain' ? goalGainWeight : goalMaintain} 
+              alt={formData.goal} 
+              style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: theme.radius.md }} 
+              loading="lazy"
+            />
+            <Text variant="h2">
+              {formData.goal === 'lose' ? 'Похудение' : formData.goal === 'gain' ? 'Набор веса' : 'Поддержание'}
+            </Text>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
             {formData.startWeightKg && (
               <div>
@@ -309,7 +329,18 @@ export function ProfilePage() {
                 <option value="medium">{t('profile.activityLevel_medium')}</option>
                 <option value="high">{t('profile.activityLevel_high')}</option>
                 <option value="very_high">{t('profile.activityLevel_very_high')}</option>
-              </select></div>
+              </select>
+              {formData.activityLevel && (
+                <img 
+                  src={formData.activityLevel === 'low' ? activityLow : 
+                       formData.activityLevel === 'medium' ? activityMedium : 
+                       formData.activityLevel === 'high' ? activityHigh : activityVeryHigh} 
+                  alt={formData.activityLevel} 
+                  style={{ width: '100%', height: '80px', objectFit: 'contain', marginTop: theme.spacing.xs, borderRadius: theme.radius.sm }} 
+                  loading="lazy"
+                />
+              )}
+            </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>

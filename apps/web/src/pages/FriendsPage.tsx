@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
+import emptyFriends from '../assets/03_empty_states/empty_friends.jpg';
 import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
@@ -119,6 +120,7 @@ export function FriendsPage() {
     if (users.length === 0) {
       return (
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+          <img src={emptyFriends} alt="" style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: theme.spacing.md, opacity: 0.8 }} />
           <Text muted>{t('friends.noData')}</Text>
         </Card>
       );
