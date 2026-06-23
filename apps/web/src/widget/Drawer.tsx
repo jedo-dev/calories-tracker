@@ -64,7 +64,8 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
   const handleSelectDate = () => {
     const dateInput = document.createElement('input');
     dateInput.type = 'date';
-    dateInput.value = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     dateInput.onchange = (e: any) => {
       const selectedDate = e.target.value;
       if (selectedDate) {
@@ -212,26 +213,27 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           <Button
             variant="primary"
             onClick={handleAddEntry}
-            style={{
-              gridColumn: '1 / -1',
-              minHeight: '48px',
-            }}
+            style={{ gridColumn: '1 / -1', minHeight: '48px' }}
           >
             + {t('commandCenter.addEntry')}
           </Button>
-          <Button
-            variant="secondary"
-            onClick={handleSelectDate}
-            style={{ minHeight: '44px' }}
-          >
+          <Button variant="secondary" onClick={handleSelectDate} style={{ minHeight: '44px' }}>
             📅 {t('commandCenter.selectDate')}
           </Button>
-          <Button
-            variant="secondary"
-            onClick={() => handleNavigate('/workouts')}
-            style={{ minHeight: '44px' }}
-          >
+          <Button variant="secondary" onClick={() => handleNavigate('/workouts')} style={{ minHeight: '44px' }}>
             🏋️ {t('workout.title')}
+          </Button>
+          <Button variant="secondary" onClick={() => handleNavigate('/weight')} style={{ minHeight: '44px' }}>
+            ⚖️ {t('weight.title')}
+          </Button>
+          <Button variant="secondary" onClick={() => handleNavigate('/reports')} style={{ minHeight: '44px' }}>
+            📊 {t('report.title')}
+          </Button>
+          <Button variant="secondary" onClick={() => handleNavigate('/measurements')} style={{ minHeight: '44px' }}>
+            📏 {t('measurement.title')}
+          </Button>
+          <Button variant="secondary" onClick={() => handleNavigate('/templates')} style={{ minHeight: '44px' }}>
+            📋 {t('template.title')}
           </Button>
         </div>
 

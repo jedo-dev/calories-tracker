@@ -15,6 +15,10 @@ import { TodayPage } from './pages/TodayPage';
 import { WorkoutsPage } from './pages/WorkoutsPage';
 import { ExercisesPage } from './pages/ExercisesPage';
 import { ActiveWorkoutPage } from './pages/ActiveWorkoutPage';
+import { WeightHistoryPage } from './pages/WeightHistoryPage';
+import { TemplatesPage } from './pages/TemplatesPage';
+import { ReportsPage } from './pages/ReportsPage';
+import { MeasurementsPage } from './pages/MeasurementsPage';
 import { useTheme } from './theme/useTheme';
 import { Footer } from './widget/Footer/Footer';
 
@@ -56,6 +60,10 @@ function App() {
             <Route path="/workouts" element={<WorkoutsPage />} />
             <Route path="/workout/category/:categoryId" element={<ExercisesPage />} />
             <Route path="/workout/:sessionId" element={<ActiveWorkoutPage />} />
+            <Route path="/weight" element={<WeightHistoryPage />} />
+            <Route path="/templates" element={<TemplatesPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/measurements" element={<MeasurementsPage />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Route>
         </Routes>

@@ -184,6 +184,63 @@ export const ru = {
     todayWorkouts: "Тренировки сегодня",
     noWorkoutsToday: "Нет тренировок сегодня",
   },
+  // Water
+  water: {
+    title: "Вода",
+    goal: "Цель: 2000 мл",
+    addGlass: "+ Стакан (250мл)",
+    addBottle: "+ Бутылка (500мл)",
+    ml: "мл",
+    glasses: "стаканов",
+    of: "из",
+    goalMl: "2000 мл",
+    logged: "Выпито",
+  },
+  // Weight
+  weight: {
+    title: "Вес",
+    logWeight: "Записать вес",
+    current: "Текущий",
+    change: "Изменение",
+    history: "История веса",
+    noHistory: "Нет записей веса",
+    kg: "кг",
+    today: "Сегодня",
+  },
+  // Templates
+  template: {
+    title: "Шаблоны",
+    save: "Сохранить как шаблон",
+    name: "Название шаблона",
+    noTemplates: "Нет шаблонов",
+    apply: "Применить",
+    saved: "Шаблон сохранён",
+  },
+  // Reports
+  report: {
+    title: "Отчёты",
+    weekly: "Недельный",
+    monthly: "Месячный",
+    avgKcal: "Средние калории",
+    totalBurned: "Сожжено всего",
+    avgWeight: "Средний вес",
+    workouts: "Тренировки",
+    days: "дней",
+    noData: "Нет данных за период",
+  },
+  // Measurements
+  measurement: {
+    title: "Замеры тела",
+    waist: "Талия (см)",
+    hips: "Бёдра (см)",
+    chest: "Грудь (см)",
+    bicep: "Бицепс (см)",
+    thigh: "Бедро (см)",
+    save: "Сохранить замеры",
+    history: "История замеров",
+    noHistory: "Нет замеров",
+    date: "Дата",
+  },
   profile: {
     title: "Профиль",
     weight: "Вес (кг)",

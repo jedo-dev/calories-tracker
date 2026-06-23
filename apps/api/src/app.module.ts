@@ -14,6 +14,10 @@ import { FriendsModule } from './friends/friends.module';
 import { ProfileModule } from './profile/profile.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { WorkoutModule } from './workouts/workout.module';
+import { WaterModule } from './water/water.module';
+import { WeightModule } from './weight/weight.module';
+import { TemplateModule } from './templates/template.module';
+import { MeasurementModule } from './measurements/measurement.module';
 
 @Module({
   imports: [
@@ -37,6 +41,10 @@ import { WorkoutModule } from './workouts/workout.module';
     ProfileModule,
     DashboardModule,
     WorkoutModule,
+    WaterModule,
+    WeightModule,
+    TemplateModule,
+    MeasurementModule,
   ],
   providers: [
     {
