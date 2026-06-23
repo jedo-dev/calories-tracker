@@ -212,6 +212,26 @@ export function TodayPage() {
         </Card>
       )}
 
+      {/* Meal Plan CTA */}
+      {dashboard?.targets && (
+        <Card
+          style={{ marginBottom: theme.spacing.md, cursor: 'pointer' }}
+          onClick={() => navigate(`/meal-plan?considerEaten=${entries.length > 0}`)}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <Text bold>🧠 План питания</Text>
+              <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
+                {entries.length === 0
+                  ? 'Составить план на сегодня'
+                  : `Добрать остаток ${Math.max(0, Math.round(kcalRemaining))} ккал`}
+              </Text>
+            </div>
+            <span style={{ fontSize: '20px' }}>→</span>
+          </div>
+        </Card>
+      )}
+
       {/* Water Tracking */}
       <Card style={{ marginBottom: theme.spacing.md }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>

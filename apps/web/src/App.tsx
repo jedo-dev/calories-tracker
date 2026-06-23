@@ -23,6 +23,7 @@ import { MeasurementsPage } from './pages/MeasurementsPage';
 import { RecipesPage } from './pages/RecipesPage';
 import { RecipeEditorPage } from './pages/RecipeEditorPage';
 import { RecipeDetailPage } from './pages/RecipeDetailPage';
+import { MealPlanPage } from './pages/MealPlanPage';
 import { useTheme } from './theme/useTheme';
 import { Footer } from './widget/Footer/Footer';
 
@@ -77,6 +78,7 @@ function App() {
             <Route path="/recipes/new" element={<RecipeEditorPage />} />
             <Route path="/recipes/:id" element={<RecipeDetailPage />} />
             <Route path="/recipes/:id/edit" element={<RecipeEditorPage />} />
+            <Route path="/meal-plan" element={<MealPlanPage />} />
             <Route path="/users/:userId" element={<PublicProfilePage />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Route>

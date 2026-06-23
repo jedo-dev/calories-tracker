@@ -19,6 +19,7 @@ import { WeightModule } from './weight/weight.module';
 import { TemplateModule } from './templates/template.module';
 import { MeasurementModule } from './measurements/measurement.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { MealPlanModule } from './meal-plan/meal-plan.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { RecipesModule } from './recipes/recipes.module';
     TemplateModule,
     MeasurementModule,
     RecipesModule,
+    MealPlanModule,
   ],
   providers: [
     {
