@@ -103,6 +103,7 @@ export function PublicProfilePage() {
   const theme = useTheme();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [userRecipes, setUserRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [followLoading, setFollowLoading] = useState(false);
@@ -112,12 +113,14 @@ export function PublicProfilePage() {
     setLoading(true);
     setError(null);
     try {
-      const [profileRes, achievementsRes] = await Promise.all([
+      const [profileRes, achievementsRes, recipesRes] = await Promise.all([
         apiClient.get(`/users/${userId}/public`),
         apiClient.get(`/achievements/${userId}/public`).catch(() => ({ data: [] })),
+        apiClient.get(`/users/${userId}/recipes`, { params: { limit: 10 } }).catch(() => ({ data: [] })),
       ]);
       setProfile(profileRes.data);
       setAchievements(achievementsRes.data);
+      setUserRecipes(recipesRes.data);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || t('common.error'));
     } finally {
@@ -251,6 +254,62 @@ export function PublicProfilePage() {
           </div>
         </Card>
       )}
+
+      {/* User Recipes */}
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipes.userRecipes')}</Text>
+        {userRecipes.length === 0 ? (
+          <Text variant="small" muted>{t('recipes.noUserRecipes')}</Text>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+            {userRecipes.map((recipe: any) => (
+              <div
+                key={recipe._id}
+                onClick={() => navigate(`/recipes/${recipe._id}`)}
+                style={{
+                  display: 'flex',
+                  gap: theme.spacing.md,
+                  alignItems: 'center',
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.radius.md,
+                  cursor: 'pointer',
+                  backgroundColor: theme.palette.bg,
+                }}
+              >
+                {recipe.photoUrl ? (
+                  <img
+                    src={recipe.photoUrl}
+                    alt={recipe.name}
+                    style={{ width: '48px', height: '48px', borderRadius: theme.radius.sm, objectFit: 'cover', flexShrink: 0 }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: theme.radius.sm,
+                    backgroundColor: theme.palette.surface,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                    flexShrink: 0,
+                  }}>
+                    🍽️
+                  </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text bold style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                    {recipe.name}
+                  </Text>
+                  <Text variant="small" muted>
+                    {recipe.kcalPer100g?.toFixed(0)} ккал · Б{recipe.proteinPer100g?.toFixed(1)} Ж{recipe.fatPer100g?.toFixed(1)} У{recipe.carbPer100g?.toFixed(1)}
+                  </Text>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <Card>
         <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('publicProfile.recentActivity')}</Text>

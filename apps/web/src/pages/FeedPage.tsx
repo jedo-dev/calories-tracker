@@ -4,6 +4,7 @@ import { apiClient } from '../api/client';
 import mascotFoxMain from '../assets/08_mascot/mascot_fox_main.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
+import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
@@ -11,7 +12,7 @@ import { Text } from '../ui/Text';
 
 interface FeedItem {
   id: string;
-  type: 'log_day' | 'streak_milestone' | 'xp_gain' | 'follow' | 'workout_completed' | 'water_goal' | 'achievement_earned';
+  type: 'log_day' | 'streak_milestone' | 'xp_gain' | 'follow' | 'workout_completed' | 'water_goal' | 'achievement_earned' | 'recipe_published';
   date: string;
   user: {
     id: string;
@@ -32,6 +33,7 @@ function getEventEmoji(type: string): string {
     case 'workout_completed': return '💪';
     case 'water_goal': return '💧';
     case 'achievement_earned': return '🏆';
+    case 'recipe_published': return '🍽️';
     default: return '📌';
   }
 }
@@ -57,6 +59,8 @@ function getEventText(item: FeedItem): string {
       return `${name} ${t('feed.waterGoal')}`;
     case 'achievement_earned':
       return `${name} ${t('feed.achievementEarned')} — ${getAchievementName(item.payload.achievementKey)}`;
+    case 'recipe_published':
+      return `${name} ${t('feed.recipePublished')} «${item.payload.recipeName || ''}»`;
     default:
       return `${name} performed an action`;
   }
@@ -203,6 +207,37 @@ export function FeedPage() {
                     );
                   })}
                 </div>
+
+                {/* Recipe published event actions */}
+                {item.type === 'recipe_published' && item.payload.recipeId && (
+                  <div style={{ display: 'flex', gap: theme.spacing.xs, marginTop: theme.spacing.sm, flexWrap: 'wrap' }}>
+                    {item.payload.photoUrl && (
+                      <img
+                        src={item.payload.photoUrl}
+                        alt={item.payload.recipeName}
+                        style={{ width: '48px', height: '48px', borderRadius: theme.radius.sm, objectFit: 'cover', marginBottom: theme.spacing.xs }}
+                      />
+                    )}
+                    <div style={{ display: 'flex', gap: theme.spacing.xs, flex: 1 }}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => navigate(`/recipes/${item.payload.recipeId}`)}
+                        style={{ flex: 1 }}
+                      >
+                        📖 Открыть
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => navigate(`/entry/new?recipeId=${item.payload.recipeId}&recipeName=${encodeURIComponent(item.payload.recipeName || '')}&kcal=${item.payload.kcalPer100g || 0}`)}
+                        style={{ flex: 1 }}
+                      >
+                        📥 В дневник
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </Card>

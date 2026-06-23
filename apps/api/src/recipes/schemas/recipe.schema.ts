@@ -5,6 +5,7 @@ export type RecipeDocument = Recipe & Document;
 
 export type CalculationMode = 'manual' | 'ingredients' | 'mixed';
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'other';
+export type Visibility = 'private' | 'public' | 'friends';
 
 export class Ingredient {
   @Prop({ type: Types.ObjectId, ref: 'Product' })
@@ -108,9 +109,34 @@ export class Recipe {
 
   @Prop({ default: false })
   isArchived: boolean;
+
+  @Prop({ type: String, enum: ['private', 'public', 'friends'], default: 'private', index: true })
+  visibility: Visibility;
+
+  @Prop()
+  publishedAt?: Date;
+
+  @Prop({ type: Types.ObjectId, ref: 'Recipe' })
+  sourceRecipeId?: Types.ObjectId;
+
+  @Prop({ default: 0 })
+  forkCount: number;
+
+  @Prop({ default: 0 })
+  likesCount: number;
+
+  @Prop({ type: Object, default: {} })
+  authorSnapshot?: {
+    userId: string;
+    username?: string;
+    displayName?: string;
+    avatarEmoji?: string;
+  };
 }
 
 export const RecipeSchema = SchemaFactory.createForClass(Recipe);
 
 RecipeSchema.index({ userId: 1, isArchived: 1 });
 RecipeSchema.index({ nameNormalized: 1 });
+RecipeSchema.index({ visibility: 1, publishedAt: -1 });
+RecipeSchema.index({ userId: 1, visibility: 1, updatedAt: -1 });

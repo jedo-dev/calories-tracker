@@ -23,6 +23,17 @@ interface Recipe {
   isArchived: boolean;
   totalCookedWeightG: number;
   servingGrams?: number;
+  visibility?: string;
+  publishedAt?: string;
+  forkCount?: number;
+  likesCount?: number;
+  isMine?: boolean;
+  authorSnapshot?: {
+    userId: string;
+    username?: string;
+    displayName?: string;
+    avatarEmoji?: string;
+  };
 }
 
 const modeBadge: Record<string, { label: string; color: string }> = {
@@ -34,17 +45,23 @@ const modeBadge: Record<string, { label: string; color: string }> = {
 export function RecipesPage() {
   const navigate = useNavigate();
   const theme = useTheme();
+  const [tab, setTab] = useState<'my' | 'board'>('my');
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [includeArchived, setIncludeArchived] = useState(false);
+  const [boardSort, setBoardSort] = useState<'newest' | 'popular' | 'forks'>('newest');
   const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
-    loadRecipes();
-  }, [debouncedSearch, includeArchived]);
+    if (tab === 'my') {
+      loadMyRecipes();
+    } else {
+      loadBoard();
+    }
+  }, [debouncedSearch, includeArchived, tab, boardSort]);
 
-  const loadRecipes = async () => {
+  const loadMyRecipes = async () => {
     setLoading(true);
     try {
       const params: any = { limit: 50 };
@@ -59,11 +76,55 @@ export function RecipesPage() {
     }
   };
 
+  const loadBoard = async () => {
+    setLoading(true);
+    try {
+      const params: any = { limit: 50, sort: boardSort };
+      if (debouncedSearch.trim()) params.search = debouncedSearch;
+      const response = await apiClient.get('/recipes/board', { params });
+      setRecipes(response.data);
+    } catch (err) {
+      console.error('Failed to load board', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePublish = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await apiClient.post(`/recipes/${id}/publish`);
+      if (tab === 'my') loadMyRecipes();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUnpublish = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await apiClient.post(`/recipes/${id}/unpublish`);
+      if (tab === 'my') loadMyRecipes();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleFork = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await apiClient.post(`/recipes/${id}/fork`);
+      alert(t('recipes.forkSuccess'));
+    } catch (err: any) {
+      alert(err.response?.data?.message || t('recipes.forkFailed'));
+    }
+  };
+
   const handleDuplicate = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       await apiClient.post(`/recipes/${id}/duplicate`);
-      loadRecipes();
+      loadMyRecipes();
     } catch (err) {
       console.error(t('recipes.duplicateFailed'), err);
     }
@@ -73,7 +134,7 @@ export function RecipesPage() {
     e.stopPropagation();
     try {
       await apiClient.delete(`/recipes/${id}`);
-      loadRecipes();
+      loadMyRecipes();
     } catch (err) {
       console.error(t('recipes.archiveFailed'), err);
     }
@@ -83,7 +144,7 @@ export function RecipesPage() {
     e.stopPropagation();
     try {
       await apiClient.post(`/recipes/${id}/unarchive`);
-      loadRecipes();
+      loadMyRecipes();
     } catch (err) {
       console.error(err);
     }
@@ -100,13 +161,37 @@ export function RecipesPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg }}>
-        <Text variant="h1">{t('recipes.title')}</Text>
-        <Button size="sm" onClick={() => navigate('/recipes/new')}>
-          + {t('recipes.create')}
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+        <Button
+          variant={tab === 'my' ? 'primary' : 'ghost'}
+          onClick={() => { setTab('my'); setSearch(''); }}
+          style={{ flex: 1 }}
+        >
+          {t('recipes.myRecipes')}
+        </Button>
+        <Button
+          variant={tab === 'board' ? 'primary' : 'ghost'}
+          onClick={() => { setTab('board'); setSearch(''); }}
+          style={{ flex: 1 }}
+        >
+          {t('recipes.board')}
         </Button>
       </div>
 
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md }}>
+        <Text variant="h1">
+          {tab === 'my' ? t('recipes.myRecipes') : t('recipes.boardTitle')}
+        </Text>
+        {tab === 'my' && (
+          <Button size="sm" onClick={() => navigate('/recipes/new')}>
+            + {t('recipes.create')}
+          </Button>
+        )}
+      </div>
+
+      {/* Search */}
       <div style={{ marginBottom: theme.spacing.md }}>
         <Input
           type="text"
@@ -116,38 +201,71 @@ export function RecipesPage() {
         />
       </div>
 
-      <div style={{ marginBottom: theme.spacing.md, display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs, cursor: 'pointer', fontSize: theme.typography.small.fontSize, color: theme.palette.textMuted }}>
-          <input
-            type="checkbox"
-            checked={includeArchived}
-            onChange={(e) => setIncludeArchived(e.target.checked)}
-          />
-          {t('recipes.archived')}
-        </label>
-      </div>
-
-      {recipes.length === 0 ? (
-        <EmptyState
-          title={t('recipes.noRecipes')}
-          description={t('recipes.noRecipesDesc')}
-          action={
-            <Button onClick={() => navigate('/recipes/new')}>
-              {t('recipes.create')}
+      {/* Board sort */}
+      {tab === 'board' && (
+        <div style={{ display: 'flex', gap: theme.spacing.xs, marginBottom: theme.spacing.md }}>
+          {(['newest', 'popular', 'forks'] as const).map((s) => (
+            <Button
+              key={s}
+              variant={boardSort === s ? 'primary' : 'ghost'}
+              size="sm"
+              onClick={() => setBoardSort(s)}
+              style={{ flex: 1 }}
+            >
+              {s === 'newest' ? t('recipes.sortNewest') : s === 'popular' ? t('recipes.sortPopular') : t('recipes.sortForks')}
             </Button>
-          }
-        />
+          ))}
+        </div>
+      )}
+
+      {/* Archive filter for my recipes */}
+      {tab === 'my' && (
+        <div style={{ marginBottom: theme.spacing.md, display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs, cursor: 'pointer', fontSize: theme.typography.small.fontSize, color: theme.palette.textMuted }}>
+            <input
+              type="checkbox"
+              checked={includeArchived}
+              onChange={(e) => setIncludeArchived(e.target.checked)}
+            />
+            {t('recipes.archived')}
+          </label>
+        </div>
+      )}
+
+      {/* Recipe list */}
+      {recipes.length === 0 ? (
+        tab === 'my' ? (
+          <EmptyState
+            title={t('recipes.noRecipes')}
+            description={t('recipes.noRecipesDesc')}
+            action={
+              <Button onClick={() => navigate('/recipes/new')}>
+                {t('recipes.create')}
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            title={t('recipes.noBoardRecipes')}
+            description={t('recipes.noBoardRecipesDesc')}
+          />
+        )
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
           {recipes.map((recipe) => {
             const badge = modeBadge[recipe.calculationMode] || modeBadge.manual;
+            const isPublished = recipe.visibility === 'public';
+            const isBoard = tab === 'board';
+            const author = recipe.authorSnapshot;
+
             return (
               <Card
                 key={recipe._id}
-                onClick={() => navigate(`/recipes/${recipe._id}`)}
+                onClick={() => navigate(isBoard ? `/recipes/${recipe._id}` : `/recipes/${recipe._id}`)}
                 style={{
                   opacity: recipe.isArchived ? 0.5 : 1,
                   padding: theme.spacing.md,
+                  cursor: 'pointer',
                 }}
               >
                 <div style={{ display: 'flex', gap: theme.spacing.md, alignItems: 'flex-start' }}>
@@ -195,31 +313,110 @@ export function RecipesPage() {
                       }}>
                         {badge.label}
                       </span>
+                      {isBoard && recipe.isMine && (
+                        <span style={{
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: theme.palette.primary + '20',
+                          color: theme.palette.primary,
+                          fontWeight: '600',
+                        }}>
+                          {t('recipes.myRecipe')}
+                        </span>
+                      )}
                     </div>
+
+                    {/* Author for board */}
+                    {isBoard && author && !recipe.isMine && (
+                      <Text variant="small" muted style={{ display: 'block', marginBottom: '2px' }}>
+                        {author.avatarEmoji} {author.displayName || author.username}
+                      </Text>
+                    )}
+
                     <Text variant="small" muted>
                       {recipe.kcalPer100g.toFixed(0)} ккал · Б{recipe.proteinPer100g.toFixed(1)} Ж{recipe.fatPer100g.toFixed(1)} У{recipe.carbPer100g.toFixed(1)} {t('recipes.per100g')}
                     </Text>
                     <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
                       {t('recipes.totalWeight')}: {recipe.totalCookedWeightG}г
                     </Text>
+
+                    {/* Visibility badge for my recipes */}
+                    {tab === 'my' && (
+                      <div style={{ display: 'flex', gap: theme.spacing.xs, marginTop: '4px', alignItems: 'center' }}>
+                        <span style={{
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: isPublished ? theme.palette.success + '20' : theme.palette.surface,
+                          color: isPublished ? theme.palette.success : theme.palette.textMuted,
+                          fontWeight: '600',
+                        }}>
+                          {isPublished ? t('recipes.published') : t('recipes.private')}
+                        </span>
+                        {isPublished && recipe.likesCount !== undefined && recipe.likesCount > 0 && (
+                          <Text variant="small" muted>❤️ {recipe.likesCount}</Text>
+                        )}
+                        {isPublished && recipe.forkCount !== undefined && recipe.forkCount > 0 && (
+                          <Text variant="small" muted>📋 {recipe.forkCount}</Text>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Board stats */}
+                    {isBoard && (
+                      <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: '4px' }}>
+                        {recipe.likesCount !== undefined && recipe.likesCount > 0 && (
+                          <Text variant="small" muted>❤️ {recipe.likesCount}</Text>
+                        )}
+                        {recipe.forkCount !== undefined && recipe.forkCount > 0 && (
+                          <Text variant="small" muted>📋 {recipe.forkCount}</Text>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* Actions */}
                 <div style={{ display: 'flex', gap: theme.spacing.xs, marginTop: theme.spacing.sm, flexWrap: 'wrap' }}>
-                  <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
-                    📥 {t('recipes.addToDiary')}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={(e) => handleDuplicate(recipe._id, e)}>
-                    📋 {t('recipes.duplicate')}
-                  </Button>
-                  {recipe.isArchived ? (
-                    <Button size="sm" variant="ghost" onClick={(e) => handleUnarchive(recipe._id, e)}>
-                      ♻️ {t('recipes.unarchive')}
-                    </Button>
+                  {tab === 'my' ? (
+                    <>
+                      <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
+                        📥 {t('recipes.addToDiary')}
+                      </Button>
+                      {isPublished ? (
+                        <Button size="sm" variant="ghost" onClick={(e) => handleUnpublish(recipe._id, e)}>
+                          🔒 {t('recipes.unpublish')}
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="ghost" onClick={(e) => handlePublish(recipe._id, e)}>
+                          🌐 {t('recipes.publish')}
+                        </Button>
+                      )}
+                      <Button size="sm" variant="ghost" onClick={(e) => handleDuplicate(recipe._id, e)}>
+                        📋 {t('recipes.duplicate')}
+                      </Button>
+                      {recipe.isArchived ? (
+                        <Button size="sm" variant="ghost" onClick={(e) => handleUnarchive(recipe._id, e)}>
+                          ♻️ {t('recipes.unarchive')}
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="ghost" onClick={(e) => handleArchive(recipe._id, e)}>
+                          🗄️ {t('recipes.archive')}
+                        </Button>
+                      )}
+                    </>
                   ) : (
-                    <Button size="sm" variant="ghost" onClick={(e) => handleArchive(recipe._id, e)}>
-                      🗄️ {t('recipes.archive')}
-                    </Button>
+                    <>
+                      <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
+                        📥 {t('recipes.addToDiary')}
+                      </Button>
+                      {!recipe.isMine && (
+                        <Button size="sm" variant="ghost" onClick={(e) => handleFork(recipe._id, e)}>
+                          📋 {t('recipes.fork')}
+                        </Button>
+                      )}
+                    </>
                   )}
                 </div>
               </Card>

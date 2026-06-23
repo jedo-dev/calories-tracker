@@ -22,6 +22,8 @@ import { RecipesService } from './recipes.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { QueryRecipesDto } from './dto/query-recipes.dto';
+import { QueryBoardDto } from './dto/query-board.dto';
+import { QueryUserRecipesDto } from './dto/query-user-recipes.dto';
 import { CreateEntryFromRecipeDto } from './dto/create-entry-from-recipe.dto';
 
 const UPLOAD_DIR = join(__dirname, '..', '..', 'uploads', 'recipes');
@@ -38,9 +40,14 @@ export class RecipesController {
     return this.recipesService.findAll(query, req.user.id);
   }
 
+  @Get('board')
+  async getBoard(@Query(ValidationPipe) query: QueryBoardDto, @Request() req: any) {
+    return this.recipesService.getBoard(query, req.user.id);
+  }
+
   @Get(':id')
   async findById(@Param('id') id: string, @Request() req: any) {
-    return this.recipesService.findById(id, req.user.id);
+    return this.recipesService.findByIdPublic(id, req.user.id);
   }
 
   @Post()
@@ -74,12 +81,32 @@ export class RecipesController {
     @Body(ValidationPipe) dto: CreateEntryFromRecipeDto,
     @Request() req: any,
   ) {
-    return this.recipesService.createEntry(id, dto, req.user.id);
+    return this.recipesService.createEntryFromPublic(id, dto, req.user.id);
   }
 
   @Post(':id/unarchive')
   async unarchive(@Param('id') id: string, @Request() req: any) {
     return this.recipesService.unarchive(id, req.user.id);
+  }
+
+  @Post(':id/publish')
+  async publish(@Param('id') id: string, @Request() req: any) {
+    return this.recipesService.publish(id, req.user.id);
+  }
+
+  @Post(':id/unpublish')
+  async unpublish(@Param('id') id: string, @Request() req: any) {
+    return this.recipesService.unpublish(id, req.user.id);
+  }
+
+  @Post(':id/fork')
+  async fork(@Param('id') id: string, @Request() req: any) {
+    return this.recipesService.fork(id, req.user.id);
+  }
+
+  @Post(':id/like')
+  async like(@Param('id') id: string, @Request() req: any) {
+    return this.recipesService.toggleLike(id, req.user.id);
   }
 
   @Post(':id/photo')

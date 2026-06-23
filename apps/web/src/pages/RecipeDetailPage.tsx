@@ -26,6 +26,7 @@ interface Ingredient {
 
 interface Recipe {
   _id: string;
+  userId: string;
   name: string;
   description?: string;
   photoUrl?: string;
@@ -46,6 +47,16 @@ interface Recipe {
   totalCarb: number;
   isArchived: boolean;
   linkedProductId?: string;
+  visibility?: string;
+  publishedAt?: string;
+  forkCount?: number;
+  likesCount?: number;
+  authorSnapshot?: {
+    userId: string;
+    username?: string;
+    displayName?: string;
+    avatarEmoji?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -57,6 +68,7 @@ export function RecipeDetailPage() {
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddToDiary, setShowAddToDiary] = useState(false);
   const [diaryDate, setDiaryDate] = useState(() => {
     const d = new Date();
@@ -65,22 +77,38 @@ export function RecipeDetailPage() {
   const [diaryMealType, setDiaryMealType] = useState('other');
   const [diaryGrams, setDiaryGrams] = useState('');
   const [addingToDiary, setAddingToDiary] = useState(false);
+  const [myUserId, setMyUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) loadRecipe();
+    loadMyUserId();
   }, [id]);
+
+  const loadMyUserId = async () => {
+    try {
+      const res = await apiClient.get('/social/me');
+      setMyUserId(res.data.user.id);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const loadRecipe = async () => {
     if (!id) return;
     setLoading(true);
+    setError(null);
     try {
       const response = await apiClient.get(`/recipes/${id}`);
       setRecipe(response.data);
       if (response.data.servingGrams) {
         setDiaryGrams(response.data.servingGrams.toString());
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        setError(t('recipes.accessDenied'));
+      } else {
+        setError(err.response?.data?.message || 'Error loading recipe');
+      }
     } finally {
       setLoading(false);
     }
@@ -124,8 +152,65 @@ export function RecipeDetailPage() {
     }
   };
 
+  const handleFork = async () => {
+    if (!recipe) return;
+    try {
+      const response = await apiClient.post(`/recipes/${recipe._id}/fork`);
+      alert(t('recipes.forkSuccess'));
+      navigate(`/recipes/${response.data._id}`);
+    } catch (err: any) {
+      alert(err.response?.data?.message || t('recipes.forkFailed'));
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!recipe) return;
+    try {
+      await apiClient.post(`/recipes/${recipe._id}/publish`);
+      loadRecipe();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!recipe) return;
+    try {
+      await apiClient.post(`/recipes/${recipe._id}/unpublish`);
+      loadRecipe();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (loading) return <Loader />;
+
+  if (error) {
+    return (
+      <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', paddingBottom: '100px', backgroundColor: theme.palette.bg, minHeight: 'calc(100vh - 64px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/recipes')} style={{ minWidth: '40px' }}>
+            ←
+          </Button>
+          <Text variant="h1" style={{ flex: 1 }}>{t('recipes.accessDenied')}</Text>
+        </div>
+        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+          <Text style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>🔒</Text>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipes.accessDenied')}</Text>
+          <Text muted>{t('recipes.accessDeniedDesc')}</Text>
+          <Button onClick={() => navigate('/recipes')} style={{ marginTop: theme.spacing.lg }}>
+            {t('recipes.title')}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   if (!recipe) return <Text>Блюдо не найдено</Text>;
+
+  const isMine = myUserId && recipe.userId === myUserId;
+  const isPublished = recipe.visibility === 'public';
+  const author = recipe.authorSnapshot;
 
   const modeLabel: Record<string, string> = {
     manual: t('recipes.manual'),
@@ -149,10 +234,65 @@ export function RecipeDetailPage() {
           ←
         </Button>
         <Text variant="h1" style={{ flex: 1 }}>{recipe.name}</Text>
-        <Button variant="ghost" size="sm" onClick={() => navigate(`/recipes/${recipe._id}/edit`)}>
-          ✏️
-        </Button>
+        {isMine && (
+          <Button variant="ghost" size="sm" onClick={() => navigate(`/recipes/${recipe._id}/edit`)}>
+            ✏️
+          </Button>
+        )}
       </div>
+
+      {/* Author info for public recipes */}
+      {!isMine && author && (
+        <Card
+          style={{ marginBottom: theme.spacing.md, cursor: 'pointer' }}
+          onClick={() => navigate(`/users/${author.userId}`)}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+            <div style={{ fontSize: '32px' }}>{author.avatarEmoji || '🦊'}</div>
+            <div>
+              <Text bold>{author.displayName || author.username}</Text>
+              {author.username && (
+                <Text variant="small" muted>@{author.username}</Text>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Visibility badge for own recipes */}
+      {isMine && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+              <span style={{
+                fontSize: '12px',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                backgroundColor: isPublished ? theme.palette.success + '20' : theme.palette.surface,
+                color: isPublished ? theme.palette.success : theme.palette.textMuted,
+                fontWeight: '600',
+              }}>
+                {isPublished ? `🌐 ${t('recipes.published')}` : `🔒 ${t('recipes.private')}`}
+              </span>
+              {isPublished && recipe.likesCount !== undefined && recipe.likesCount > 0 && (
+                <Text variant="small" muted>❤️ {recipe.likesCount}</Text>
+              )}
+              {isPublished && recipe.forkCount !== undefined && recipe.forkCount > 0 && (
+                <Text variant="small" muted>📋 {recipe.forkCount}</Text>
+              )}
+            </div>
+            {isPublished ? (
+              <Button size="sm" variant="ghost" onClick={handleUnpublish}>
+                {t('recipes.unpublish')}
+              </Button>
+            ) : (
+              <Button size="sm" variant="ghost" onClick={handlePublish}>
+                {t('recipes.publish')}
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Photo */}
       {recipe.photoUrl && (
@@ -259,14 +399,20 @@ export function RecipeDetailPage() {
         <Button onClick={() => setShowAddToDiary(true)}>
           📥 {t('recipes.addToDiary')}
         </Button>
-        <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-          <Button variant="secondary" onClick={handleDuplicate} style={{ flex: 1 }}>
-            📋 {t('recipes.duplicate')}
+        {isMine ? (
+          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+            <Button variant="secondary" onClick={handleDuplicate} style={{ flex: 1 }}>
+              📋 {t('recipes.duplicate')}
+            </Button>
+            <Button variant="danger" onClick={handleArchive} style={{ flex: 1 }}>
+              🗄️ {t('recipes.archive')}
+            </Button>
+          </div>
+        ) : (
+          <Button variant="secondary" onClick={handleFork}>
+            📋 {t('recipes.fork')}
           </Button>
-          <Button variant="danger" onClick={handleArchive} style={{ flex: 1 }}>
-            🗄️ {t('recipes.archive')}
-          </Button>
-        </div>
+        )}
       </div>
 
       {/* Add to diary bottom sheet */}

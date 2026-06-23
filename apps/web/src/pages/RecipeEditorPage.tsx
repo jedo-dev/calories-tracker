@@ -61,6 +61,7 @@ export function RecipeEditorPage() {
   const [servingName, setServingName] = useState('');
   const [servingGrams, setServingGrams] = useState('');
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+  const [visibility, setVisibility] = useState<'private' | 'public'>('private');
 
   // Ingredient search
   const [ingredientSearch, setIngredientSearch] = useState('');
@@ -100,6 +101,7 @@ export function RecipeEditorPage() {
       setManualCarb(recipe.carbPer100g?.toString() || '');
       setServingName(recipe.servingName || '');
       setServingGrams(recipe.servingGrams?.toString() || '');
+      setVisibility(recipe.visibility || 'private');
     } catch (err) {
       console.error(err);
       setError(t('recipes.loadFailed'));
@@ -255,6 +257,7 @@ export function RecipeEditorPage() {
         totalCookedWeightG: weight,
         servingName: servingName.trim() || undefined,
         servingGrams: servingGrams ? parseFloat(servingGrams) : undefined,
+        visibility,
         ingredients: calculationMode !== 'manual' ? ingredients.map((ing) => ({
           productId: ing.productId,
           productName: ing.productName,
@@ -506,6 +509,49 @@ export function RecipeEditorPage() {
                 fontFamily: 'inherit',
               }}
             />
+          </div>
+
+          {/* Visibility toggle */}
+          <div>
+            <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text, fontSize: theme.typography.small.fontSize }}>
+              {t('recipes.visibility')}
+            </label>
+            <div style={{ display: 'flex', gap: theme.spacing.xs }}>
+              <button
+                onClick={() => { setVisibility('private'); markDirty(); }}
+                style={{
+                  flex: 1,
+                  padding: theme.spacing.sm,
+                  fontSize: theme.typography.small.fontSize,
+                  fontWeight: '600',
+                  border: `2px solid ${visibility === 'private' ? theme.palette.border : theme.palette.border}`,
+                  borderRadius: theme.radius.md,
+                  backgroundColor: visibility === 'private' ? theme.palette.surface : 'transparent',
+                  color: visibility === 'private' ? theme.palette.text : theme.palette.textMuted,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                🔒 {t('recipes.visibilityPrivate')}
+              </button>
+              <button
+                onClick={() => { setVisibility('public'); markDirty(); }}
+                style={{
+                  flex: 1,
+                  padding: theme.spacing.sm,
+                  fontSize: theme.typography.small.fontSize,
+                  fontWeight: '600',
+                  border: `2px solid ${visibility === 'public' ? theme.palette.primary : theme.palette.border}`,
+                  borderRadius: theme.radius.md,
+                  backgroundColor: visibility === 'public' ? theme.palette.primary + '20' : 'transparent',
+                  color: visibility === 'public' ? theme.palette.primary : theme.palette.textMuted,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                🌐 {t('recipes.visibilityPublic')}
+              </button>
+            </div>
           </div>
         </div>
       </Card>
