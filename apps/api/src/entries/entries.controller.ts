@@ -27,6 +27,11 @@ export class EntriesController {
     return this.entriesService.listByDate(query.date, req.user.id);
   }
 
+  @Get('recent')
+  async getRecent(@Request() req: any) {
+    return this.entriesService.getRecentEntries(req.user.id, 5);
+  }
+
   @Get(':id')
   async findById(@Param('id') id: string, @Request() req: any) {
     return this.entriesService.getById(id, req.user.id);

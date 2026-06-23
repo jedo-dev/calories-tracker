@@ -44,6 +44,9 @@ export class User {
       gender: { type: String, enum: ['male', 'female'] },
       activityLevel: { type: String, enum: ['low', 'medium', 'high', 'very_high'] },
       goal: { type: String, enum: ['lose', 'maintain', 'gain'] },
+      startWeightKg: { type: Number },
+      targetWeightKg: { type: Number },
+      targetDate: { type: String },
       updatedAt: { type: Date },
     },
     required: false,
@@ -55,6 +58,9 @@ export class User {
     gender?: 'male' | 'female';
     activityLevel?: 'low' | 'medium' | 'high' | 'very_high';
     goal?: 'lose' | 'maintain' | 'gain';
+    startWeightKg?: number;
+    targetWeightKg?: number;
+    targetDate?: string;
     updatedAt?: Date;
   };
 }

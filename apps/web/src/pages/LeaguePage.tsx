@@ -18,11 +18,22 @@ interface LeaderboardItem {
   xpWeek: number;
 }
 
+interface League {
+  name: string;
+  color: string;
+  minXP: number;
+  maxXP: number;
+}
+
 interface LeaderboardResponse {
   weekKey: string;
   me?: {
     rank: number;
     xpWeek: number;
+    xpTotal: number;
+    league: League;
+    nextLeagueXP: number | null;
+    progress: number;
   };
   items: LeaderboardItem[];
 }
@@ -89,14 +100,71 @@ export function LeaguePage() {
 
       {data && (
         <>
+          {/* League Header */}
+          <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '10' }}>
+            <Text variant="h1" style={{ marginBottom: theme.spacing.sm }}>🏆 Лига недели</Text>
+            <Text variant="small" muted>{data.weekKey}</Text>
+          </Card>
+
+          {/* My Stats Card */}
           {data.me && (
             <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '20', border: `2px solid ${theme.palette.primary}` }}>
-              <Text bold style={{ marginBottom: theme.spacing.xs }}>
-                {t('league.me')}
-              </Text>
-              <Text>
-                #{data.me.rank} · {data.me.xpWeek} XP
-              </Text>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
+                <Text variant="h2" bold>Мое место</Text>
+                <div style={{ 
+                  padding: '4px 12px', 
+                  borderRadius: '12px', 
+                  backgroundColor: data.me.league.color + '30',
+                  border: `2px solid ${data.me.league.color}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <span style={{ fontSize: '16px' }}>
+                    {data.me.league.name === 'Diamond' ? '💎' : 
+                     data.me.league.name === 'Gold' ? '🥇' : 
+                     data.me.league.name === 'Silver' ? '🥈' : '🥉'}
+                  </span>
+                  <Text bold style={{ color: data.me.league.color }}>{data.me.league.name}</Text>
+                </div>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+                <div style={{ textAlign: 'center' }}>
+                  <Text variant="small" muted>Место</Text>
+                  <Text variant="h2" bold>#{data.me.rank}</Text>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <Text variant="small" muted>XP за неделю</Text>
+                  <Text variant="h2" bold>{data.me.xpWeek}</Text>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <Text variant="small" muted>Всего XP</Text>
+                  <Text variant="h2" bold>{data.me.xpTotal}</Text>
+                </div>
+              </div>
+
+              {/* League Progress */}
+              {data.me.nextLeagueXP && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <Text variant="small" muted>Прогресс до следующей лиги</Text>
+                    <Text variant="small" muted>{data.me.progress}%</Text>
+                  </div>
+                  <div style={{ backgroundColor: theme.palette.bg, borderRadius: theme.radius.sm, height: '8px', overflow: 'hidden' }}>
+                    <div style={{ 
+                      width: `${data.me.progress}%`, 
+                      height: '100%', 
+                      backgroundColor: data.me.league.color, 
+                      borderRadius: theme.radius.sm, 
+                      transition: 'width 0.3s' 
+                    }} />
+                  </div>
+                  <Text variant="small" muted style={{ marginTop: '4px', display: 'block' }}>
+                    До {data.me.nextLeagueXP} XP осталось {data.me.nextLeagueXP - data.me.xpTotal} XP
+                  </Text>
+                </div>
+              )}
             </Card>
           )}
 

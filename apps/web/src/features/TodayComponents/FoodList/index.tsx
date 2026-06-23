@@ -36,17 +36,11 @@ const FoodList = ({ entries, handleDelete }: Props) => {
               )}
               <div style={{ flex: 1, position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-
-                    <Text muted style={{}}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <Text muted>
                       {entry.productName}
                     </Text>
-
-
-
-
                     <Text variant="small" muted style={{ fontSize: '10px' }}>
-
                       {t('totals.macros', {
                         kcal: entry.kcal.toFixed(1),
                         protein: entry.protein.toFixed(1),
@@ -54,7 +48,7 @@ const FoodList = ({ entries, handleDelete }: Props) => {
                         carb: entry.carb.toFixed(1),
                       })}
                     </Text>
-                  </div>
+                    </div>
                   <Text muted variant="small" style={{}}>
                     {entry.grams}г
                   </Text>

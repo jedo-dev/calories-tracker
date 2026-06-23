@@ -10,6 +10,9 @@ export interface ProfileData {
   gender?: 'male' | 'female';
   activityLevel?: 'low' | 'medium' | 'high' | 'very_high';
   goal?: 'lose' | 'maintain' | 'gain';
+  startWeightKg?: number;
+  targetWeightKg?: number;
+  targetDate?: string;
 }
 
 export interface Targets {

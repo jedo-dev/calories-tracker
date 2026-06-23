@@ -16,6 +16,9 @@ interface ProfileData {
   gender?: 'male' | 'female';
   activityLevel?: 'low' | 'medium' | 'high' | 'very_high';
   goal?: 'lose' | 'maintain' | 'gain';
+  startWeightKg?: number;
+  targetWeightKg?: number;
+  targetDate?: string;
 }
 
 export function ProfilePage() {
@@ -24,6 +27,8 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [prediction, setPrediction] = useState<any>(null);
   const [formData, setFormData] = useState<ProfileData>({
     weightKg: undefined,
     heightCm: undefined,
@@ -31,6 +36,9 @@ export function ProfilePage() {
     gender: undefined,
     activityLevel: undefined,
     goal: 'maintain',
+    startWeightKg: undefined,
+    targetWeightKg: undefined,
+    targetDate: undefined,
   });
 
   useEffect(() => {
@@ -41,7 +49,10 @@ export function ProfilePage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get('/profile');
+      const [res, predRes] = await Promise.all([
+        apiClient.get('/profile'),
+        apiClient.get('/weight/prediction').catch(() => ({ data: { available: false } })),
+      ]);
       if (res.data.profile) {
         setFormData({
           weightKg: res.data.profile.weightKg,
@@ -50,8 +61,13 @@ export function ProfilePage() {
           gender: res.data.profile.gender,
           activityLevel: res.data.profile.activityLevel,
           goal: res.data.profile.goal || 'maintain',
+          startWeightKg: res.data.profile.startWeightKg,
+          targetWeightKg: res.data.profile.targetWeightKg,
+          targetDate: res.data.profile.targetDate,
         });
       }
+      setUser(res.data.user);
+      setPrediction(predRes.data);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || t('profile.loadFailed'));
     } finally {
@@ -89,6 +105,115 @@ export function ProfilePage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+      {/* User Card */}
+      {user && (
+        <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '10' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+            <div style={{ fontSize: '48px' }}>{user.avatarEmoji || '🦊'}</div>
+            <div>
+              <Text variant="h2" bold>{user.displayName || user.username || 'User'}</Text>
+              {user.username && (
+                <Text variant="small" muted>@{user.username}</Text>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Goal Card */}
+      {formData.goal && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>
+            {formData.goal === 'lose' ? '🎯 Похудение' : formData.goal === 'gain' ? '💪 Набор веса' : '⚖️ Поддержание'}
+          </Text>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
+            {formData.startWeightKg && (
+              <div>
+                <Text variant="small" muted>Стартовый вес</Text>
+                <Text bold>{formData.startWeightKg} кг</Text>
+              </div>
+            )}
+            {formData.weightKg && (
+              <div>
+                <Text variant="small" muted>Текущий вес</Text>
+                <Text bold>{formData.weightKg} кг</Text>
+              </div>
+            )}
+            {formData.targetWeightKg && (
+              <div>
+                <Text variant="small" muted>Целевой вес</Text>
+                <Text bold>{formData.targetWeightKg} кг</Text>
+              </div>
+            )}
+            {formData.targetDate && (
+              <div>
+                <Text variant="small" muted>Дедлайн</Text>
+                <Text bold>{formData.targetDate}</Text>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Progress Card */}
+      {formData.startWeightKg && formData.weightKg && formData.targetWeightKg && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>📊 Прогресс</Text>
+          {(() => {
+            const total = Math.abs(formData.startWeightKg - formData.targetWeightKg);
+            const current = Math.abs(formData.startWeightKg - formData.weightKg);
+            const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+            return (
+              <>
+                <div style={{ backgroundColor: theme.palette.bg, borderRadius: theme.radius.sm, height: '12px', overflow: 'hidden', marginBottom: theme.spacing.sm }}>
+                  <div style={{ width: `${pct}%`, height: '100%', backgroundColor: theme.palette.primary, borderRadius: theme.radius.sm, transition: 'width 0.3s' }} />
+                </div>
+                <Text variant="small" muted>{pct}% выполнено</Text>
+              </>
+            );
+          })()}
+        </Card>
+      )}
+
+      {/* Prediction Card */}
+      {prediction?.available && (
+        <Card style={{ marginBottom: theme.spacing.md, borderLeft: `3px solid ${prediction.pace === 'too_fast' ? '#FFA500' : prediction.pace === 'stalled' ? theme.palette.danger : theme.palette.success}` }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>🔮 Прогноз</Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Text variant="small" muted>Тренд за неделю</Text>
+              <Text bold style={{ color: prediction.weeklyTrend < 0 ? theme.palette.success : prediction.weeklyTrend > 0 ? theme.palette.danger : theme.palette.text }}>
+                {prediction.weeklyTrend > 0 ? '+' : ''}{prediction.weeklyTrend} кг/нед
+              </Text>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Text variant="small" muted>Темп</Text>
+              <Text bold style={{ color: prediction.pace === 'too_fast' ? '#FFA500' : prediction.pace === 'stalled' ? theme.palette.danger : prediction.pace === 'too_slow' ? theme.palette.danger : theme.palette.success }}>
+                {prediction.pace === 'too_fast' ? '⚠️ Слишком быстро' :
+                 prediction.pace === 'stalled' ? '⏸️ Вес стоит' :
+                 prediction.pace === 'too_slow' ? '🐌 Слишком медленно' : '✅ Нормально'}
+              </Text>
+            </div>
+            {prediction.estimatedDate && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Text variant="small" muted>Прогноз достижения</Text>
+                <Text bold>{prediction.estimatedDate}</Text>
+              </div>
+            )}
+            {prediction.pace === 'stalled' && (
+              <Text variant="small" style={{ color: theme.palette.danger, marginTop: theme.spacing.xs }}>
+                Вес стоит несколько дней. Можно пересмотреть калории или добавить активность.
+              </Text>
+            )}
+            {prediction.pace === 'too_fast' && (
+              <Text variant="small" style={{ color: '#FFA500', marginTop: theme.spacing.xs }}>
+                Слишком быстрый темп может привести к срыву. Рекомендуем не более 0.5-1 кг в неделю.
+              </Text>
+            )}
+          </div>
+        </Card>
+      )}
+
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         {t('profile.title')}
       </Text>
@@ -197,6 +322,37 @@ export function ProfilePage() {
                 <option value="gain">{t('profile.goal_gain')}</option>
               </select>
             </div>
+          </div>
+        </Card>
+
+        {/* Goal Settings Card */}
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>🎯 Настройки цели</Text>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '4px', rowGap: '4px' }}>
+            <Input
+              label="Стартовый вес (кг)"
+              type="number"
+              value={formData.startWeightKg || ''}
+              onChange={(e) => handleChange('startWeightKg', e.target.value ? parseFloat(e.target.value) : undefined)}
+              min={30}
+              max={300}
+              step={0.1}
+            />
+            <Input
+              label="Целевой вес (кг)"
+              type="number"
+              value={formData.targetWeightKg || ''}
+              onChange={(e) => handleChange('targetWeightKg', e.target.value ? parseFloat(e.target.value) : undefined)}
+              min={30}
+              max={300}
+              step={0.1}
+            />
+            <Input
+              label="Дедлайн цели"
+              type="date"
+              value={formData.targetDate || ''}
+              onChange={(e) => handleChange('targetDate', e.target.value || undefined)}
+            />
           </div>
         </Card>
 

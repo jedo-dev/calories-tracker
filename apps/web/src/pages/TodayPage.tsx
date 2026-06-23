@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import DayChanger from '../features/TodayComponents/DayChanger';
 import FoodList from '../features/TodayComponents/FoodList';
+import { RecentProducts } from '../features/TodayComponents/RecentProducts';
+import { DailyTips } from '../features/TodayComponents/DailyTips';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -153,6 +155,12 @@ export function TodayPage() {
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '80px' }}>
       <DayChanger setDate={setDate} date={date} registrationDate={socialStats?.user.createdAt} />
+
+      {/* Quick Add */}
+      <RecentProducts date={date} onAdded={loadData} />
+
+      {/* Daily Tips */}
+      <DailyTips dashboard={dashboard} waterMl={water.totalMl} waterGoal={waterGoal} />
 
       {/* Streak */}
       {socialStats && (

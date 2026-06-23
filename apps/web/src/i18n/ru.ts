@@ -289,5 +289,27 @@ export const ru = {
     days_one: "{count} день",
     days_few: "{count} дня",
     days_many: "{count} дней"
+  },
+
+  // Recent Products
+  recentProducts: {
+    title: "Быстрое добавление",
+    repeatLast: "Повторить",
+    add100g: "+100г",
+  },
+
+  // Daily Tips
+  dailyTips: {
+    title: "Совет дня",
+    waterDone: "Отлично! Вода на сегодня закрыта 💧",
+    waterAlmost: "Почти хватает воды, осталось {ml} мл",
+    lowProtein: "Сегодня мало белка: осталось {g}г. Творог, курица или йогурт помогут",
+    highFat: "Жиры почти на пределе, лучше выбрать белковый продукт",
+    caloriesLeft: "Осталось {kcal} ккал. Подойдут: {suggestions}",
+    suggestionsProtein: "творог, курица, рыба",
+    suggestionsBalanced: "йогурт, фрукты, орехи",
+    almostDone: "Почти цель! Следи чтобы не выйти за норму",
+    overLimit: "Превышение на {kcal} ккал. Легче завтра!",
+    keepGoing: "Хороший день! Продолжай в том же духе",
   }
 };

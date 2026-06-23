@@ -59,6 +59,13 @@ export class LeaderboardController {
     private socialService: SocialService,
   ) {}
 
+  private getLeague(xpTotal: number): { name: string; color: string; minXP: number; maxXP: number } {
+    if (xpTotal >= 1000) return { name: 'Diamond', color: '#B9F2FF', minXP: 1000, maxXP: Infinity };
+    if (xpTotal >= 500) return { name: 'Gold', color: '#FFD700', minXP: 500, maxXP: 1000 };
+    if (xpTotal >= 200) return { name: 'Silver', color: '#C0C0C0', minXP: 200, maxXP: 500 };
+    return { name: 'Bronze', color: '#CD7F32', minXP: 0, maxXP: 200 };
+  }
+
   @Get('week/global')
   async getGlobalLeaderboard(@Request() req: any) {
     const weekKey = this.socialService.getWeekKey();
@@ -93,9 +100,16 @@ export class LeaderboardController {
     if (myStats) {
       const myRank = publicStats.findIndex((s: any) => s.user.id === req.user.id) + 1;
       if (myRank > 0) {
+        const league = this.getLeague(myStats.xpTotal || 0);
+        const nextLeagueXP = league.maxXP === Infinity ? null : league.maxXP;
+        const progress = league.maxXP === Infinity ? 100 : Math.round(((myStats.xpTotal - league.minXP) / (league.maxXP - league.minXP)) * 100);
         me = {
           rank: myRank,
           xpWeek: myStats.xpWeek,
+          xpTotal: myStats.xpTotal || 0,
+          league,
+          nextLeagueXP,
+          progress,
         };
       }
     }
@@ -150,9 +164,16 @@ export class LeaderboardController {
     if (myStats) {
       const myRank = publicStats.findIndex((s: any) => s.user.id === req.user.id) + 1;
       if (myRank > 0) {
+        const league = this.getLeague(myStats.xpTotal || 0);
+        const nextLeagueXP = league.maxXP === Infinity ? null : league.maxXP;
+        const progress = league.maxXP === Infinity ? 100 : Math.round(((myStats.xpTotal - league.minXP) / (league.maxXP - league.minXP)) * 100);
         me = {
           rank: myRank,
           xpWeek: myStats.xpWeek,
+          xpTotal: myStats.xpTotal || 0,
+          league,
+          nextLeagueXP,
+          progress,
         };
       }
     }

@@ -99,7 +99,7 @@ export function ProductsPage() {
         <div>
           {products.map((product) => (
             <Card key={product._id} style={{ marginBottom: theme.spacing.sm }}>
-              <Text bold style={{ marginBottom: theme.spacing.xs }}>{product.name}</Text>
+              <Text bold style={{ marginBottom: '4px' }}>{product.name}</Text>
               <Text variant="small" muted>
                 {t('totals.macros', {
                   kcal: product.kcalPer100g.toFixed(0),

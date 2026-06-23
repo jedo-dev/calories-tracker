@@ -22,4 +22,9 @@ export class WeightController {
   async getLatest(@Request() req: any) {
     return this.weightService.getLatest(req.user.id);
   }
+
+  @Get('prediction')
+  async getPrediction(@Request() req: any) {
+    return this.weightService.getPrediction(req.user.id);
+  }
 }

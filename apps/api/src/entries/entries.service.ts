@@ -163,5 +163,36 @@ export class EntriesService {
     const entry = await this.getById(id, userId);
     await entry.deleteOne();
   }
+
+  async getRecentEntries(userId: string, limit: number = 5): Promise<any[]> {
+    const entries = await this.entryModel
+      .find({ 
+        userId: new Types.ObjectId(userId),
+        productId: { $exists: true, $ne: null }
+      })
+      .sort({ createdAt: -1 })
+      .limit(limit * 3)
+      .exec();
+
+    const seen = new Map<string, any>();
+    for (const entry of entries) {
+      const pid = entry.productId?.toString();
+      if (pid && !seen.has(pid)) {
+        seen.set(pid, {
+          productId: pid,
+          productName: entry.productName,
+          grams: entry.grams,
+          kcal: entry.kcal,
+          kcalPer100g: entry.kcalPer100g,
+          proteinPer100g: entry.proteinPer100g,
+          fatPer100g: entry.fatPer100g,
+          carbPer100g: entry.carbPer100g,
+          lastUsed: entry.get('createdAt'),
+        });
+      }
+    }
+
+    return Array.from(seen.values()).slice(0, limit);
+  }
 }
 
