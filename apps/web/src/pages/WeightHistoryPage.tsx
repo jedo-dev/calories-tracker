@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import emptyWeight from '../assets/03_empty_states/empty_weight.jpg';
+import DeleteIcon from '../assets/DeleteIcon';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { EmptyState } from '../ui/EmptyState';
 import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
@@ -37,6 +39,16 @@ export function WeightHistoryPage() {
       setWeightInput('');
       await load();
     } catch (err) { console.error(err); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Удалить запись веса?')) return;
+    try {
+      await apiClient.delete(`/weight/${id}`);
+      await load();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to delete');
+    }
   };
 
   if (loading) return <Loader />;
@@ -119,16 +131,27 @@ export function WeightHistoryPage() {
 
       {/* History table */}
       {history.length === 0 ? (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <img src={emptyWeight} alt="" style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: theme.spacing.md, opacity: 0.8 }} />
-          <Text muted>{t('weight.noHistory')}</Text>
-        </Card>
+        <EmptyState
+          image={emptyWeight}
+          title={t('weight.noHistory')}
+        />
       ) : (
         history.map((entry) => (
           <Card key={entry._id} style={{ marginBottom: theme.spacing.xs, padding: theme.spacing.sm }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text variant="small" muted>{entry.date}</Text>
-              <Text bold>{entry.weightKg} {t('weight.kg')}</Text>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <Text bold>{entry.weightKg} {t('weight.kg')}</Text>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(entry._id)}
+                  style={{ padding: '6px', minWidth: '32px', minHeight: '32px' }}
+                  aria-label="Удалить"
+                >
+                  <DeleteIcon />
+                </Button>
+              </div>
             </div>
           </Card>
         ))

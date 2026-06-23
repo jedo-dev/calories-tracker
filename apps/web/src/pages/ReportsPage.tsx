@@ -31,6 +31,7 @@ function getMonthDates(offset = 0): { from: string; to: string } {
 }
 
 interface DayData {
+  date: string;
   entries: any[];
   workouts: any[];
   weight: number | null;
@@ -47,27 +48,10 @@ export function ReportsPage() {
     setLoading(true);
     const dates = period === 'week' ? getWeekDates(offset) : getMonthDates(offset);
     try {
-      const allDates: string[] = [];
-      const from = new Date(dates.from);
-      const to = new Date(dates.to);
-      for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
-        allDates.push(formatDate(d));
-      }
-
-      const results: DayData[] = [];
-      for (const date of allDates) {
-        const [entriesRes, workoutsRes, weightRes] = await Promise.all([
-          apiClient.get(`/entries?date=${date}`).catch(() => ({ data: [] })),
-          apiClient.get('/workouts/sessions', { params: { date } }).catch(() => ({ data: [] })),
-          apiClient.get('/weight', { params: { limit: 1 } }).catch(() => ({ data: [] })),
-        ]);
-        results.push({
-          entries: entriesRes.data || [],
-          workouts: workoutsRes.data || [],
-          weight: weightRes.data?.[0]?.weightKg || null,
-        });
-      }
-      setData(results);
+      const res = await apiClient.get('/stats/range', {
+        params: { from: dates.from, to: dates.to },
+      });
+      setData(res.data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -137,20 +121,14 @@ export function ReportsPage() {
       )}
 
       {/* Daily breakdown */}
-      {data.map((day, i) => {
+      {data.map((day) => {
         const dayKcal = day.entries.reduce((s: number, e: any) => s + (e.kcal || 0), 0);
         const dayBurned = day.workouts.reduce((s: number, w: any) => s + (w.totalCaloriesBurned || 0), 0);
-        const dates = period === 'week' ? getWeekDates(offset) : getMonthDates(offset);
-        const allDates: string[] = [];
-        const from = new Date(dates.from);
-        const to = new Date(dates.to);
-        for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) allDates.push(formatDate(d));
-        const dateStr = allDates[i];
 
         return (
-          <Card key={dateStr} style={{ marginBottom: theme.spacing.xs, padding: theme.spacing.sm }}>
+          <Card key={day.date} style={{ marginBottom: theme.spacing.xs, padding: theme.spacing.sm }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text variant="small" muted>{dateStr.slice(5)}</Text>
+              <Text variant="small" muted>{day.date.slice(5)}</Text>
               <div style={{ display: 'flex', gap: theme.spacing.md }}>
                 {dayKcal > 0 && <Text variant="small" style={{ color: theme.palette.success }}>{Math.round(dayKcal)} ккал</Text>}
                 {dayBurned > 0 && <Text variant="small" style={{ color: theme.palette.primary }}>−{Math.round(dayBurned)}</Text>}

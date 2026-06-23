@@ -187,7 +187,7 @@ export class EntriesService {
           proteinPer100g: entry.proteinPer100g,
           fatPer100g: entry.fatPer100g,
           carbPer100g: entry.carbPer100g,
-          lastUsed: entry.get('createdAt'),
+          lastUsed: (entry as any).createdAt || new Date().toISOString(),
         });
       }
     }

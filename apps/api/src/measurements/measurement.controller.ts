@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { MeasurementService } from './measurement.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
@@ -15,5 +15,11 @@ export class MeasurementController {
   @Get()
   async getHistory(@Query('limit') limit: string, @Request() req: any) {
     return this.service.getHistory(req.user.id, limit ? parseInt(limit, 10) : 90);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string, @Request() req: any) {
+    await this.service.delete(id, req.user.id);
+    return { ok: true };
   }
 }

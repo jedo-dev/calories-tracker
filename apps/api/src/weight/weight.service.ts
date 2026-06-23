@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { WeightLog, WeightLogDocument } from './schemas/weight-log.schema';
@@ -140,5 +140,16 @@ export class WeightService {
       daysTracked: cleanEntries.length,
       outlierWarning,
     };
+  }
+
+  async delete(id: string, userId: string): Promise<void> {
+    const entry = await this.weightModel.findById(id).exec();
+    if (!entry) {
+      throw new NotFoundException('Weight entry not found');
+    }
+    if (entry.userId.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    await entry.deleteOne();
   }
 }

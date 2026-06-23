@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { WeightService } from './weight.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
@@ -26,5 +26,11 @@ export class WeightController {
   @Get('prediction')
   async getPrediction(@Request() req: any) {
     return this.weightService.getPrediction(req.user.id);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string, @Request() req: any) {
+    await this.weightService.delete(id, req.user.id);
+    return { ok: true };
   }
 }

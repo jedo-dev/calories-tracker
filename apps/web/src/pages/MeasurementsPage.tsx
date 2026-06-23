@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import emptyMeasurements from '../assets/03_empty_states/empty_measurements.jpg';
+import DeleteIcon from '../assets/DeleteIcon';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -55,6 +56,16 @@ export function MeasurementsPage() {
     } catch (err) { console.error(err); }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Удалить запись замеров?')) return;
+    try {
+      await apiClient.delete(`/measurements/${id}`);
+      await load();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to delete');
+    }
+  };
+
   const fields = [
     { key: 'waistCm', label: t('measurement.waist') },
     { key: 'hipsCm', label: t('measurement.hips') },
@@ -101,7 +112,18 @@ export function MeasurementsPage() {
       ) : (
         history.map((m) => (
           <Card key={m._id} style={{ marginBottom: theme.spacing.sm }}>
-            <Text variant="small" muted style={{ marginBottom: theme.spacing.xs }}>{m.date}</Text>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.xs }}>
+              <Text variant="small" muted>{m.date}</Text>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(m._id)}
+                style={{ padding: '6px', minWidth: '32px', minHeight: '32px' }}
+                aria-label="Удалить"
+              >
+                <DeleteIcon />
+              </Button>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: theme.spacing.sm }}>
               {fields.map(f => {
                 const val = (m as any)[f.key];

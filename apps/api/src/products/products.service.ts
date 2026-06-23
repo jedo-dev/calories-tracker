@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductsDto } from './dto/query-products.dto';
 import { Product, ProductDocument } from './schemas/product.schema';
 
@@ -86,5 +87,40 @@ export class ProductsService {
 
     const product = new this.productModel(productData);
     return product.save();
+  }
+
+  async update(id: string, dto: UpdateProductDto, userId: string): Promise<ProductDocument> {
+    const product = await this.productModel.findById(id).exec();
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    if (product.createdBy && product.createdBy.toString() !== userId) {
+      throw new ForbiddenException('You can only edit your own products');
+    }
+
+    const updateData: any = {};
+    if (dto.name !== undefined) {
+      updateData.name = dto.name.trim().replace(/\s+/g, ' ');
+      updateData.nameNormalized = this.normalizeName(dto.name);
+    }
+    if (dto.brand !== undefined) updateData.brand = dto.brand;
+    if (dto.kcalPer100g !== undefined) updateData.kcalPer100g = dto.kcalPer100g;
+    if (dto.proteinPer100g !== undefined) updateData.proteinPer100g = dto.proteinPer100g;
+    if (dto.fatPer100g !== undefined) updateData.fatPer100g = dto.fatPer100g;
+    if (dto.carbPer100g !== undefined) updateData.carbPer100g = dto.carbPer100g;
+
+    product.set(updateData);
+    return product.save();
+  }
+
+  async delete(id: string, userId: string): Promise<void> {
+    const product = await this.productModel.findById(id).exec();
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    if (product.createdBy && product.createdBy.toString() !== userId) {
+      throw new ForbiddenException('You can only delete your own products');
+    }
+    await product.deleteOne();
   }
 }
