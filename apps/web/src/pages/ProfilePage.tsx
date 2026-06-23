@@ -11,6 +11,7 @@ import activityVeryHigh from '../assets/12_activity/activity_very_high.jpg';
 import mascotFoxMain from '../assets/08_mascot/mascot_fox_main.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
+import { Achievements } from '../ui/Achievements';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
@@ -131,6 +132,9 @@ export function ProfilePage() {
           </div>
         </Card>
       )}
+
+      {/* Achievements */}
+      <Achievements />
 
       {/* Goal Card */}
       {formData.goal && (

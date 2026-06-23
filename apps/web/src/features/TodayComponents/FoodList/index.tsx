@@ -7,6 +7,7 @@ import { Entry } from "../../../pages/TodayPage"
 import { useTheme } from "../../../theme/useTheme"
 import { Button } from "../../../ui/Button"
 import { Card } from "../../../ui/Card"
+import { EmptyState } from "../../../ui/EmptyState"
 import { Text } from "../../../ui/Text"
 interface Props {
   entries: Entry[];
@@ -22,10 +23,7 @@ const FoodList = ({ entries, handleDelete }: Props) => {
         {t('today.entries')}
       </Text>
       {entries.length === 0 ? (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <img src={emptyFood} alt="" style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: theme.spacing.md, opacity: 0.8 }} />
-          <Text muted>{t('today.noEntries')}</Text>
-        </Card>
+        <EmptyState image={emptyFood} title={t('today.noEntries')} />
       ) : (
         entries.map((entry: Entry) => (
           <Card key={entry._id} style={{ padding: `${theme.spacing.md} 0`, backgroundColor: theme.palette.bg, border: 'unset' }}>

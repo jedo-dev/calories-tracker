@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity-event.schema';
 import { Follow, FollowDocument } from '../social/schemas/follow.schema';
+import { UserStats, UserStatsDocument } from '../social/schemas/user-stats.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
 
 @Injectable()
@@ -11,7 +12,34 @@ export class FriendsService {
     @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
+    @InjectModel(UserStats.name) private userStatsModel: Model<UserStatsDocument>,
   ) {}
+
+  private getLeague(xpTotal: number): { name: string; color: string } {
+    if (xpTotal >= 1000) return { name: 'Diamond', color: '#B9F2FF' };
+    if (xpTotal >= 500) return { name: 'Gold', color: '#FFD700' };
+    if (xpTotal >= 200) return { name: 'Silver', color: '#C0C0C0' };
+    return { name: 'Bronze', color: '#CD7F32' };
+  }
+
+  private async enrichWithStats(users: any[]) {
+    const userIds = users.map((u) => new Types.ObjectId(u.id));
+    const statsList = await this.userStatsModel
+      .find({ userId: { $in: userIds } })
+      .exec();
+    const statsMap = new Map(statsList.map((s) => [s.userId.toString(), s]));
+
+    return users.map((u) => {
+      const stats = statsMap.get(u.id);
+      const xpTotal = stats?.xpTotal || 0;
+      return {
+        ...u,
+        xpWeek: stats?.xpWeek || 0,
+        currentStreak: stats?.currentStreak || 0,
+        league: this.getLeague(xpTotal),
+      };
+    });
+  }
 
   async searchUsers(query: string, currentUserId: string, limit: number = 20) {
     const searchRegex = new RegExp(query, 'i');
@@ -23,7 +51,7 @@ export class FriendsService {
       })
       .limit(limit)
       .exec();
-    console.log(`users`, users, searchRegex);
+
     const followingIds = await this.followModel
       .find({ followerId: new Types.ObjectId(currentUserId) })
       .distinct('followingId')
@@ -31,13 +59,15 @@ export class FriendsService {
 
     const followingSet = new Set(followingIds.map((id) => id.toString()));
 
-    return users.map((user) => ({
+    const baseUsers = users.map((user) => ({
       id: user._id.toString(),
       username: user.username,
       displayName: user.displayName || user.firstName || user.username || 'User',
       avatarEmoji: user.avatarEmoji || '🦊',
       isFollowing: followingSet.has(user._id.toString()),
     }));
+
+    return this.enrichWithStats(baseUsers);
   }
 
   async follow(followerId: string, followingId: string): Promise<void> {
@@ -88,7 +118,7 @@ export class FriendsService {
       .populate('followingId', 'username displayName firstName avatarEmoji')
       .exec();
 
-    return follows.map((follow) => {
+    const baseUsers = follows.map((follow) => {
       const user = follow.followingId as any;
       return {
         id: user._id.toString(),
@@ -97,6 +127,8 @@ export class FriendsService {
         avatarEmoji: user.avatarEmoji || '🦊',
       };
     });
+
+    return this.enrichWithStats(baseUsers);
   }
 
   async getFollowers(userId: string, limit: number = 50) {
@@ -106,7 +138,7 @@ export class FriendsService {
       .populate('followerId', 'username displayName firstName avatarEmoji')
       .exec();
 
-    return follows.map((follow) => {
+    const baseUsers = follows.map((follow) => {
       const user = follow.followerId as any;
       return {
         id: user._id.toString(),
@@ -115,5 +147,7 @@ export class FriendsService {
         avatarEmoji: user.avatarEmoji || '🦊',
       };
     });
+
+    return this.enrichWithStats(baseUsers);
   }
 }

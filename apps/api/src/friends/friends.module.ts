@@ -5,6 +5,7 @@ import { FriendsService } from './friends.service';
 import { Follow, FollowSchema } from '../social/schemas/follow.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { ActivityEvent, ActivityEventSchema } from '../social/schemas/activity-event.schema';
+import { UserStats, UserStatsSchema } from '../social/schemas/user-stats.schema';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ActivityEvent, ActivityEventSchema } from '../social/schemas/activity-e
       { name: Follow.name, schema: FollowSchema },
       { name: User.name, schema: UserSchema },
       { name: ActivityEvent.name, schema: ActivityEventSchema },
+      { name: UserStats.name, schema: UserStatsSchema },
     ]),
   ],
   controllers: [FriendsController],

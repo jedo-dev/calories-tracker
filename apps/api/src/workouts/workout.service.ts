@@ -6,6 +6,7 @@ import { Exercise, ExerciseDocument } from './schemas/exercise.schema';
 import { WorkoutSession, WorkoutSessionDocument } from './schemas/workout-session.schema';
 import { WorkoutLog, WorkoutLogDocument } from './schemas/workout-log.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
+import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity-event.schema';
 import { CreateWorkoutSessionDto } from './dto/create-workout-session.dto';
 import { AddExerciseToSessionDto } from './dto/add-exercise.dto';
 
@@ -17,6 +18,7 @@ export class WorkoutService {
     @InjectModel(WorkoutSession.name) private sessionModel: Model<WorkoutSessionDocument>,
     @InjectModel(WorkoutLog.name) private logModel: Model<WorkoutLogDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
   ) {}
 
   // Categories
@@ -85,7 +87,21 @@ export class WorkoutService {
     session.exerciseCount = logs.length;
     session.finishedAt = new Date();
 
-    return session.save();
+    const saved = await session.save();
+
+    await this.activityEventModel.create({
+      userId: new Types.ObjectId(userId),
+      type: 'workout_completed',
+      date: session.date,
+      payload: {
+        workoutName: session.name,
+        caloriesBurned: saved.totalCaloriesBurned,
+        durationSec: saved.totalDurationSec,
+        exerciseCount: saved.exerciseCount,
+      },
+    });
+
+    return saved;
   }
 
   async deleteSession(sessionId: string, userId: string): Promise<void> {

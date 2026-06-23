@@ -181,7 +181,9 @@ export function TodayPage() {
       {/* Calorie Balance */}
       {dashboard && kcalTarget > 0 && (
         <Card style={{ marginBottom: theme.spacing.md }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('today.totals')}</Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+            <Text variant="h2">🔥 {t('today.totals')}</Text>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, textAlign: 'center' }}>
             <div>
               <Text variant="small" muted style={{ display: 'block' }}>{t('dashboard.consumed')}</Text>

@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { SocialService } from './social.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { InjectModel } from '@nestjs/mongoose';
@@ -236,8 +236,41 @@ export class FeedController {
             avatarEmoji: user.avatarEmoji || '🦊',
           },
           payload: e.payload,
+          reactions: e.reactions || {},
           createdAt: e.createdAt,
         };
       });
+  }
+
+  @Post(':eventId/react')
+  async reactToEvent(@Param('eventId') eventId: string, @Body() body: { emoji: string }, @Request() req: any) {
+    const { emoji } = body;
+    if (!emoji || !['🔥', '💪', '👏'].includes(emoji)) {
+      throw new Error('Invalid emoji');
+    }
+
+    const event = await this.activityEventModel.findById(eventId).exec();
+    if (!event) {
+      throw new Error('Event not found');
+    }
+
+    if (!event.reactions) {
+      event.reactions = {};
+    }
+
+    const userId = req.user.id;
+    const currentReactions = event.reactions[emoji] || [];
+
+    const userIndex = currentReactions.indexOf(userId);
+    if (userIndex >= 0) {
+      currentReactions.splice(userIndex, 1);
+    } else {
+      currentReactions.push(userId);
+    }
+
+    event.reactions[emoji] = currentReactions;
+    await event.save();
+
+    return { ok: true, reactions: event.reactions };
   }
 }

@@ -11,6 +11,7 @@ import { FriendsPage } from './pages/FriendsPage';
 import { LeaguePage } from './pages/LeaguePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { PublicProfilePage } from './pages/PublicProfilePage';
 import { TodayPage } from './pages/TodayPage';
 import { WorkoutsPage } from './pages/WorkoutsPage';
 import { ExercisesPage } from './pages/ExercisesPage';
@@ -64,6 +65,7 @@ function App() {
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/measurements" element={<MeasurementsPage />} />
+            <Route path="/users/:userId" element={<PublicProfilePage />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Route>
         </Routes>

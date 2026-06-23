@@ -18,7 +18,6 @@ export function EmptyState({ image, title, description, action }: EmptyStateProp
         <img
           src={image}
           alt=""
-          loading="lazy"
           style={{
             width: '120px',
             height: '120px',
@@ -28,9 +27,9 @@ export function EmptyState({ image, title, description, action }: EmptyStateProp
           }}
         />
       )}
-      <Text muted>{title}</Text>
+      <Text muted style={{ display: 'block' }}>{title}</Text>
       {description && (
-        <Text variant="small" muted style={{ marginTop: theme.spacing.xs }}>
+        <Text variant="small" muted style={{ display: 'block', marginTop: theme.spacing.xs }}>
           {description}
         </Text>
       )}

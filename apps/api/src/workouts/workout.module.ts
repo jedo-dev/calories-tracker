@@ -7,6 +7,7 @@ import { Exercise, ExerciseSchema } from './schemas/exercise.schema';
 import { WorkoutSession, WorkoutSessionSchema } from './schemas/workout-session.schema';
 import { WorkoutLog, WorkoutLogSchema } from './schemas/workout-log.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
+import { ActivityEvent, ActivityEventSchema } from '../social/schemas/activity-event.schema';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
       { name: WorkoutSession.name, schema: WorkoutSessionSchema },
       { name: WorkoutLog.name, schema: WorkoutLogSchema },
       { name: User.name, schema: UserSchema },
+      { name: ActivityEvent.name, schema: ActivityEventSchema },
     ]),
   ],
   controllers: [WorkoutController],
