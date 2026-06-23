@@ -235,6 +235,9 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           <Button variant="secondary" onClick={() => handleNavigate('/templates')} style={{ minHeight: '44px' }}>
             📋 {t('template.title')}
           </Button>
+          <Button variant="secondary" onClick={() => handleNavigate('/recipes')} style={{ minHeight: '44px' }}>
+            🍽️ {t('recipes.title')}
+          </Button>
         </div>
 
         {/* Logout */}

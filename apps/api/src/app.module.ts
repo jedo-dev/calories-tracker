@@ -18,6 +18,7 @@ import { WaterModule } from './water/water.module';
 import { WeightModule } from './weight/weight.module';
 import { TemplateModule } from './templates/template.module';
 import { MeasurementModule } from './measurements/measurement.module';
+import { RecipesModule } from './recipes/recipes.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { MeasurementModule } from './measurements/measurement.module';
     WeightModule,
     TemplateModule,
     MeasurementModule,
+    RecipesModule,
   ],
   providers: [
     {

@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 
 export type ProductDocument = Product & Document;
 
-export type ProductSource = 'OFF' | 'USER' | 'CUSTOM_SEED' | 'BARCODE';
+export type ProductSource = 'OFF' | 'USER' | 'CUSTOM_SEED' | 'BARCODE' | 'RECIPE';
 
 @Schema({ timestamps: true })
 export class Product {
@@ -31,7 +31,7 @@ export class Product {
   @Prop({ default: 0 })
   carbPer100g: number;
 
-  @Prop({ required: true, enum: ['OFF', 'USER', 'CUSTOM_SEED', 'BARCODE'] })
+  @Prop({ required: true, enum: ['OFF', 'USER', 'CUSTOM_SEED', 'BARCODE', 'RECIPE'] })
   source: ProductSource;
 
   @Prop()

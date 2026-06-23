@@ -18,6 +18,7 @@ interface Product {
   proteinPer100g: number;
   fatPer100g: number;
   carbPer100g: number;
+  source?: string;
 }
 
 interface Entry {
@@ -442,7 +443,21 @@ export function AddEntryPage() {
                   }
                 }}
               >
-                <Text bold style={{ color: theme.palette.text }}>{product.name}</Text>
+                <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs }}>
+                  <Text bold style={{ color: theme.palette.text }}>{product.name}</Text>
+                  {product.source === 'RECIPE' && (
+                    <span style={{
+                      fontSize: '11px',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      backgroundColor: theme.palette.primary + '20',
+                      color: theme.palette.primary,
+                      fontWeight: '600',
+                    }}>
+                      {t('recipes.dish')}
+                    </span>
+                  )}
+                </div>
                 <Text variant="small" muted>{t('totals.macros', {
                   kcal: product.kcalPer100g.toFixed(1),
                   protein: product.proteinPer100g.toFixed(1),

@@ -1,0 +1,790 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { apiClient } from '../api/client';
+import { useDebounce } from '../hooks/useDebounce';
+import { t } from '../i18n';
+import { useTheme } from '../theme/useTheme';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Input } from '../ui/Input';
+import { Text } from '../ui/Text';
+import Loader from '../ui/Loader';
+
+interface Ingredient {
+  productId?: string;
+  productName: string;
+  grams: number;
+  kcalPer100g: number;
+  proteinPer100g: number;
+  fatPer100g: number;
+  carbPer100g: number;
+  kcal: number;
+  protein: number;
+  fat: number;
+  carb: number;
+}
+
+interface Product {
+  _id: string;
+  name: string;
+  kcalPer100g: number;
+  proteinPer100g: number;
+  fatPer100g: number;
+  carbPer100g: number;
+  source?: string;
+}
+
+export function RecipeEditorPage() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const theme = useTheme();
+  const isEdit = !!id;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [loading, setLoading] = useState(isEdit);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [savedRecipe, setSavedRecipe] = useState<any>(null);
+  const [showSavedActions, setShowSavedActions] = useState(false);
+
+  // Form fields
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [calculationMode, setCalculationMode] = useState<'manual' | 'ingredients' | 'mixed'>('manual');
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [totalCookedWeightG, setTotalCookedWeightG] = useState('');
+  const [manualKcal, setManualKcal] = useState('');
+  const [manualProtein, setManualProtein] = useState('');
+  const [manualFat, setManualFat] = useState('');
+  const [manualCarb, setManualCarb] = useState('');
+  const [servingName, setServingName] = useState('');
+  const [servingGrams, setServingGrams] = useState('');
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+
+  // Ingredient search
+  const [ingredientSearch, setIngredientSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const debouncedIngredientSearch = useDebounce(ingredientSearch, 300);
+
+  // Dirty tracking
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    if (isEdit) loadRecipe();
+  }, [id]);
+
+  useEffect(() => {
+    if (debouncedIngredientSearch.trim().length >= 2) {
+      searchProducts();
+    } else {
+      setSearchResults([]);
+    }
+  }, [debouncedIngredientSearch]);
+
+  const loadRecipe = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const response = await apiClient.get(`/recipes/${id}`);
+      const recipe = response.data;
+      setName(recipe.name);
+      setDescription(recipe.description || '');
+      setPhotoUrl(recipe.photoUrl || '');
+      setCalculationMode(recipe.calculationMode);
+      setIngredients(recipe.ingredients || []);
+      setTotalCookedWeightG(recipe.totalCookedWeightG?.toString() || '');
+      setManualKcal(recipe.kcalPer100g?.toString() || '');
+      setManualProtein(recipe.proteinPer100g?.toString() || '');
+      setManualFat(recipe.fatPer100g?.toString() || '');
+      setManualCarb(recipe.carbPer100g?.toString() || '');
+      setServingName(recipe.servingName || '');
+      setServingGrams(recipe.servingGrams?.toString() || '');
+    } catch (err) {
+      console.error(err);
+      setError(t('recipes.loadFailed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchProducts = async () => {
+    try {
+      const response = await apiClient.get('/products', {
+        params: { search: debouncedIngredientSearch, limit: 15 },
+      });
+      setSearchResults(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const markDirty = useCallback(() => setIsDirty(true), []);
+
+  const addIngredient = (product: Product) => {
+    markDirty();
+    setIngredients((prev) => [
+      ...prev,
+      {
+        productId: product._id,
+        productName: product.name,
+        grams: 100,
+        kcalPer100g: product.kcalPer100g,
+        proteinPer100g: product.proteinPer100g,
+        fatPer100g: product.fatPer100g,
+        carbPer100g: product.carbPer100g,
+        kcal: product.kcalPer100g,
+        protein: product.proteinPer100g,
+        fat: product.fatPer100g,
+        carb: product.carbPer100g,
+      },
+    ]);
+    setIngredientSearch('');
+    setSearchResults([]);
+  };
+
+  const updateIngredientGrams = (index: number, grams: number) => {
+    markDirty();
+    setIngredients((prev) => {
+      const updated = [...prev];
+      const ing = { ...updated[index] };
+      ing.grams = grams;
+      const factor = grams / 100;
+      ing.kcal = Math.round(ing.kcalPer100g * factor * 100) / 100;
+      ing.protein = Math.round(ing.proteinPer100g * factor * 100) / 100;
+      ing.fat = Math.round(ing.fatPer100g * factor * 100) / 100;
+      ing.carb = Math.round(ing.carbPer100g * factor * 100) / 100;
+      updated[index] = ing;
+      return updated;
+    });
+  };
+
+  const removeIngredient = (index: number) => {
+    markDirty();
+    setIngredients((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Calculated totals from ingredients
+  const ingredientsTotal = ingredients.reduce(
+    (acc, ing) => ({
+      kcal: acc.kcal + ing.kcal,
+      protein: acc.protein + ing.protein,
+      fat: acc.fat + ing.fat,
+      carb: acc.carb + ing.carb,
+    }),
+    { kcal: 0, protein: 0, fat: 0, carb: 0 },
+  );
+
+  const ingredientsWeightSum = ingredients.reduce((sum, ing) => sum + ing.grams, 0);
+
+  // Calculated per 100g
+  const weight = parseFloat(totalCookedWeightG) || 0;
+  const calculatedPer100g = weight > 0
+    ? {
+        kcal: Math.round(ingredientsTotal.kcal / weight * 100 * 100) / 100,
+        protein: Math.round(ingredientsTotal.protein / weight * 100 * 100) / 100,
+        fat: Math.round(ingredientsTotal.fat / weight * 100 * 100) / 100,
+        carb: Math.round(ingredientsTotal.carb / weight * 100 * 100) / 100,
+      }
+    : { kcal: 0, protein: 0, fat: 0, carb: 0 };
+
+  const finalPer100g = calculationMode === 'manual'
+    ? {
+        kcal: parseFloat(manualKcal) || 0,
+        protein: parseFloat(manualProtein) || 0,
+        fat: parseFloat(manualFat) || 0,
+        carb: parseFloat(manualCarb) || 0,
+      }
+    : calculationMode === 'mixed'
+      ? {
+          kcal: parseFloat(manualKcal) || calculatedPer100g.kcal,
+          protein: parseFloat(manualProtein) || calculatedPer100g.protein,
+          fat: parseFloat(manualFat) || calculatedPer100g.fat,
+          carb: parseFloat(manualCarb) || calculatedPer100g.carb,
+        }
+      : calculatedPer100g;
+
+  const uploadRecipePhoto = async (recipeId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const response = await apiClient.post(`/recipes/${recipeId}/photo`, formData);
+    return response.data.photoUrl as string;
+  };
+
+  const validate = (): string | null => {
+    if (!name.trim() || name.trim().length < 2) return t('recipeValidation.nameMinLength');
+    if (weight <= 0) return t('recipeValidation.weightRequired');
+    if (calculationMode === 'ingredients' && ingredients.length === 0) return t('recipeValidation.ingredientRequired');
+    return null;
+  };
+
+  const handleSave = async () => {
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const isLocalPhotoPreview = photoUrl.startsWith('data:');
+      const payload: any = {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        photoUrl: !isLocalPhotoPreview && photoUrl ? photoUrl : undefined,
+        calculationMode,
+        totalCookedWeightG: weight,
+        servingName: servingName.trim() || undefined,
+        servingGrams: servingGrams ? parseFloat(servingGrams) : undefined,
+        ingredients: calculationMode !== 'manual' ? ingredients.map((ing) => ({
+          productId: ing.productId,
+          productName: ing.productName,
+          grams: ing.grams,
+          kcalPer100g: ing.kcalPer100g,
+          proteinPer100g: ing.proteinPer100g,
+          fatPer100g: ing.fatPer100g,
+          carbPer100g: ing.carbPer100g,
+        })) : [],
+      };
+
+      if (calculationMode === 'manual' || calculationMode === 'mixed') {
+        if (manualKcal) payload.kcalPer100g = parseFloat(manualKcal);
+        if (manualProtein) payload.proteinPer100g = parseFloat(manualProtein);
+        if (manualFat) payload.fatPer100g = parseFloat(manualFat);
+        if (manualCarb) payload.carbPer100g = parseFloat(manualCarb);
+      }
+
+      let result;
+      if (isEdit) {
+        result = await apiClient.patch(`/recipes/${id}`, payload);
+      } else {
+        result = await apiClient.post('/recipes', payload);
+      }
+
+      let saved = result.data;
+      if (pendingPhotoFile) {
+        try {
+          const uploadedPhotoUrl = await uploadRecipePhoto(saved._id, pendingPhotoFile);
+          saved = { ...saved, photoUrl: uploadedPhotoUrl };
+          setPhotoUrl(uploadedPhotoUrl);
+          setPendingPhotoFile(null);
+        } catch (err) {
+          setSavedRecipe(saved);
+          setError(t('recipeEditor.photoUploadFailed'));
+          return;
+        }
+      }
+
+      setSavedRecipe(saved);
+      setIsDirty(false);
+
+      if (!isEdit) {
+        setShowSavedActions(true);
+      } else {
+        navigate(`/recipes/${saved._id}`);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('recipeEditor.saveFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t('recipeEditor.photoTooLarge'));
+      return;
+    }
+
+    const recipeIdForUpload = savedRecipe?._id || id;
+    if (!recipeIdForUpload) {
+      // Preview locally before saving
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPhotoUrl(reader.result as string);
+        setPendingPhotoFile(file);
+        markDirty();
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    try {
+      const uploadedPhotoUrl = await uploadRecipePhoto(recipeIdForUpload, file);
+      setPhotoUrl(uploadedPhotoUrl);
+      setPendingPhotoFile(null);
+      markDirty();
+    } catch (err) {
+      setError(t('recipeEditor.photoUploadFailed'));
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setPhotoUrl('');
+    setPendingPhotoFile(null);
+    markDirty();
+    const recipeIdForDelete = savedRecipe?._id || id;
+    if (recipeIdForDelete) {
+      try {
+        await apiClient.delete(`/recipes/${recipeIdForDelete}/photo`);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleSetWeightToIngredientsSum = () => {
+    setTotalCookedWeightG(ingredientsWeightSum.toString());
+    markDirty();
+  };
+
+  const handleSetWeightPercent = (percent: number) => {
+    const val = Math.round(ingredientsWeightSum * percent);
+    setTotalCookedWeightG(val.toString());
+    markDirty();
+  };
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  if (loading) return <Loader />;
+
+  // Show saved actions dialog
+  if (showSavedActions && savedRecipe) {
+    return (
+      <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>
+            ✅ {t('recipeEditor.savedActions')}
+          </Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, marginTop: theme.spacing.lg }}>
+            <Button onClick={() => navigate(`/entry/new?recipeId=${savedRecipe._id}&recipeName=${encodeURIComponent(savedRecipe.name)}&kcal=${savedRecipe.kcalPer100g}&protein=${savedRecipe.proteinPer100g}&fat=${savedRecipe.fatPer100g}&carb=${savedRecipe.carbPer100g}`)}>
+              📥 {t('recipeEditor.addToDiary')}
+            </Button>
+            <Button variant="secondary" onClick={() => setShowSavedActions(false)}>
+              ✏️ {t('recipeEditor.stayHere')}
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/recipes')}>
+              📋 {t('recipeEditor.goToList')}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', paddingBottom: '100px', backgroundColor: theme.palette.bg, minHeight: 'calc(100vh - 64px)' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} style={{ minWidth: '40px' }}>
+          ←
+        </Button>
+        <Text variant="h1">
+          {isEdit ? t('recipeEditor.editTitle') : t('recipeEditor.newTitle')}
+        </Text>
+      </div>
+
+      {error && (
+        <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.danger + '20' }}>
+          <Text style={{ color: theme.palette.danger }}>{error}</Text>
+        </Card>
+      )}
+
+      {/* Photo */}
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.photo')}</Text>
+        {photoUrl ? (
+          <div style={{ position: 'relative' }}>
+            <img
+              src={photoUrl}
+              alt={name}
+              style={{
+                width: '100%',
+                maxHeight: '200px',
+                objectFit: 'cover',
+                borderRadius: theme.radius.md,
+              }}
+            />
+            <div style={{ display: 'flex', gap: theme.spacing.xs, marginTop: theme.spacing.sm }}>
+              <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()}>
+                {t('recipeEditor.replacePhoto')}
+              </Button>
+              <Button size="sm" variant="danger" onClick={handleRemovePhoto}>
+                {t('recipeEditor.removePhoto')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              width: '100%',
+              height: '140px',
+              border: `2px dashed ${theme.palette.border}`,
+              borderRadius: theme.radius.md,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              gap: theme.spacing.xs,
+            }}
+          >
+            <Text style={{ fontSize: '32px' }}>📷</Text>
+            <Text variant="small" muted>{t('recipeEditor.addPhoto')}</Text>
+          </div>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: 'none' }}
+          onChange={handlePhotoUpload}
+        />
+      </Card>
+
+      {/* Basic Info */}
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+          <Input
+            label={t('recipeEditor.name')}
+            placeholder={t('recipeEditor.namePlaceholder')}
+            value={name}
+            onChange={(e) => { setName(e.target.value); markDirty(); }}
+          />
+          <div>
+            <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text, fontSize: theme.typography.small.fontSize }}>
+              {t('recipeEditor.description')}
+            </label>
+            <textarea
+              placeholder={t('recipeEditor.descriptionPlaceholder')}
+              value={description}
+              onChange={(e) => { setDescription(e.target.value); markDirty(); }}
+              style={{
+                width: '100%',
+                minHeight: '60px',
+                padding: theme.spacing.sm,
+                fontSize: theme.typography.body.fontSize,
+                backgroundColor: theme.palette.bg,
+                color: theme.palette.text,
+                border: `1px solid ${theme.palette.border}`,
+                borderRadius: theme.radius.sm,
+                resize: 'vertical',
+                boxSizing: 'border-box',
+                outline: 'none',
+                fontFamily: 'inherit',
+              }}
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Calculation Mode */}
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.calculationMode')}</Text>
+        <div style={{ display: 'flex', gap: theme.spacing.xs }}>
+          {(['manual', 'ingredients', 'mixed'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => { setCalculationMode(mode); markDirty(); }}
+              style={{
+                flex: 1,
+                padding: theme.spacing.sm,
+                fontSize: theme.typography.small.fontSize,
+                fontWeight: '600',
+                border: `2px solid ${calculationMode === mode ? theme.palette.primary : theme.palette.border}`,
+                borderRadius: theme.radius.md,
+                backgroundColor: calculationMode === mode ? theme.palette.primary + '20' : 'transparent',
+                color: calculationMode === mode ? theme.palette.primary : theme.palette.text,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              {t(`recipeEditor.${mode}`)}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* Manual KBJU */}
+      {(calculationMode === 'manual' || calculationMode === 'mixed') && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>
+            {calculationMode === 'mixed' ? t('recipeEditor.mixed') + ' — КБЖУ' : t('recipeEditor.manual') + ' — КБЖУ'}
+          </Text>
+          <Text variant="small" muted style={{ marginBottom: theme.spacing.sm, display: 'block' }}>
+            {t('recipes.per100g')}
+          </Text>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
+            <Input
+              label={t('recipeEditor.manualKcal')}
+              type="number"
+              inputMode="decimal"
+              value={manualKcal}
+              onChange={(e) => { setManualKcal(e.target.value); markDirty(); }}
+              placeholder="0"
+            />
+            <Input
+              label={t('recipeEditor.manualProtein')}
+              type="number"
+              inputMode="decimal"
+              value={manualProtein}
+              onChange={(e) => { setManualProtein(e.target.value); markDirty(); }}
+              placeholder="0"
+            />
+            <Input
+              label={t('recipeEditor.manualFat')}
+              type="number"
+              inputMode="decimal"
+              value={manualFat}
+              onChange={(e) => { setManualFat(e.target.value); markDirty(); }}
+              placeholder="0"
+            />
+            <Input
+              label={t('recipeEditor.manualCarb')}
+              type="number"
+              inputMode="decimal"
+              value={manualCarb}
+              onChange={(e) => { setManualCarb(e.target.value); markDirty(); }}
+              placeholder="0"
+            />
+          </div>
+        </Card>
+      )}
+
+      {/* Ingredients */}
+      {calculationMode !== 'manual' && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.ingredientsTitle')}</Text>
+
+          <Input
+            type="text"
+            placeholder={t('recipeEditor.searchProducts')}
+            value={ingredientSearch}
+            onChange={(e) => setIngredientSearch(e.target.value)}
+          />
+
+          {searchResults.length > 0 && (
+            <Card style={{ marginTop: theme.spacing.xs, maxHeight: '200px', overflowY: 'auto', padding: 0 }}>
+              {searchResults.map((product) => (
+                <div
+                  key={product._id}
+                  onClick={() => addIngredient(product)}
+                  style={{
+                    padding: theme.spacing.sm,
+                    cursor: 'pointer',
+                    borderBottom: `1px solid ${theme.palette.border}`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = theme.palette.surface; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                >
+                  <div>
+                    <Text bold>{product.name}</Text>
+                    {product.source === 'RECIPE' && (
+                      <span style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '3px', backgroundColor: theme.palette.primary + '20', color: theme.palette.primary, marginLeft: '4px' }}>
+                        {t('recipes.dish')}
+                      </span>
+                    )}
+                  </div>
+                  <Text variant="small" muted>{product.kcalPer100g} ккал</Text>
+                </div>
+              ))}
+            </Card>
+          )}
+
+          {ingredients.length > 0 ? (
+            <div style={{ marginTop: theme.spacing.sm }}>
+              {ingredients.map((ing, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: theme.spacing.sm,
+                    padding: `${theme.spacing.sm} 0`,
+                    borderBottom: `1px solid ${theme.palette.border}`,
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Text bold style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                      {ing.productName}
+                    </Text>
+                    <Text variant="small" muted>
+                      {ing.kcal.toFixed(0)} ккал · Б{ing.protein.toFixed(1)} Ж{ing.fat.toFixed(1)} У{ing.carb.toFixed(1)}
+                    </Text>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={ing.grams}
+                      onChange={(e) => updateIngredientGrams(index, parseFloat(e.target.value) || 0)}
+                      style={{
+                        width: '70px',
+                        padding: '4px 6px',
+                        fontSize: theme.typography.small.fontSize,
+                        backgroundColor: theme.palette.bg,
+                        color: theme.palette.text,
+                        border: `1px solid ${theme.palette.border}`,
+                        borderRadius: theme.radius.sm,
+                        textAlign: 'right',
+                        outline: 'none',
+                      }}
+                    />
+                    <Text variant="small" muted>г</Text>
+                    <button
+                      onClick={() => removeIngredient(index)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: theme.palette.danger,
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        padding: '4px',
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <div style={{
+                marginTop: theme.spacing.sm,
+                padding: theme.spacing.sm,
+                backgroundColor: theme.palette.surface,
+                borderRadius: theme.radius.md,
+              }}>
+                <Text variant="small" bold>{t('recipeEditor.ingredientTotal')}</Text>
+                <Text variant="small" muted style={{ display: 'block' }}>
+                  {ingredientsTotal.kcal.toFixed(0)} ккал · Б{ingredientsTotal.protein.toFixed(1)} Ж{ingredientsTotal.fat.toFixed(1)} У{ingredientsTotal.carb.toFixed(1)}
+                </Text>
+                <Text variant="small" muted style={{ display: 'block' }}>
+                  {t('recipes.totalWeight')}: {ingredientsWeightSum}г
+                </Text>
+              </div>
+            </div>
+          ) : (
+            <Text variant="small" muted style={{ display: 'block', marginTop: theme.spacing.sm }}>
+              {t('recipes.noIngredients')}
+            </Text>
+          )}
+        </Card>
+      )}
+
+      {/* Total Weight */}
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.totalWeight')}</Text>
+        <Text variant="small" muted style={{ marginBottom: theme.spacing.sm, display: 'block' }}>
+          {t('recipeEditor.totalWeightHint')}
+        </Text>
+        <Input
+          type="number"
+          inputMode="decimal"
+          placeholder={t('recipeEditor.totalWeightPlaceholder')}
+          value={totalCookedWeightG}
+          onChange={(e) => { setTotalCookedWeightG(e.target.value); markDirty(); }}
+        />
+        {calculationMode !== 'manual' && ingredients.length > 0 && (
+          <div style={{ display: 'flex', gap: theme.spacing.xs, marginTop: theme.spacing.sm, flexWrap: 'wrap' }}>
+            <Button size="sm" variant="ghost" onClick={handleSetWeightToIngredientsSum}>
+              {t('recipeEditor.weightEqualsSum')} ({ingredientsWeightSum}г)
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => handleSetWeightPercent(0.9)}>
+              {t('recipeEditor.weightMinus10')} ({Math.round(ingredientsWeightSum * 0.9)}г)
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => handleSetWeightPercent(0.8)}>
+              {t('recipeEditor.weightMinus20')} ({Math.round(ingredientsWeightSum * 0.8)}г)
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* Serving info */}
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.servingName')}</Text>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
+          <Input
+            label={t('recipeEditor.servingName')}
+            placeholder="тарелка"
+            value={servingName}
+            onChange={(e) => { setServingName(e.target.value); markDirty(); }}
+          />
+          <Input
+            label={t('recipeEditor.servingGrams')}
+            type="number"
+            inputMode="decimal"
+            placeholder="250"
+            value={servingGrams}
+            onChange={(e) => { setServingGrams(e.target.value); markDirty(); }}
+          />
+        </div>
+      </Card>
+
+      {/* Result summary */}
+      <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '15' }}>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.resultTitle')}</Text>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: theme.spacing.sm, textAlign: 'center' }}>
+          <div>
+            <Text bold style={{ fontSize: '20px', display: 'block', color: theme.palette.primary }}>{finalPer100g.kcal.toFixed(0)}</Text>
+            <Text variant="small" muted>ккал</Text>
+          </div>
+          <div>
+            <Text bold style={{ fontSize: '20px', display: 'block' }}>{finalPer100g.protein.toFixed(1)}</Text>
+            <Text variant="small" muted>белки</Text>
+          </div>
+          <div>
+            <Text bold style={{ fontSize: '20px', display: 'block' }}>{finalPer100g.fat.toFixed(1)}</Text>
+            <Text variant="small" muted>жиры</Text>
+          </div>
+          <div>
+            <Text bold style={{ fontSize: '20px', display: 'block' }}>{finalPer100g.carb.toFixed(1)}</Text>
+            <Text variant="small" muted>углеводы</Text>
+          </div>
+        </div>
+        {servingGrams && parseFloat(servingGrams) > 0 && (
+          <div style={{ marginTop: theme.spacing.sm, textAlign: 'center' }}>
+            <Text variant="small" muted>
+              {servingName || 'Порция'} ({servingGrams}г): {((finalPer100g.kcal * parseFloat(servingGrams)) / 100).toFixed(0)} ккал
+            </Text>
+          </div>
+        )}
+      </Card>
+
+      {/* Sticky Save Button */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: theme.spacing.md,
+        backgroundColor: theme.palette.bg,
+        borderTop: `1px solid ${theme.palette.border}`,
+        zIndex: 5,
+      }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <Button onClick={handleSave} disabled={saving} size="lg">
+            {saving ? t('common.saving') : isEdit ? t('recipeEditor.saveChanges') : t('recipeEditor.save')}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
