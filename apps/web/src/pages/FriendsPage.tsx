@@ -154,28 +154,21 @@ export function FriendsPage() {
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
 
 
-      <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
-        <Button
-          variant={tab === 'search' ? 'primary' : 'secondary'}
-          onClick={() => setTab('search')}
-          style={{ flex: 1 }}
-        >
-          {t('friends.search')}
-        </Button>
-        <Button
-          variant={tab === 'following' ? 'primary' : 'secondary'}
-          onClick={() => setTab('following')}
-          style={{ flex: 1 }}
-        >
-          {t('friends.following')}
-        </Button>
-        <Button
-          variant={tab === 'followers' ? 'primary' : 'secondary'}
-          onClick={() => setTab('followers')}
-          style={{ flex: 1 }}
-        >
-          {t('friends.followers')}
-        </Button>
+      <div style={{ display: 'flex', gap: theme.spacing.xs, marginBottom: theme.spacing.lg, overflowX: 'auto' }}>
+        {[
+          { key: 'search', label: t('friends.search') },
+          { key: 'following', label: t('friends.following') },
+          { key: 'followers', label: t('friends.followers') },
+        ].map(item => (
+          <Button
+            key={item.key}
+            variant={tab === item.key ? 'primary' : 'secondary'}
+            onClick={() => setTab(item.key as any)}
+            style={{ flex: '1 0 0', whiteSpace: 'nowrap', fontSize: '13px', padding: `${theme.spacing.sm} ${theme.spacing.xs}` }}
+          >
+            {item.label}
+          </Button>
+        ))}
       </div>
 
       {tab === 'search' && (

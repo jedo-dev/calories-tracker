@@ -10,7 +10,7 @@ export class Product {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, index: true, lowercase: true })
+  @Prop({ required: true, lowercase: true })
   nameNormalized: string;
 
   @Prop({ required: true })

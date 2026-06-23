@@ -151,7 +151,7 @@ export function TodayPage() {
   }
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '80px' }}>
       <DayChanger setDate={setDate} date={date} registrationDate={socialStats?.user.createdAt} />
 
       {/* Streak */}
@@ -159,11 +159,11 @@ export function TodayPage() {
         <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '10' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <Text variant="small" muted>{t('commandCenter.streak')}</Text>
+              <Text variant="small" muted style={{ display: 'block' }}>{t('commandCenter.streak')}</Text>
               <Text variant="h2" bold>{t('today.streakDays', { count: socialStats.stats.currentStreak })} 🔥</Text>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <Text variant="small" muted>{t('today.xpWeek')}</Text>
+              <Text variant="small" muted style={{ display: 'block' }}>{t('today.xpWeek')}</Text>
               <Text variant="h2" bold>{socialStats.stats.xpWeek}</Text>
             </div>
           </div>
@@ -176,15 +176,15 @@ export function TodayPage() {
           <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('today.totals')}</Text>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, textAlign: 'center' }}>
             <div>
-              <Text variant="small" muted>{t('dashboard.consumed')}</Text>
+              <Text variant="small" muted style={{ display: 'block' }}>{t('dashboard.consumed')}</Text>
               <Text bold style={{ color: theme.palette.success, fontSize: '20px' }}>{Math.round(kcalEaten)}</Text>
             </div>
             <div>
-              <Text variant="small" muted>{t('workout.burned')}</Text>
+              <Text variant="small" muted style={{ display: 'block' }}>{t('workout.burned')}</Text>
               <Text bold style={{ color: theme.palette.primary, fontSize: '20px' }}>{Math.round(totalBurned)}</Text>
             </div>
             <div>
-              <Text variant="small" muted>Остаток</Text>
+              <Text variant="small" muted style={{ display: 'block' }}>Остаток</Text>
               <Text bold style={{ color: kcalRemaining >= 0 ? theme.palette.text : theme.palette.danger, fontSize: '20px' }}>{Math.round(kcalRemaining)}</Text>
             </div>
           </div>

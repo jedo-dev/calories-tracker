@@ -5,25 +5,16 @@ import { BurgerMenu } from "../BurgerMenu";
 import { Drawer } from "../Drawer";
 import styles from "./styles.module.css";
 
-//@ts-ignore
 import BellIcon from "../../assets/BellIcon";
 import ProfileIcon from "../../assets/ProfileIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
 import StarIcon from "../../assets/StarIcon";
 import { t } from "../../i18n";
 
-function isActive(pathname: string, rule: string): boolean {
-  return pathname === rule;
-}
-
 export const Footer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const handleClick = (boolean: boolean) => {
-    setIsOpen(boolean);
-  };
-
   const theme = useTheme();
 
   const items = [
@@ -38,51 +29,79 @@ export const Footer = () => {
 
   return (
     <div className={styles.footerWrapper}>
-      <div className={styles.footer}>
+      <nav className={styles.footer} role="navigation" aria-label="Основная навигация">
         {leftItems.map((item) => (
-          <div
+          <button
             key={item.path}
             className={styles.footerItem}
             onClick={() => navigate(item.path)}
+            aria-label={item.label}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+              padding: '4px',
+              minWidth: '44px',
+              minHeight: '44px',
+              justifyContent: 'center',
+            }}
           >
             {item.icon}
             <span
               style={{
                 color: theme.palette.gray_100,
-                textDecoration: "none",
-                opacity: isActive(location.pathname, item.path) ? 1 : 0.5,
+                opacity: location.pathname === item.path ? 1 : 0.5,
+                fontSize: '10px',
               }}
             >
               {item.label}
             </span>
-          </div>
+          </button>
         ))}
 
         <div className={styles.footerItem}>
-          <BurgerMenu onClick={() => handleClick(!isOpen)} isOpen={isOpen} />
+          <BurgerMenu onClick={() => setIsOpen(!isOpen)} isOpen={isOpen} />
         </div>
 
         {rightItems.map((item) => (
-          <div
+          <button
             key={item.path}
             className={styles.footerItem}
             onClick={() => navigate(item.path)}
+            aria-label={item.label}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+              padding: '4px',
+              minWidth: '44px',
+              minHeight: '44px',
+              justifyContent: 'center',
+            }}
           >
             {item.icon}
             <span
               style={{
                 color: theme.palette.gray_100,
-                textDecoration: "none",
-                opacity: isActive(location.pathname, item.path) ? 1 : 0.5,
+                opacity: location.pathname === item.path ? 1 : 0.5,
+                fontSize: '10px',
               }}
             >
               {item.label}
             </span>
-          </div>
+          </button>
         ))}
-      </div>
+      </nav>
       <Drawer
-        onClick={() => handleClick(!isOpen)}
+        onClick={() => setIsOpen(!isOpen)}
         isOpen={isOpen}
       />
     </div>

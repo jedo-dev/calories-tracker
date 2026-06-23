@@ -5,7 +5,7 @@ export type WorkoutLogDocument = WorkoutLog & Document;
 
 @Schema({ timestamps: true })
 export class WorkoutLog {
-  @Prop({ type: Types.ObjectId, ref: 'WorkoutSession', required: true, index: true })
+  @Prop({ type: Types.ObjectId, ref: 'WorkoutSession', required: true })
   sessionId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })

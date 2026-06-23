@@ -27,37 +27,20 @@ const Loader = () => {
       }}>{t('common.loading')}</div>
       <style>{`
         @keyframes rotate-loader {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
         .inner-line-loader-group {
           animation: rotate-loader 2s linear infinite;
           transform-origin: 32px 32px;
         }
       `}</style>
-      <div style={{ color: '#0D2231', ['--accent' as any]: '#53D46B' }}>
+      <div style={{ color: '#0D2231' }}>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
           <g className="inner-line-loader-group">
-            <path d="M32 8 A24 24 0 0 1 55 28" className="inner-line-loader" stroke="var(--accent, #53D46B)" strokeWidth="6" strokeLinecap="round" />
+            <path d="M32 8 A24 24 0 0 1 55 28" className="inner-line-loader" stroke="#53D46B" strokeWidth="6" strokeLinecap="round" />
           </g>
-
-          <path d="M32 8 A24 24 0 1 1 31.999 8" stroke="var(--bgRing, #B4C2C6)" stroke-opacity="0.35" stroke-width="6" stroke-linecap="round" />
-
-
-
-
-
-
-
-
-
-
-
-
+          <path d="M32 8 A24 24 0 1 1 31.999 8" stroke="#B4C2C6" strokeOpacity="0.35" strokeWidth="6" strokeLinecap="round" />
         </svg>
       </div>
     </div>

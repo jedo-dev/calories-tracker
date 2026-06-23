@@ -54,22 +54,22 @@ export function WeightHistoryPage() {
 
       {/* Stats */}
       {latest && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
           <Card style={{ textAlign: 'center' }}>
-            <Text variant="small" muted>{t('weight.current')}</Text>
-            <Text variant="h2" bold style={{ color: theme.palette.primary }}>{latest.weightKg}</Text>
+            <Text variant="small" muted style={{ display: 'block' }}>{t('weight.current')}</Text>
+            <Text variant="h2" bold style={{ color: theme.palette.primary, display: 'block' }}>{latest.weightKg}</Text>
             <Text variant="small" muted>{t('weight.kg')}</Text>
           </Card>
           <Card style={{ textAlign: 'center' }}>
-            <Text variant="small" muted>{t('weight.change')}</Text>
-            <Text variant="h2" bold style={{ color: diff <= 0 ? theme.palette.success : theme.palette.danger }}>
+            <Text variant="small" muted style={{ display: 'block' }}>{t('weight.change')}</Text>
+            <Text variant="h2" bold style={{ color: diff <= 0 ? theme.palette.success : theme.palette.danger, display: 'block' }}>
               {diff > 0 ? '+' : ''}{diff.toFixed(1)}
             </Text>
             <Text variant="small" muted>{t('weight.kg')}</Text>
           </Card>
           <Card style={{ textAlign: 'center' }}>
-            <Text variant="small" muted>{t('weight.history')}</Text>
-            <Text variant="h2" bold>{history.length}</Text>
+            <Text variant="small" muted style={{ display: 'block' }}>{t('weight.history')}</Text>
+            <Text variant="h2" bold style={{ display: 'block' }}>{history.length}</Text>
             <Text variant="small" muted>{t('report.days')}</Text>
           </Card>
         </div>
@@ -107,10 +107,12 @@ export function WeightHistoryPage() {
       {/* Add weight */}
       <Card style={{ marginBottom: theme.spacing.lg }}>
         <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('weight.logWeight')}</Text>
-        <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-          <Input type="date" value={dateInput} onChange={(e) => setDateInput(e.target.value)} style={{ flex: 1 }} />
-          <Input type="number" placeholder={t('weight.kg')} value={weightInput} onChange={(e) => setWeightInput(e.target.value)} step="0.1" min="20" max="300" style={{ flex: 1 }} />
-          <Button onClick={handleSave} style={{ width: 'auto', minWidth: '80px' }}>{t('common.save')}</Button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+            <Input type="date" value={dateInput} onChange={(e) => setDateInput(e.target.value)} style={{ flex: 1, minWidth: 0 }} />
+            <Input type="number" placeholder={t('weight.kg')} value={weightInput} onChange={(e) => setWeightInput(e.target.value)} step="0.1" min="20" max="300" style={{ flex: 1, minWidth: 0 }} />
+          </div>
+          <Button onClick={handleSave}>{t('common.save')}</Button>
         </div>
       </Card>
 

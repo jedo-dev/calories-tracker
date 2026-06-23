@@ -19,29 +19,32 @@ export class ProductsService {
 
   async findAll(query: QueryProductsDto): Promise<ProductDocument[]> {
     const { search, limit } = query;
-    const queryFilter: any = {};
+    const maxResults = limit || 20;
 
-    if (search && search.trim()) {
-      const searchNormalized = this.normalizeName(search);
-      const escapedSearch = this.escapeRegex(searchNormalized);
-      queryFilter.nameNormalized = { $regex: escapedSearch };
+    if (!search || !search.trim()) {
+      return this.productModel.find().limit(maxResults).exec();
     }
 
-    const products = await this.productModel
-      .find({})
-      // .limit((limit || 20) * 2)
-      // .sort({ nameNormalized: 1 })
-      .exec();
+    const searchNormalized = this.normalizeName(search);
+    const escapedSearch = this.escapeRegex(searchNormalized);
 
-    // if (search && search.trim()) {
-    //   const searchNormalized = this.normalizeName(search);
-    //   const startsWith = products.filter((p) => p.nameNormalized.startsWith(searchNormalized));
-    //   const contains = products.filter((p) => !p.nameNormalized.startsWith(searchNormalized));
-    //   const sorted = [...startsWith, ...contains];
-    //   return sorted.slice(0, limit || 20);
-    // }
+    const filter = { nameNormalized: { $regex: escapedSearch } };
 
-    return products.slice(0, limit || 20);
+    const all = await this.productModel.find(filter).limit(maxResults * 3).exec();
+
+    all.sort((a, b) => {
+      const aN = a.nameNormalized;
+      const bN = b.nameNormalized;
+      const aExact = aN === searchNormalized ? 0 : 1;
+      const bExact = bN === searchNormalized ? 0 : 1;
+      if (aExact !== bExact) return aExact - bExact;
+      const aStarts = aN.startsWith(searchNormalized) ? 0 : 1;
+      const bStarts = bN.startsWith(searchNormalized) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return aN.localeCompare(bN);
+    });
+
+    return all.slice(0, maxResults);
   }
 
   async findById(id: string): Promise<ProductDocument | null> {

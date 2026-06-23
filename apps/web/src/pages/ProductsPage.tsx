@@ -17,17 +17,10 @@ interface Product {
 
 function useDebounce(value: string, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
-
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
   }, [value, delay]);
-
   return debouncedValue;
 }
 
@@ -46,16 +39,11 @@ export function ProductsPage() {
         setProducts([]);
         return;
       }
-
       setLoading(true);
       setError(null);
-
       try {
         const response = await apiClient.get('/products', {
-          params: {
-            search: debouncedSearch,
-            limit: 20,
-          },
+          params: { search: debouncedSearch, limit: 20 },
         });
         setProducts(response.data);
       } catch (err: any) {
@@ -65,18 +53,12 @@ export function ProductsPage() {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, [debouncedSearch]);
 
-  const handleProductClick = (productId: string) => {
-    console.log('Selected product ID:', productId);
-  };
-
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
-
-
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '80px' }}>
+      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>🛒 {t('products.title')}</Text>
 
       <Input
         type="text"
@@ -94,14 +76,21 @@ export function ProductsPage() {
 
       {error && (
         <Card style={{ marginBottom: theme.spacing.md }}>
-          <Text style={{ color: theme.palette.danger }}>
-            {t('common.error')}: {error}
-          </Text>
+          <Text style={{ color: theme.palette.danger }}>{t('common.error')}: {error}</Text>
         </Card>
       )}
 
-      {!loading && !error && products.length === 0 && debouncedSearch && (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+      {!loading && !error && !debouncedSearch.trim() && (
+        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+          <div style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>🔍</div>
+          <Text muted>Начните вводить название продукта</Text>
+          <Text variant="small" muted style={{ marginTop: theme.spacing.sm }}>Например: курица, рис, яблоко</Text>
+        </Card>
+      )}
+
+      {!loading && !error && debouncedSearch.trim() && products.length === 0 && (
+        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+          <div style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>😕</div>
           <Text muted>{t('products.noProductsFound')}</Text>
         </Card>
       )}
@@ -109,23 +98,15 @@ export function ProductsPage() {
       {!loading && !error && products.length > 0 && (
         <div>
           {products.map((product) => (
-            <Card
-              key={product._id}
-              onClick={() => handleProductClick(product._id)}
-              style={{ marginBottom: theme.spacing.md }}
-            >
-              <Text bold style={{ marginBottom: theme.spacing.sm, color: theme.palette.text }}>
-                {product.name}
-              </Text>
+            <Card key={product._id} style={{ marginBottom: theme.spacing.sm }}>
+              <Text bold style={{ marginBottom: theme.spacing.xs }}>{product.name}</Text>
               <Text variant="small" muted>
-                <div>
-                  {t('totals.macros', {
-                    kcal: product.kcalPer100g.toFixed(1),
-                    protein: product.proteinPer100g.toFixed(1),
-                    fat: product.fatPer100g.toFixed(1),
-                    carb: product.carbPer100g.toFixed(1),
-                  })}
-                </div>
+                {t('totals.macros', {
+                  kcal: product.kcalPer100g.toFixed(0),
+                  protein: product.proteinPer100g.toFixed(1),
+                  fat: product.fatPer100g.toFixed(1),
+                  carb: product.carbPer100g.toFixed(1),
+                })}
               </Text>
             </Card>
           ))}
@@ -134,4 +115,3 @@ export function ProductsPage() {
     </div>
   );
 }
-

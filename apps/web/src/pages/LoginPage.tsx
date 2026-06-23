@@ -19,6 +19,12 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!email.includes('@') || !email.includes('.')) {
+      setError('Введите email в формате name@example.com');
+      return;
+    }
+
     setLoading(true);
     try {
       await login(email, password);

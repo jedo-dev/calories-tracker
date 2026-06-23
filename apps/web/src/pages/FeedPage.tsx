@@ -67,7 +67,8 @@ export function FeedPage() {
   }
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '80px' }}>
+      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>📰 {t('feed.title')}</Text>
 
 
 
@@ -81,6 +82,7 @@ export function FeedPage() {
         <>
           {feed.length === 0 ? (
             <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+              <div style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>📰</div>
               <Text muted>{t('feed.noEvents')}</Text>
             </Card>
           ) : (

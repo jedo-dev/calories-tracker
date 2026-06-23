@@ -46,7 +46,6 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
   const theme = useTheme();
 
   const size = 320;
-  const asize = 220;
   const cx = size / 2;
   const cy = size / 2;
 

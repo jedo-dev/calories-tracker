@@ -102,9 +102,9 @@ export function ReportsPage() {
 
       {/* Navigation */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg }}>
-        <Button variant="ghost" size="sm" onClick={() => setOffset(offset - 1)} style={{ width: 'auto' }}>←</Button>
+        <Button variant="ghost" size="sm" onClick={() => setOffset(offset - 1)} style={{ width: 'auto', minWidth: '44px', minHeight: '44px' }} aria-label="Предыдущий период">←</Button>
         <Text variant="small" muted>{periodLabel}</Text>
-        <Button variant="ghost" size="sm" onClick={() => setOffset(offset + 1)} disabled={offset >= 0} style={{ width: 'auto' }}>→</Button>
+        <Button variant="ghost" size="sm" onClick={() => setOffset(offset + 1)} disabled={offset >= 0} style={{ width: 'auto', minWidth: '44px', minHeight: '44px' }} aria-label="Следующий период">→</Button>
       </div>
 
       {/* Stats grid */}
@@ -115,19 +115,19 @@ export function ReportsPage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
           <Card style={{ textAlign: 'center' }}>
-            <Text variant="small" muted>{t('report.avgKcal')}</Text>
+            <Text variant="small" muted style={{ display: 'block' }}>{t('report.avgKcal')}</Text>
             <Text variant="h2" bold style={{ color: theme.palette.primary }}>{avgKcal}</Text>
           </Card>
           <Card style={{ textAlign: 'center' }}>
-            <Text variant="small" muted>{t('report.totalBurned')}</Text>
+            <Text variant="small" muted style={{ display: 'block' }}>{t('report.totalBurned')}</Text>
             <Text variant="h2" bold style={{ color: theme.palette.success }}>{Math.round(totalBurned)}</Text>
           </Card>
           <Card style={{ textAlign: 'center' }}>
-            <Text variant="small" muted>{t('report.workouts')}</Text>
+            <Text variant="small" muted style={{ display: 'block' }}>{t('report.workouts')}</Text>
             <Text variant="h2" bold>{totalWorkouts}</Text>
           </Card>
           <Card style={{ textAlign: 'center' }}>
-            <Text variant="small" muted>{t('report.avgWeight')}</Text>
+            <Text variant="small" muted style={{ display: 'block' }}>{t('report.avgWeight')}</Text>
             <Text variant="h2" bold>{avgWeight}</Text>
           </Card>
         </div>

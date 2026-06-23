@@ -4,44 +4,27 @@ export function BurgerMenu({ onClick, isOpen = false }: { onClick: (boolean: boo
   const theme = useTheme();
 
   return (
-    <div
+    <button
       onClick={() => onClick(!isOpen)}
+      aria-label={isOpen ? 'Закрыть меню' : 'Открыть меню'}
       style={{
-       
         display: 'flex',
         flexDirection: 'column',
         gap: '3px',
         cursor: 'pointer',
-        padding: '8px',
+        padding: '10px',
         width: '44px',
-        height: '34px',
+        height: '44px',
         justifyContent: 'center',
+        alignItems: 'center',
+        background: 'none',
+        border: 'none',
+        outline: 'none',
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          height: '3px',
-          backgroundColor: theme.palette.primary,
-          transition: 'all 0.3s ease',
-        }}
-      />
-      <div
-        style={{
-          width: '100%',
-          height: '3px',
-          backgroundColor: theme.palette.primary,
-          transition: 'all 0.3s ease',
-        }}
-      />
-      <div
-        style={{
-          width: '100%',
-          height: '3px',
-          backgroundColor: theme.palette.primary,
-          transition: 'all 0.3s ease',
-        }}
-      />
-    </div>
+      <div style={{ width: '100%', height: '3px', backgroundColor: theme.palette.primary, transition: 'all 0.3s ease' }} />
+      <div style={{ width: '100%', height: '3px', backgroundColor: theme.palette.primary, transition: 'all 0.3s ease' }} />
+      <div style={{ width: '100%', height: '3px', backgroundColor: theme.palette.primary, transition: 'all 0.3s ease' }} />
+    </button>
   );
 }

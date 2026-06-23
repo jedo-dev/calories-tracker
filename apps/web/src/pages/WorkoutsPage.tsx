@@ -126,7 +126,7 @@ export function WorkoutsPage() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: theme.spacing.md }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: theme.spacing.md }}>
             {categories.map((cat) => (
               <Card
                 key={cat._id}
@@ -140,9 +140,9 @@ export function WorkoutsPage() {
                 onClick={() => navigate(`/workout/category/${cat._id}`)}
               >
                 <div style={{ fontSize: '40px', marginBottom: theme.spacing.sm }}>{cat.emoji}</div>
-                <Text bold>{cat.name}</Text>
+                <Text bold style={{ display: 'block' }}>{cat.name}</Text>
                 {cat.description && (
-                  <Text variant="small" muted style={{ marginTop: theme.spacing.xs, fontSize: '12px' }}>
+                  <Text variant="small" muted style={{ display: 'block', marginTop: theme.spacing.xs, fontSize: '12px', lineHeight: '1.3' }}>
                     {cat.description}
                   </Text>
                 )}

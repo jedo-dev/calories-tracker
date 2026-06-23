@@ -61,21 +61,22 @@ const FoodList = ({ entries, handleDelete }: Props) => {
                 </div>
 
               </div>
-              <div style={{ display: 'flex', gap: theme.spacing.sm, }}>
+              <div style={{ display: 'flex', gap: theme.spacing.sm }}>
                 <Button
                   variant="ghost"
                   size='sm'
                   onClick={() => navigate(`/entry/${entry._id}`)}
-                  style={{ padding: 'unset' }}
+                  style={{ padding: '8px', minWidth: '44px', minHeight: '44px' }}
+                  aria-label="Редактировать запись"
                 >
                   <EditIcon />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  style={{ padding: 'unset' }}
+                  style={{ padding: '8px', minWidth: '44px', minHeight: '44px' }}
                   onClick={() => handleDelete(entry._id)}
-
+                  aria-label="Удалить запись"
                 >
                   <DeleteIcon />
                 </Button>
