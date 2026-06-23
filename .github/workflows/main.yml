@@ -34,7 +34,7 @@ jobs:
       - name: 🔨 Web build
         working-directory: apps/web
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: /api
         run: |
           npm run build
 
@@ -44,7 +44,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: /api
           WEB_PORT: 3322
         run: |
           echo "Build Started..."
@@ -56,7 +56,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: /api
           WEB_PORT: 3322
         run: |
           echo "Compose Started..."
