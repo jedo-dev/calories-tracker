@@ -121,7 +121,7 @@ export function ExercisesPage() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         {categoryName || t('workout.exercises')}
       </Text>
@@ -217,7 +217,12 @@ export function ExercisesPage() {
                       objectFit: 'contain',
                     }}
                     onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
+                      const img = e.target as HTMLImageElement;
+                      img.style.display = 'none';
+                      const placeholder = document.createElement('div');
+                      placeholder.style.cssText = `max-width:100%;max-height:250px;border-radius:${theme.radius.md};background:${theme.palette.surface};display:flex;align-items:center;justify-content:center;font-size:64px;padding:${theme.spacing.xl};`;
+                      placeholder.textContent = '💪';
+                      img.parentNode?.insertBefore(placeholder, img);
                     }}
                   />
                 </div>
@@ -234,7 +239,7 @@ export function ExercisesPage() {
                     </div>
                     <div>
                       <Text variant="small" muted>{t('workout.reps')}</Text>
-                      <Text bold>{ex.defaultDurationSec ? `${ex.defaultDurationSec}${t('workout.sec')}` : ex.defaultReps}</Text>
+                      <Text bold>{ex.defaultDurationSec ? `${ex.defaultDurationSec} ${t('workout.sec')}` : ex.defaultReps}</Text>
                     </div>
                     <div>
                       <Text variant="small" muted>{t('workout.muscleGroups')}</Text>

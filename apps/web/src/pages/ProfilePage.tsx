@@ -113,7 +113,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
       {/* User Card */}
       {user && (
         <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '10' }}>
@@ -260,7 +260,9 @@ export function ProfilePage() {
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* Body Parameters Section */}
         <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>Параметры тела</Text>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '4px', rowGap: '4px' }}>
             <Input
               label={t('profile.weight')}
@@ -290,9 +292,10 @@ export function ProfilePage() {
               max={100}
               step={1}
             />
-            <div> <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
-              {t('profile.gender')}
-            </label>
+            <div>
+              <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
+                {t('profile.gender')}
+              </label>
               <select
                 value={formData.gender || ''}
                 onChange={(e) => handleChange('gender', e.target.value || undefined)}
@@ -309,12 +312,14 @@ export function ProfilePage() {
                 <option value="">—</option>
                 <option value="male">{t('profile.gender_male')}</option>
                 <option value="female">{t('profile.gender_female')}</option>
-              </select></div>
+              </select>
+            </div>
           </div>
           <div style={{ display: "flex", gap: '4px', marginTop: '4px', width: '100%', flexDirection: 'column' }}>
-            <div>    <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
-              {t('profile.activityLevel')}
-            </label>
+            <div>
+              <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text }}>
+                {t('profile.activityLevel')}
+              </label>
               <select
                 value={formData.activityLevel || ''}
                 onChange={(e) => handleChange('activityLevel', e.target.value || undefined)}
@@ -335,12 +340,12 @@ export function ProfilePage() {
                 <option value="very_high">{t('profile.activityLevel_very_high')}</option>
               </select>
               {formData.activityLevel && (
-                <img 
-                  src={formData.activityLevel === 'low' ? activityLow : 
-                       formData.activityLevel === 'medium' ? activityMedium : 
-                       formData.activityLevel === 'high' ? activityHigh : activityVeryHigh} 
-                  alt={formData.activityLevel} 
-                  style={{ width: '100%', height: '80px', objectFit: 'contain', marginTop: theme.spacing.xs, borderRadius: theme.radius.sm }} 
+                <img
+                  src={formData.activityLevel === 'low' ? activityLow :
+                       formData.activityLevel === 'medium' ? activityMedium :
+                       formData.activityLevel === 'high' ? activityHigh : activityVeryHigh}
+                  alt={formData.activityLevel}
+                  style={{ width: '100%', height: '80px', objectFit: 'contain', marginTop: theme.spacing.xs, borderRadius: theme.radius.sm }}
                   loading="lazy"
                 />
               )}
@@ -371,9 +376,9 @@ export function ProfilePage() {
           </div>
         </Card>
 
-        {/* Goal Settings Card */}
+        {/* Goal Settings Section */}
         <Card style={{ marginBottom: theme.spacing.md }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>🎯 Настройки цели</Text>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>Настройки цели</Text>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '4px', rowGap: '4px' }}>
             <Input
               label="Стартовый вес (кг)"
@@ -401,14 +406,6 @@ export function ProfilePage() {
             />
           </div>
         </Card>
-
-
-
-
-
-
-
-
 
         <Button type="submit" disabled={saving}>
           {saving ? t('common.saving') : t('profile.save')}

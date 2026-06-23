@@ -172,7 +172,7 @@ export function ActiveWorkoutPage() {
   if (!session) return <Text>{t('common.error')}</Text>;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
       {/* Header with stats */}
       <Card style={{ marginBottom: theme.spacing.lg, backgroundColor: theme.palette.primary + '10' }}>
         <Text variant="h2" style={{ marginBottom: theme.spacing.sm, color: theme.palette.text }}>
@@ -183,19 +183,19 @@ export function ActiveWorkoutPage() {
             <Text variant="h2" bold style={{ color: theme.palette.primary }}>
               {Math.round(session.totalCaloriesBurned)}
             </Text>
-            <Text variant="small" muted>{t('workout.totalCalories')}</Text>
+            <Text variant="small" muted> {t('workout.totalCalories')}</Text>
           </div>
           <div>
             <Text variant="h2" bold style={{ color: theme.palette.text }}>
               {session.exerciseCount}
             </Text>
-            <Text variant="small" muted>{t('workout.exerciseCount')}</Text>
+            <Text variant="small" muted> {t('workout.exerciseCount')}</Text>
           </div>
           <div>
             <Text variant="h2" bold style={{ color: theme.palette.text }}>
               {formatDuration(session.totalDurationSec)}
             </Text>
-            <Text variant="small" muted>{t('workout.totalDuration')}</Text>
+            <Text variant="small" muted> {t('workout.totalDuration')}</Text>
           </div>
         </div>
       </Card>
@@ -256,7 +256,12 @@ export function ActiveWorkoutPage() {
                     borderRadius: theme.radius.sm,
                   }}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
+                    const img = e.target as HTMLImageElement;
+                    img.style.display = 'none';
+                    const placeholder = document.createElement('div');
+                    placeholder.style.cssText = `width:80px;height:80px;border-radius:${theme.radius.sm};background:${theme.palette.surface};display:flex;align-items:center;justify-content:center;font-size:32px;`;
+                    placeholder.textContent = '💪';
+                    img.parentNode?.insertBefore(placeholder, img);
                   }}
                 />
               </div>
@@ -341,7 +346,12 @@ export function ActiveWorkoutPage() {
                 alt={ex.name}
                 style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: theme.radius.sm }}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = 'none';
+                  const placeholder = document.createElement('div');
+                  placeholder.style.cssText = `width:48px;height:48px;border-radius:${theme.radius.sm};background:${theme.palette.surface};display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;`;
+                  placeholder.textContent = '💪';
+                  img.parentNode?.insertBefore(placeholder, img);
                 }}
               />
               <div>

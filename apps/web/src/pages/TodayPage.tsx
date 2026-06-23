@@ -110,8 +110,13 @@ export function TodayPage() {
 
   const handleLogWeight = async () => {
     if (!weightInput) return;
+    const weight = parseFloat(weightInput);
+    if (isNaN(weight) || weight < 30 || weight > 300) {
+      alert('Введите вес от 30 до 300 кг');
+      return;
+    }
     try {
-      await apiClient.post('/weight', { date, weightKg: parseFloat(weightInput) });
+      await apiClient.post('/weight', { date, weightKg: weight });
       setWeightInput('');
       setShowWeightInput(false);
     } catch (err) { console.error(err); }
@@ -141,7 +146,8 @@ export function TodayPage() {
   const kcalTarget = dashboard?.targets?.kcalTarget || 0;
   const kcalRemaining = kcalTarget > 0 ? kcalTarget - kcalEaten + totalBurned : 0;
   const waterGoal = 2000;
-  const waterPct = Math.min(100, Math.round((water.totalMl / waterGoal) * 100));
+  const waterPct = Math.round((water.totalMl / waterGoal) * 100);
+  const waterReached = water.totalMl >= waterGoal;
 
   if (loading) return <Loader />;
   if (error) {
@@ -210,14 +216,31 @@ export function TodayPage() {
       <Card style={{ marginBottom: theme.spacing.md }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
           <Text bold>💧 {t('water.title')}</Text>
-          <Text variant="small" muted>{water.totalMl} / {waterGoal} {t('water.ml')}</Text>
+          <Text variant="small" muted>
+            {water.totalMl} / {waterGoal} {t('water.ml')}
+            {waterReached && ' ✅'}
+          </Text>
         </div>
         <div style={{ backgroundColor: theme.palette.bg, borderRadius: theme.radius.sm, height: '12px', overflow: 'hidden', marginBottom: theme.spacing.sm }}>
-          <div style={{ width: `${waterPct}%`, height: '100%', backgroundColor: '#4A9EFF', borderRadius: theme.radius.sm, transition: 'width 0.3s' }} />
+          <div style={{
+            width: `${Math.min(100, waterPct)}%`,
+            height: '100%',
+            backgroundColor: waterReached ? theme.palette.success : '#4A9EFF',
+            borderRadius: theme.radius.sm,
+            transition: 'width 0.3s',
+          }} />
         </div>
-        <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+        {waterReached && (
+          <Text variant="small" style={{ color: theme.palette.success, display: 'block', marginBottom: theme.spacing.sm }}>
+            {waterPct >= 100 ? `Цель достигнута (${waterPct}%)` : ''}
+          </Text>
+        )}
+        <div style={{ display: 'flex', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
           <Button variant="ghost" size="sm" onClick={() => handleAddWater(250)}>+250 мл</Button>
           <Button variant="ghost" size="sm" onClick={() => handleAddWater(500)}>+500 мл</Button>
+          {water.totalMl > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => handleAddWater(-250)} style={{ color: theme.palette.danger }}>-250 мл</Button>
+          )}
         </div>
       </Card>
 

@@ -25,7 +25,7 @@ export function MeasurementsPage() {
   const theme = useTheme();
   const [history, setHistory] = useState<Measurement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
   const now = new Date();
   const [date, setDate] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`);
   const [form, setForm] = useState({ waistCm: '', hipsCm: '', chestCm: '', bicepCm: '', thighCm: '' });
@@ -77,11 +77,11 @@ export function MeasurementsPage() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>📏 {t('measurement.title')}</Text>
 
       <Button onClick={() => setShowForm(!showForm)} style={{ marginBottom: theme.spacing.lg }}>
-        {showForm ? t('common.cancel') : t('measurement.save')}
+        {showForm ? t('common.cancel') : '+ ' + t('measurement.save')}
       </Button>
 
       {showForm && (
@@ -131,7 +131,7 @@ export function MeasurementsPage() {
                 return (
                   <div key={f.key} style={{ textAlign: 'center' }}>
                     <Text variant="small" muted>{f.label.split(' ')[0]}</Text>
-                    <Text bold>{val}</Text>
+                    <Text bold>{val} см</Text>
                   </div>
                 );
               })}

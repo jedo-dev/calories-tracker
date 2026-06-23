@@ -1,6 +1,21 @@
 import { useTheme } from "../../../theme/useTheme";
 import { Button } from "../../../ui/Button";
 
+const MONTHS_RU = [
+  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+];
+
+const DAYS_RU = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+function formatDateRu(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const dayName = DAYS_RU[date.getDay()];
+  const monthName = MONTHS_RU[month - 1];
+  return `${dayName}, ${day} ${monthName}`;
+}
+
 const DayChanger = ({ date, setDate, registrationDate }: { registrationDate: Date | undefined, date: string, setDate: (date: string) => void }) => {
 
   const theme = useTheme()
@@ -31,7 +46,7 @@ const DayChanger = ({ date, setDate, registrationDate }: { registrationDate: Dat
         ←
       </Button>
 
-      {date}
+      {formatDateRu(date)}
       <Button variant="ghost" size="sm" disabled={isNeedTodisableBtn(new Date(date), new Date)} onClick={() => changeDate(1)} style={{ width: 'auto', minWidth: '44px', minHeight: '44px' }} aria-label="Следующий день">
         →
       </Button>

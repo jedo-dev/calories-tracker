@@ -296,7 +296,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle }: Botto
           width: '100%',
           maxHeight: '80%',
           bottom: 0,
-          background: 'linear-gradient(24deg, rgba(225, 229, 255, 1) 0%, rgba(210, 235, 252, 1) 29%, rgba(218, 246, 224, 1) 100%)',
+          background: theme.palette.surface,
           borderTopLeftRadius: theme.radius.lg,
           borderTopRightRadius: theme.radius.lg,
           transform: sheetTransform,

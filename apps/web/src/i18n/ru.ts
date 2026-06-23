@@ -418,6 +418,7 @@ export const ru = {
     tags: "Теги",
     calculationMode: "Способ расчета КБЖУ",
     manual: "Вручную",
+    ingredients: "из ингредиентов",
     fromIngredients: "Из продуктов",
     mixed: "С коррекцией",
     manualKcal: "Калории на 100 г",

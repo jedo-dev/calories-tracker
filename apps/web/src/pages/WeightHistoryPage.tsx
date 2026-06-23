@@ -13,6 +13,16 @@ import { Text } from '../ui/Text';
 
 interface WeightEntry { _id: string; date: string; weightKg: number }
 
+const MONTHS_RU = [
+  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+];
+
+function formatDateRu(dateStr: string): string {
+  const [, month, day] = dateStr.split('-').map(Number);
+  return `${day} ${MONTHS_RU[month - 1]}`;
+}
+
 export function WeightHistoryPage() {
   const theme = useTheme();
   const [history, setHistory] = useState<WeightEntry[]>([]);
@@ -62,7 +72,7 @@ export function WeightHistoryPage() {
   const range = maxW - minW || 1;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>⚖️ {t('weight.title')}</Text>
 
       {/* Stats */}
@@ -111,8 +121,8 @@ export function WeightHistoryPage() {
             })}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: theme.spacing.xs }}>
-            <Text variant="small" muted>{sorted.slice(-30)[0]?.date.slice(5)}</Text>
-            <Text variant="small" muted>{sorted.slice(-30)[sorted.slice(-30).length - 1]?.date.slice(5)}</Text>
+            <Text variant="small" muted>{formatDateRu(sorted.slice(-30)[0]?.date)}</Text>
+            <Text variant="small" muted>{formatDateRu(sorted.slice(-30)[sorted.slice(-30).length - 1]?.date)}</Text>
           </div>
         </Card>
       )}
@@ -139,7 +149,7 @@ export function WeightHistoryPage() {
         history.map((entry) => (
           <Card key={entry._id} style={{ marginBottom: theme.spacing.xs, padding: theme.spacing.sm }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text variant="small" muted>{entry.date}</Text>
+              <Text variant="small" muted>{formatDateRu(entry.date)}</Text>
               <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
                 <Text bold>{entry.weightKg} {t('weight.kg')}</Text>
                 <Button

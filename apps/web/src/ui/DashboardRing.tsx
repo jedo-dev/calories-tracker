@@ -69,10 +69,17 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
   const trackColor = theme.palette.border;
   const trackOpacity = 0.22;
 
-  const kcalColor = theme.palette.success;
+  // Semantical colors for kcal ring based on progress
+  const getKcalColor = (pct: number): string => {
+    if (pct > 1.1) return theme.palette.danger; // Over limit - red
+    if (pct > 0.9) return '#FFA500'; // Close to limit - yellow/orange
+    return theme.palette.success; // Within target - green
+  };
+
+  const kcalColor = getKcalColor(progress.kcalPct);
   const proteinColor = theme.palette.success ?? theme.palette.primary;
   const fatColor = theme.palette.success ?? theme.palette.textMuted;
-  const carbColor = theme.palette.success; // если есть отдельный цвет — подставь
+  const carbColor = theme.palette.success;
 
   // ===== Сектора для макросов внутри общего диапазона =====
   // Делим ARC_SWEEP на 3 сектора и оставляем gap между ними.
@@ -170,6 +177,16 @@ export function DashboardRing({ consumed, targets, progress }: DashboardRingProp
         <Text variant="small" muted>
           {t('dashboard.of')}  {Math.round(targets.kcalTarget)} {t('dashboard.kcal')}
         </Text>
+        {progress.kcalPct > 1 && (
+          <Text variant="small" style={{ color: theme.palette.danger, display: 'block', marginTop: '2px' }}>
+            перебор {Math.round(consumed.kcal - targets.kcalTarget)} ккал
+          </Text>
+        )}
+        {progress.kcalPct >= 0.85 && progress.kcalPct <= 1 && (
+          <Text variant="small" style={{ color: theme.palette.success, display: 'block', marginTop: '2px' }}>
+            осталось {Math.round(targets.kcalTarget - consumed.kcal)} ккал
+          </Text>
+        )}
       </div>
 
       {/* Macro legend */}

@@ -106,7 +106,7 @@ export function TemplatesPage() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>📋 {t('template.title')}</Text>
 
       <Button onClick={() => setShowCreate(!showCreate)} style={{ marginBottom: theme.spacing.lg }}>
@@ -202,7 +202,7 @@ export function TemplatesPage() {
               {tpl.items.map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: `${theme.spacing.xs} 0` }}>
                   <Text variant="small">{item.productName}</Text>
-                  <Text variant="small" muted>{item.grams}г · {Math.round(item.kcal)}ккал</Text>
+                    <Text variant="small" muted>{item.grams}г · {Math.round(item.kcal)} ккал</Text>
                 </div>
               ))}
             </div>

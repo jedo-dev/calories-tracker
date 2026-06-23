@@ -90,7 +90,7 @@ export function LeaguePage() {
   const leagueImg = data?.me?.league ? LEAGUE_IMAGES[data.me.league.name] || rankBronze : rankBronze;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '80px' }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
       <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
         <Button
           variant={mode === 'friends' ? 'primary' : 'secondary'}
@@ -142,15 +142,15 @@ export function LeaguePage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
                 <div style={{ textAlign: 'center' }}>
                   <Text variant="small" muted>{t('league.myPlace')}</Text>
-                  <Text variant="h2" bold>#{data.me.rank}</Text>
+                  <Text variant="h2" bold> #{data.me.rank}</Text>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <Text variant="small" muted>{t('league.xpWeek')}</Text>
-                  <Text variant="h2" bold>{data.me.xpWeek}</Text>
+                  <Text variant="h2" bold> {data.me.xpWeek}</Text>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <Text variant="small" muted>{t('league.xpTotal')}</Text>
-                  <Text variant="h2" bold>{data.me.xpTotal}</Text>
+                  <Text variant="h2" bold> {data.me.xpTotal}</Text>
                 </div>
               </div>
 

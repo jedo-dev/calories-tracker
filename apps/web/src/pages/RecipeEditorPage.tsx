@@ -215,6 +215,23 @@ export function RecipeEditorPage() {
     if (!name.trim() || name.trim().length < 2) return t('recipeValidation.nameMinLength');
     if (weight <= 0) return t('recipeValidation.weightRequired');
     if (calculationMode === 'ingredients' && ingredients.length === 0) return t('recipeValidation.ingredientRequired');
+
+    // Validate macros per 100g
+    const macrosSum = finalPer100g.protein + finalPer100g.fat + finalPer100g.carb;
+    if (macrosSum > 100) {
+      return `Сумма Б+Ж+У (${macrosSum.toFixed(1)}г) не может превышать 100г на 100г продукта`;
+    }
+
+    // Validate calories consistency (4/9/4 kcal per gram)
+    const expectedKcal = finalPer100g.protein * 4 + finalPer100g.fat * 9 + finalPer100g.carb * 4;
+    if (finalPer100g.kcal > 0 && expectedKcal > 0) {
+      const diff = Math.abs(finalPer100g.kcal - expectedKcal);
+      const pctDiff = (diff / expectedKcal) * 100;
+      if (pctDiff > 30) {
+        return `Калории (${finalPer100g.kcal}) не соответствуют макросам (ожидается ~${Math.round(expectedKcal)} ккал). Проверьте данные.`;
+      }
+    }
+
     return null;
   };
 
@@ -759,6 +776,41 @@ export function RecipeEditorPage() {
             <Text variant="small" muted>углеводы</Text>
           </div>
         </div>
+
+        {/* Macro sum warning */}
+        {(() => {
+          const macrosSum = finalPer100g.protein + finalPer100g.fat + finalPer100g.carb;
+          if (macrosSum > 100) {
+            return (
+              <div style={{ marginTop: theme.spacing.sm, padding: theme.spacing.sm, backgroundColor: theme.palette.danger + '20', borderRadius: theme.radius.sm }}>
+                <Text variant="small" style={{ color: theme.palette.danger }}>
+                  ⚠️ Сумма Б+Ж+У = {macrosSum.toFixed(1)}г превышает 100г/100г
+                </Text>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
+        {/* Calorie consistency warning */}
+        {(() => {
+          const expectedKcal = finalPer100g.protein * 4 + finalPer100g.fat * 9 + finalPer100g.carb * 4;
+          if (finalPer100g.kcal > 0 && expectedKcal > 0) {
+            const diff = Math.abs(finalPer100g.kcal - expectedKcal);
+            const pctDiff = (diff / expectedKcal) * 100;
+            if (pctDiff > 20) {
+              return (
+                <div style={{ marginTop: theme.spacing.sm, padding: theme.spacing.sm, backgroundColor: '#FFA500' + '20', borderRadius: theme.radius.sm }}>
+                  <Text variant="small" style={{ color: '#FFA500' }}>
+                    ⚠️ Калории не соответствуют макросам (ожидается ~{Math.round(expectedKcal)} ккал)
+                  </Text>
+                </div>
+              );
+            }
+          }
+          return null;
+        })()}
+
         {servingGrams && parseFloat(servingGrams) > 0 && (
           <div style={{ marginTop: theme.spacing.sm, textAlign: 'center' }}>
             <Text variant="small" muted>
@@ -770,14 +822,13 @@ export function RecipeEditorPage() {
 
       {/* Sticky Save Button */}
       <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        position: 'sticky',
+        bottom: '0',
         padding: theme.spacing.md,
         backgroundColor: theme.palette.bg,
         borderTop: `1px solid ${theme.palette.border}`,
         zIndex: 5,
+        marginTop: theme.spacing.md,
       }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <Button onClick={handleSave} disabled={saving} size="lg">

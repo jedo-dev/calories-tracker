@@ -13,6 +13,29 @@ function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+const MONTHS_RU = [
+  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+];
+
+function formatDateRu(dateStr: string): string {
+  const [, month, day] = dateStr.split('-').map(Number);
+  return `${day} ${MONTHS_RU[month - 1]}`;
+}
+
+function formatPeriodRu(from: string, to: string, isMonth: boolean): string {
+  if (isMonth) {
+    const [, month] = from.split('-').map(Number);
+    return `${MONTHS_RU[month - 1]}`;
+  }
+  const [, fromMonth, fromDay] = from.split('-').map(Number);
+  const [, toMonth, toDay] = to.split('-').map(Number);
+  if (fromMonth === toMonth) {
+    return `${fromDay}–${toDay} ${MONTHS_RU[fromMonth - 1]}`;
+  }
+  return `${fromDay} ${MONTHS_RU[fromMonth - 1]} – ${toDay} ${MONTHS_RU[toMonth - 1]}`;
+}
+
 function getWeekDates(offset = 0): { from: string; to: string } {
   const now = new Date();
   const day = now.getDay() || 7;
@@ -66,14 +89,12 @@ export function ReportsPage() {
   const weights = data.filter(d => d.weight).map(d => d.weight!);
   const avgWeight = weights.length > 0 ? (weights.reduce((s, w) => s + w, 0) / weights.length).toFixed(1) : '—';
 
-  const periodLabel = period === 'week'
-    ? `${getWeekDates(offset).from} — ${getWeekDates(offset).to}`
-    : `${getMonthDates(offset).from.slice(0, 7)}`;
+  const periodLabel = formatPeriodRu(getWeekDates(offset).from, period === 'week' ? getWeekDates(offset).to : getMonthDates(offset).to, period === 'month');
 
   if (loading) return <Loader />;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>📊 {t('report.title')}</Text>
 
       {/* Period selector */}
@@ -128,11 +149,11 @@ export function ReportsPage() {
         return (
           <Card key={day.date} style={{ marginBottom: theme.spacing.xs, padding: theme.spacing.sm }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text variant="small" muted>{day.date.slice(5)}</Text>
+              <Text variant="small" muted>{formatDateRu(day.date)}</Text>
               <div style={{ display: 'flex', gap: theme.spacing.md }}>
                 {dayKcal > 0 && <Text variant="small" style={{ color: theme.palette.success }}>{Math.round(dayKcal)} ккал</Text>}
-                {dayBurned > 0 && <Text variant="small" style={{ color: theme.palette.primary }}>−{Math.round(dayBurned)}</Text>}
-                {day.weight && <Text variant="small" bold>{day.weight}кг</Text>}
+                {dayBurned > 0 && <Text variant="small" style={{ color: theme.palette.primary }}>{Math.round(dayBurned)} ккал</Text>}
+                {day.weight && <Text variant="small" bold>{day.weight} кг</Text>}
               </div>
             </div>
           </Card>

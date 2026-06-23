@@ -61,13 +61,24 @@ export function RecentProducts({ date, onAdded }: Props) {
 
   if (recent.length === 0) return null;
 
+  // Filter out very small portions and deduplicate
+  const filtered = recent
+    .filter(p => p.grams >= 10)
+    .reduce((acc, p) => {
+      const existing = acc.find(x => x.productId === p.productId);
+      if (!existing) acc.push(p);
+      return acc;
+    }, [] as RecentProduct[]);
+
+  if (filtered.length === 0) return null;
+
   return (
     <Card style={{ marginBottom: theme.spacing.md }}>
       <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>
         ⚡ {t('recentProducts.title')}
       </Text>
       <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
-        {recent.map((product) => (
+        {filtered.map((product) => (
           <div
             key={product.productId}
             style={{
@@ -96,15 +107,17 @@ export function RecentProducts({ date, onAdded }: Props) {
               </Text>
             </div>
             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleQuickAdd(product, product.grams)}
-                disabled={loading}
-                style={{ minWidth: '44px', minHeight: '36px', fontSize: '11px' }}
-              >
-                {product.grams}г
-              </Button>
+              {product.grams !== 100 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleQuickAdd(product, product.grams)}
+                  disabled={loading}
+                  style={{ minWidth: '44px', minHeight: '36px', fontSize: '11px' }}
+                >
+                  {product.grams}г
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"

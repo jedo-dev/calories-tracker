@@ -72,8 +72,8 @@ export function Achievements() {
               key={a.key}
               style={{
                 textAlign: 'center',
-                opacity: a.unlocked ? 1 : 0.4,
-                filter: a.unlocked ? 'none' : 'grayscale(100%)',
+                opacity: a.unlocked ? 1 : 0.7,
+                filter: a.unlocked ? 'none' : 'grayscale(80%)',
               }}
               title={a.unlocked ? `${name} — ${desc}` : `${name} — ${t('achievements.locked')}`}
             >

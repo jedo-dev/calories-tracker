@@ -82,7 +82,7 @@ export function WorkoutsPage() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
       <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
         <Button
           variant={tab === 'categories' ? 'primary' : 'ghost'}
@@ -124,7 +124,7 @@ export function WorkoutsPage() {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <Text bold style={{ color: theme.palette.primary, fontSize: '18px' }}>
-                        {Math.round(s.totalCaloriesBurned)}
+                        {Math.round(s.totalCaloriesBurned)}{' '}
                       </Text>
                       <Text variant="small" muted>{t('workout.calories')}</Text>
                     </div>
@@ -203,7 +203,7 @@ export function WorkoutsPage() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <Text bold style={{ color: theme.palette.primary, fontSize: '20px' }}>
-                      {Math.round(s.totalCaloriesBurned)}
+                      {Math.round(s.totalCaloriesBurned)}{' '}
                     </Text>
                     <Text variant="small" muted>{t('workout.calories')}</Text>
                   </div>

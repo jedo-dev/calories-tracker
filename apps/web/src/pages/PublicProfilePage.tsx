@@ -172,7 +172,7 @@ export function PublicProfilePage() {
   const unlockedAchievements = achievements.filter((a) => a.unlocked);
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '80px' }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
       {profile.isSelf && (
         <div style={{ marginBottom: theme.spacing.md }}>
           <Button variant="ghost" onClick={() => navigate('/profile')} style={{ width: 'auto' }}>
@@ -207,15 +207,15 @@ export function PublicProfilePage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, textAlign: 'center' }}>
           <div>
             <Text variant="small" muted>{t('publicProfile.xpWeek')}</Text>
-            <Text variant="h2" bold>{profile.xpWeek}</Text>
+            <Text variant="h2" bold> {profile.xpWeek}</Text>
           </div>
           <div>
             <Text variant="small" muted>{t('publicProfile.xpTotal')}</Text>
-            <Text variant="h2" bold>{profile.xpTotal}</Text>
+            <Text variant="h2" bold> {profile.xpTotal}</Text>
           </div>
           <div>
             <Text variant="small" muted>{t('publicProfile.streak')}</Text>
-            <Text variant="h2" bold>{profile.currentStreak} 🔥</Text>
+            <Text variant="h2" bold> {profile.currentStreak} 🔥</Text>
           </div>
         </div>
 

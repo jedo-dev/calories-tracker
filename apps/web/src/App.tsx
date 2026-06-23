@@ -29,7 +29,12 @@ import { Footer } from './widget/Footer/Footer';
 function AppLayout() {
   return (
     <ProtectedRoute>
-      <div>
+      <div style={{
+        maxWidth: '480px',
+        margin: '0 auto',
+        minHeight: '100vh',
+        position: 'relative',
+      }}>
         <Outlet />
         <Footer />
       </div>

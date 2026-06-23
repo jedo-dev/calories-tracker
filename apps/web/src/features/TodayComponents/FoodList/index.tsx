@@ -9,6 +9,15 @@ import { Button } from "../../../ui/Button"
 import { Card } from "../../../ui/Card"
 import { EmptyState } from "../../../ui/EmptyState"
 import { Text } from "../../../ui/Text"
+
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: 'Завтрак',
+  lunch: 'Обед',
+  dinner: 'Ужин',
+  snack: 'Перекус',
+  other: 'Другое',
+};
+
 interface Props {
   entries: Entry[];
   handleDelete: (id: string) => void;
@@ -28,12 +37,11 @@ const FoodList = ({ entries, handleDelete }: Props) => {
         entries.map((entry: Entry) => (
           <Card key={entry._id} style={{ padding: `${theme.spacing.md} 0`, backgroundColor: theme.palette.bg, border: 'unset' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: theme.spacing.md }}>
-              {(entry.time) && (
-                <div style={{ padding: theme.spacing.xs, borderRadius: '15px', }}>
-                  <span style={{ color: theme.palette.white, fontSize: '12px' }}>  {entry.time && `${entry.time} `}</span>
-
-                </div>
-              )}
+              <div style={{ padding: theme.spacing.xs, borderRadius: '15px', minWidth: '45px' }}>
+                <span style={{ color: theme.palette.white, fontSize: '12px' }}>
+                  {entry.time || MEAL_LABELS[entry.mealType] || '—'}
+                </span>
+              </div>
               <div style={{ flex: 1, position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>

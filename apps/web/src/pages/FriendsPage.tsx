@@ -195,7 +195,7 @@ export function FriendsPage() {
   };
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '80px' }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>{t('friends.title')}</Text>
 
       <div style={{ display: 'flex', gap: theme.spacing.xs, marginBottom: theme.spacing.lg, overflowX: 'auto' }}>
