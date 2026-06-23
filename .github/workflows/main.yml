@@ -1,0 +1,58 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: compose
+    runs-on: [self-hosted]
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v3
+
+      - name: 🔨 API dependencies
+        working-directory: apps/api
+        run: |
+          npm ci
+
+      - name: 🔨 API build
+        working-directory: apps/api
+        run: |
+          npm run build
+
+      - name: 🔨 Web dependencies
+        working-directory: apps/web
+        run: |
+          npm ci
+
+      - name: 🔨 Web build
+        working-directory: apps/web
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: |
+          npm run build
+
+      - name: Docker Build images
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          WEB_PORT: 3322
+        run: |
+          echo "Build Started..."
+          docker-compose build --pull
+
+      - name: Docker Compose
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          WEB_PORT: 3322
+        run: |
+          echo "Compose Started..."
+          docker-compose up -d
