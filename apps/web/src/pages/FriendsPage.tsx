@@ -135,7 +135,7 @@ export function FriendsPage() {
           <div style={{ fontSize: '28px', flexShrink: 0 }}>{user.avatarEmoji}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs }}>
-              <Text bold style={{ color: theme.palette.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.displayName}</Text>
+              <Text bold style={{ color: theme.palette.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{user.displayName}</Text>
               {leagueImg && (
                 <img src={leagueImg} alt={user.league!.name} style={{ width: '16px', height: '16px', objectFit: 'contain', flexShrink: 0 }} loading="lazy" />
               )}
@@ -143,7 +143,7 @@ export function FriendsPage() {
             {user.username && (
               <Text variant="small" muted style={{ fontSize: '12px' }}>@{user.username}</Text>
             )}
-            <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: '2px' }}>
+            <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: '2px', flexWrap: 'wrap' }}>
               {user.xpWeek !== undefined && (
                 <Text variant="small" muted>{t('friends.xpWeek', { xp: user.xpWeek })}</Text>
               )}
@@ -157,7 +157,7 @@ export function FriendsPage() {
               variant={user.isFollowing ? 'secondary' : 'primary'}
               size="sm"
               onClick={(e) => { e.stopPropagation(); user.isFollowing ? handleUnfollow(user.id) : handleFollow(user.id); }}
-              style={{ flexShrink: 0 }}
+              style={{ flexShrink: 0, width: 'auto' }}
             >
               {user.isFollowing ? t('friends.unfollow') : t('friends.follow')}
             </Button>
@@ -167,7 +167,7 @@ export function FriendsPage() {
               variant="ghost"
               size="sm"
               onClick={(e) => { e.stopPropagation(); handleUnfollow(user.id); }}
-              style={{ flexShrink: 0 }}
+              style={{ flexShrink: 0, width: 'auto' }}
             >
               {t('friends.unfollow')}
             </Button>

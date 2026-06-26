@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import onboardingGoals from '../assets/09_onboarding/onboarding_1_goals.jpg';
-import onboardingTracking from '../assets/09_onboarding/onboarding_2_tracking.jpg';
-import onboardingWorkouts from '../assets/09_onboarding/onboarding_3_workouts.jpg';
+import onboardingGoals from '../assets/09_onboarding/onboarding_1_goals.png';
+import onboardingTracking from '../assets/09_onboarding/onboarding_2_tracking.png';
+import onboardingWorkouts from '../assets/09_onboarding/onboarding_3_workouts.png';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
