@@ -56,7 +56,7 @@ export function EntryPage() {
 
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [loading]);
 
   const scrollToSlide = (index: number) => {
     const container = scrollContainerRef.current;
