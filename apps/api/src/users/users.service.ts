@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
@@ -7,13 +7,37 @@ import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity
 import { Follow, FollowDocument } from '../social/schemas/follow.schema';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(UserStats.name) private userStatsModel: Model<UserStatsDocument>,
     @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
     @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
   ) {}
+
+  async onModuleInit() {
+    await this.userModel
+      .updateMany({ tgUserId: null }, { $unset: { tgUserId: '' } })
+      .exec();
+
+    try {
+      await this.userModel.collection.dropIndex('tgUserId_1');
+    } catch (error: any) {
+      if (error?.codeName !== 'IndexNotFound') {
+        throw error;
+      }
+    }
+
+    await this.userModel.collection.createIndex(
+      { tgUserId: 1 },
+      {
+        unique: true,
+        partialFilterExpression: {
+          tgUserId: { $type: 'number' },
+        },
+      },
+    );
+  }
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email }).exec();

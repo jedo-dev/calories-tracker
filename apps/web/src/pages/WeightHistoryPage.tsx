@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
-import emptyWeight from '../assets/03_empty_states/empty_weight.jpg';
+import emptyWeight from '../assets/03_empty_states/empty_weight.png';
 import DeleteIcon from '../assets/DeleteIcon';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';

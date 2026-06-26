@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
-import emptyFriends from '../assets/03_empty_states/empty_friends.jpg';
+import emptyFriends from '../assets/03_empty_states/empty_friends.png';
 import rankBronze from '../assets/07_achievements/rank_bronze.jpg';
 import rankSilver from '../assets/07_achievements/rank_silver.jpg';
 import rankGold from '../assets/07_achievements/rank_gold.jpg';

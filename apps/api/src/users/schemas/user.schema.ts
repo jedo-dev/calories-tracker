@@ -5,7 +5,7 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ sparse: true, unique: true, index: true })
+  @Prop()
   tgUserId?: number;
 
   @Prop({ required: true, unique: true, index: true })
@@ -66,3 +66,12 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+UserSchema.index(
+  { tgUserId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      tgUserId: { $type: 'number' },
+    },
+  },
+);

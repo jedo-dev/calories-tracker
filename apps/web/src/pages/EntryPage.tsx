@@ -77,17 +77,21 @@ export function EntryPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         backgroundColor: theme.palette.bg,
         display: 'flex',
         flexDirection: 'column',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        paddingBottom: `calc(${theme.spacing.lg} + env(safe-area-inset-bottom, 0px))`,
       }}
     >
       {/* Slides */}
       <div
         ref={scrollContainerRef}
         style={{
-          flex: 1,
+          flex: '1 1 auto',
+          minHeight: 0,
           display: 'flex',
           overflowX: 'auto',
           overflowY: 'hidden',
@@ -108,18 +112,19 @@ export function EntryPage() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              padding: theme.spacing.xl,
-              gap: theme.spacing.lg,
+              padding: theme.spacing.lg,
+              gap: theme.spacing.md,
             }}
           >
             <img 
               src={slide.image} 
               alt={slide.title} 
               style={{ 
-                width: '200px', 
-                height: '200px', 
+                width: 'clamp(140px, 42vw, 200px)', 
+                height: 'clamp(140px, 42vw, 200px)', 
                 objectFit: 'contain', 
-                marginBottom: theme.spacing.md 
+                marginBottom: theme.spacing.sm,
+                flexShrink: 0,
               }} 
             />
             <Text variant="h1" style={{ textAlign: 'center', color: theme.palette.text }}>
@@ -146,7 +151,8 @@ export function EntryPage() {
           display: 'flex',
           justifyContent: 'center',
           gap: theme.spacing.sm,
-          padding: theme.spacing.md,
+          padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+          flexShrink: 0,
         }}
       >
         {slides.map((_, index) => (
@@ -168,7 +174,15 @@ export function EntryPage() {
       </div>
 
       {/* Actions */}
-      <div style={{ padding: theme.spacing.lg, display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+      <div
+        style={{
+          padding: `0 ${theme.spacing.lg} ${theme.spacing.lg}`,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: theme.spacing.sm,
+          flexShrink: 0,
+        }}
+      >
         <Button onClick={handleNext} size="lg">
           {currentIndex === slides.length - 1 ? 'Начать' : 'Далее'}
         </Button>
