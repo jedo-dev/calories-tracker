@@ -34,12 +34,15 @@ export function RegisterPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         backgroundColor: theme.palette.bg,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
         padding: theme.spacing.xl,
+        paddingBottom: `calc(${theme.spacing.xl} + env(safe-area-inset-bottom, 0px))`,
       }}
     >
       <div style={{ maxWidth: '400px', margin: '0 auto', width: '100%' }}>

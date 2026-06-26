@@ -187,13 +187,14 @@ export function PublicProfilePage() {
       <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '10' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md, marginBottom: theme.spacing.md }}>
           <div style={{ fontSize: '48px' }}>{profile.avatarEmoji}</div>
-          <div style={{ flex: 1 }}>
-            <Text variant="h1" bold>{profile.displayName}</Text>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text variant="h1" bold style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{profile.displayName}</Text>
             {profile.username && (
-              <Text variant="small" muted>@{profile.username}</Text>
+              <Text variant="small" muted style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>@{profile.username}</Text>
             )}
           </div>
           <div style={{
+            flexShrink: 0,
             padding: '4px 12px',
             borderRadius: '12px',
             backgroundColor: profile.league.color + '30',

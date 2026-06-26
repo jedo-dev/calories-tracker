@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import DayChanger from '../features/TodayComponents/DayChanger';
 import FoodList from '../features/TodayComponents/FoodList';
@@ -42,6 +42,17 @@ interface SocialStats {
 
 interface WorkoutSession { _id: string; totalCaloriesBurned: number; exerciseCount: number }
 
+// Sanitize numeric values: return 0 for NaN, Infinity, or unreasonably large numbers
+function safeNum(val: number): number {
+  if (!isFinite(val) || isNaN(val) || Math.abs(val) > 100000) return 0;
+  return val;
+}
+
+// Format to 2 decimal places, trimming trailing zeros
+function fmt2(val: number): string {
+  return safeNum(val).toFixed(2);
+}
+
 function formatDate(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -52,7 +63,13 @@ function formatDate(date: Date): string {
 export function TodayPage() {
   const navigate = useNavigate();
   const theme = useTheme();
-  const [date, setDate] = useState(formatDate(new Date()));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryDate = searchParams.get('date');
+  const date = queryDate || formatDate(new Date());
+
+  const setDate = (newDate: string) => {
+    setSearchParams({ date: newDate });
+  };
   const [entries, setEntries] = useState<Entry[]>([]);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
@@ -102,7 +119,20 @@ export function TodayPage() {
 
   const handleAddWater = async (amountMl: number) => {
     try {
-      await apiClient.post('/water', { date, amountMl });
+      if (amountMl < 0) {
+        // Remove the most recent water log(s) to approximate the negative amount
+        const remaining = Math.abs(amountMl);
+        let removed = 0;
+        const logsCopy = [...water.logs];
+        while (removed < remaining && logsCopy.length > 0) {
+          const lastLog = logsCopy.shift();
+          if (!lastLog) break;
+          await apiClient.delete(`/water/${lastLog._id}`);
+          removed += lastLog.amountMl;
+        }
+      } else {
+        await apiClient.post('/water', { date, amountMl });
+      }
       const res = await apiClient.get('/water', { params: { date } });
       setWater(res.data);
     } catch (err) { console.error(err); }
@@ -193,15 +223,15 @@ export function TodayPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, textAlign: 'center' }}>
             <div>
               <Text variant="small" muted style={{ display: 'block' }}>{t('dashboard.consumed')}</Text>
-              <Text bold style={{ color: theme.palette.success, fontSize: '20px' }}>{Math.round(kcalEaten)}</Text>
+              <Text bold style={{ color: theme.palette.success, fontSize: '20px' }}>{fmt2(kcalEaten)}</Text>
             </div>
             <div>
               <Text variant="small" muted style={{ display: 'block' }}>{t('workout.burned')}</Text>
-              <Text bold style={{ color: theme.palette.primary, fontSize: '20px' }}>{Math.round(totalBurned)}</Text>
+              <Text bold style={{ color: theme.palette.primary, fontSize: '20px' }}>{fmt2(totalBurned)}</Text>
             </div>
             <div>
               <Text variant="small" muted style={{ display: 'block' }}>Остаток</Text>
-              <Text bold style={{ color: kcalRemaining >= 0 ? theme.palette.text : theme.palette.danger, fontSize: '20px' }}>{Math.round(kcalRemaining)}</Text>
+              <Text bold style={{ color: safeNum(kcalRemaining) >= 0 ? theme.palette.text : theme.palette.danger, fontSize: '20px' }}>{fmt2(kcalRemaining)}</Text>
             </div>
           </div>
           {dashboard.progress && (
@@ -224,7 +254,7 @@ export function TodayPage() {
               <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
                 {entries.length === 0
                   ? 'Составить план на сегодня'
-                  : `Добрать остаток ${Math.max(0, Math.round(kcalRemaining))} ккал`}
+                  : `Добрать остаток ${Math.max(0, safeNum(kcalRemaining)).toFixed(2)} ккал`}
               </Text>
             </div>
             <span style={{ fontSize: '20px' }}>→</span>
