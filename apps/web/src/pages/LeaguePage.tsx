@@ -6,17 +6,12 @@ import rankBronze from '../assets/07_achievements/rank_bronze.jpg';
 import rankSilver from '../assets/07_achievements/rank_silver.jpg';
 import rankGold from '../assets/07_achievements/rank_gold.jpg';
 import rankDiamond from '../assets/07_achievements/rank_diamond.jpg';
-import badgeFirstWorkout from '../assets/07_achievements/badge_first_workout.jpg';
-import badgeHydrationHero from '../assets/07_achievements/badge_hydration_hero.jpg';
-import activityMedium from '../assets/12_activity/activity_medium.jpg';
-import productsImage from '../assets/products.png';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
-import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 
 const LEAGUE_IMAGES: Record<string, string> = {

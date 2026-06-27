@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react';
+import type { CSSProperties, FormEvent } from 'react';
 import { useTheme } from '../../theme/useTheme';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
@@ -49,7 +49,7 @@ function fieldShell(editing: boolean, theme: ReturnType<typeof useTheme>) {
     background: editing ? 'rgba(3, 18, 28, 0.88)' : 'transparent',
     padding: editing ? '12px 12px 10px' : '0',
     minHeight: editing ? '64px' : 'auto',
-  };
+  } as CSSProperties;
 }
 
 function fieldLabel(editing: boolean) {
@@ -62,7 +62,7 @@ function fieldLabel(editing: boolean) {
     fontSize: '11px',
     display: 'inline-block',
     marginBottom: editing ? 0 : '4px',
-  };
+  } as CSSProperties;
 }
 
 export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange }: ProfileBodyCardProps) {
