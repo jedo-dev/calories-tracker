@@ -9,6 +9,7 @@ import { EntryPage } from './pages/EntryPage';
 import { FeedPage } from './pages/FeedPage';
 import { FriendsPage } from './pages/FriendsPage';
 import { LeaguePage } from './pages/LeaguePage';
+import { AchievementsPage } from './pages/AchievementsPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
@@ -61,6 +62,7 @@ function App() {
           <Route element={<AppLayout />}>
             <Route path="/today" element={<TodayPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/achievements" element={<AchievementsPage />} />
             <Route path="/entry/new" element={<AddEntryPage />} />
             <Route path="/entry/:id" element={<AddEntryPage />} />
             <Route path="/products" element={<ProductsPage />} />
