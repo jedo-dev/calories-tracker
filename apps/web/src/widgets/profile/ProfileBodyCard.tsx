@@ -13,7 +13,6 @@ interface ProfileBodyCardProps {
   saving: boolean;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
   onChange: (field: keyof ProfileData, value: any) => void;
-  onToggleEdit: () => void;
 }
 
 const bodyFields = [
@@ -42,7 +41,31 @@ function formatGender(gender?: ProfileData['gender']) {
   return '—';
 }
 
-export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange, onToggleEdit }: ProfileBodyCardProps) {
+function fieldShell(editing: boolean, theme: ReturnType<typeof useTheme>) {
+  return {
+    position: 'relative' as const,
+    borderRadius: '16px',
+    border: editing ? `1px solid ${theme.palette.border}` : '1px solid transparent',
+    background: editing ? 'rgba(3, 18, 28, 0.88)' : 'transparent',
+    padding: editing ? '12px 12px 10px' : '0',
+    minHeight: editing ? '64px' : 'auto',
+  };
+}
+
+function fieldLabel(editing: boolean) {
+  return {
+    position: editing ? 'absolute' : 'static',
+    top: editing ? '-9px' : undefined,
+    left: editing ? '10px' : undefined,
+    padding: editing ? '0 6px' : '0',
+    background: editing ? 'linear-gradient(180deg, rgba(17, 49, 69, 0.98), rgba(10, 32, 46, 0.98))' : 'transparent',
+    fontSize: '11px',
+    display: 'inline-block',
+    marginBottom: editing ? 0 : '4px',
+  };
+}
+
+export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange }: ProfileBodyCardProps) {
   const theme = useTheme();
 
   return (
@@ -55,54 +78,18 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
       }}
     >
       <form onSubmit={onSubmit}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <div style={{ marginBottom: '10px' }}>
           <Text variant="h2" bold style={{ display: 'block', fontSize: '20px' }}>
             {t('profile.bodyTitle')}
           </Text>
-          <button
-            type="button"
-            onClick={onToggleEdit}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: theme.palette.primary,
-              fontWeight: 700,
-              fontSize: '15px',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            {editing ? t('common.cancel') : '✎'}
-          </button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           {bodyFields.map((field) => {
             const value = formData[field.field];
             return (
-              <div
-                key={field.field}
-                style={{
-                  position: 'relative',
-                  borderRadius: '16px',
-                  border: `1px solid ${theme.palette.border}`,
-                  background: 'rgba(3, 18, 28, 0.88)',
-                  padding: '12px 12px 10px',
-                  minHeight: '64px',
-                }}
-              >
-                <Text
-                  variant="small"
-                  muted
-                  style={{
-                    position: 'absolute',
-                    top: '-9px',
-                    left: '10px',
-                    padding: '0 6px',
-                    background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.98), rgba(10, 32, 46, 0.98))',
-                    fontSize: '11px',
-                  }}
-                >
+              <div key={field.field} style={fieldShell(editing, theme)}>
+                <Text variant="small" muted style={fieldLabel(editing)}>
                   {t(field.labelKey)}
                 </Text>
                 {editing ? (
@@ -116,13 +103,13 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
                     style={{
                       border: 'none',
                       background: 'transparent',
-                      padding: 0,
+                      padding: '4px 0 0',
                       fontSize: '18px',
                       fontWeight: 600,
                     }}
                   />
                 ) : (
-                  <Text bold style={{ display: 'block', fontSize: '18px', paddingTop: '6px' }}>
+                  <Text bold style={{ display: 'block', fontSize: '16px', paddingTop: '0' }}>
                     {value ?? '—'}
                   </Text>
                 )}
@@ -130,17 +117,8 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
             );
           })}
 
-          <div
-            style={{
-              position: 'relative',
-              borderRadius: '16px',
-              border: `1px solid ${theme.palette.border}`,
-              background: 'rgba(3, 18, 28, 0.88)',
-              padding: '12px 12px 10px',
-              minHeight: '64px',
-            }}
-          >
-            <Text variant="small" muted style={{ position: 'absolute', top: '-9px', left: '10px', padding: '0 6px', background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.98), rgba(10, 32, 46, 0.98))', fontSize: '11px' }}>
+          <div style={fieldShell(editing, theme)}>
+            <Text variant="small" muted style={fieldLabel(editing)}>
               {t('profile.gender')}
             </Text>
             {editing ? (
@@ -158,7 +136,7 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
                   appearance: 'none',
                   WebkitAppearance: 'none',
                   MozAppearance: 'none',
-                  padding: '6px 24px 0 0',
+                  padding: '4px 24px 0 0',
                   cursor: 'pointer',
                 }}
               >
@@ -167,18 +145,18 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
                 <option value="female">{t('profile.gender_female')}</option>
               </select>
             ) : (
-              <Text bold style={{ display: 'block', fontSize: '18px', paddingTop: '6px' }}>
+              <Text bold style={{ display: 'block', fontSize: '16px', paddingTop: '0' }}>
                 {formatGender(formData.gender)}
               </Text>
             )}
           </div>
         </div>
 
-        <details style={{ marginTop: '10px' }}>
-          <summary style={{ cursor: 'pointer', color: theme.palette.textMuted, fontWeight: 600, listStyle: 'none', fontSize: '14px' }}>
+        <div style={{ marginTop: '10px' }}>
+          <Text variant="small" muted style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '10px' }}>
             {t('profile.additional')}
-          </summary>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+          </Text>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             {[
               { labelKey: 'profile.goal', value: formatGoal(formData.goal), field: 'goal' as const },
               { labelKey: 'profile.activityLevel', value: formatActivity(formData.activityLevel), field: 'activityLevel' as const },
@@ -193,14 +171,14 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
                   style={{
                     position: 'relative',
                     borderRadius: '16px',
-                    border: `1px solid ${theme.palette.border}`,
-                    background: 'rgba(3, 18, 28, 0.88)',
-                    padding: '12px 12px 10px',
-                    minHeight: '64px',
+                    border: editing ? `1px solid ${theme.palette.border}` : '1px solid transparent',
+                    background: editing ? 'rgba(3, 18, 28, 0.88)' : 'transparent',
+                    padding: editing ? '12px 12px 10px' : '0',
+                    minHeight: editing ? '64px' : 'auto',
                     gridColumn: isWide ? '1 / -1' : undefined,
                   }}
                 >
-                  <Text variant="small" muted style={{ position: 'absolute', top: '-9px', left: '10px', padding: '0 6px', background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.98), rgba(10, 32, 46, 0.98))', fontSize: '11px' }}>
+                  <Text variant="small" muted style={fieldLabel(editing)}>
                     {t(item.labelKey)}
                   </Text>
                   {editing ? (
@@ -219,7 +197,7 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
                           appearance: 'none',
                           WebkitAppearance: 'none',
                           MozAppearance: 'none',
-                          padding: '6px 24px 0 0',
+                          padding: '4px 24px 0 0',
                           cursor: 'pointer',
                         }}
                       >
@@ -242,7 +220,7 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
                           appearance: 'none',
                           WebkitAppearance: 'none',
                           MozAppearance: 'none',
-                          padding: '6px 24px 0 0',
+                          padding: '4px 24px 0 0',
                           cursor: 'pointer',
                         }}
                       >
@@ -257,7 +235,7 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
                         type="date"
                         value={formData.targetDate || ''}
                         onChange={(e) => onChange('targetDate', e.target.value || undefined)}
-                        style={{ border: 'none', background: 'transparent', padding: 0, fontSize: '18px', fontWeight: 600 }}
+                        style={{ border: 'none', background: 'transparent', padding: '4px 0 0', fontSize: '18px', fontWeight: 600 }}
                       />
                     ) : (
                       <Input
@@ -267,11 +245,11 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
                         min={30}
                         max={300}
                         step={0.1}
-                        style={{ border: 'none', background: 'transparent', padding: 0, fontSize: '18px', fontWeight: 600 }}
+                        style={{ border: 'none', background: 'transparent', padding: '4px 0 0', fontSize: '18px', fontWeight: 600 }}
                       />
                     )
                   ) : (
-                    <Text bold style={{ display: 'block', fontSize: '18px', paddingTop: '6px' }}>
+                    <Text bold style={{ display: 'block', fontSize: '16px', paddingTop: '0' }}>
                       {item.value ?? '—'}
                     </Text>
                   )}
@@ -279,7 +257,7 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
               );
             })}
           </div>
-        </details>
+        </div>
 
         {editing && (
           <Button
@@ -291,7 +269,7 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange,
               background: 'linear-gradient(180deg, rgba(83,212,107,1), rgba(60,170,82,1))',
               color: '#07210f',
               boxShadow: '0 18px 30px rgba(83, 212, 107, 0.24)',
-              marginTop: '2px',
+              marginTop: '12px',
             }}
           >
             {saving ? t('common.saving') : t('profile.save')}

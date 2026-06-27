@@ -143,14 +143,18 @@ export function ProfilePage() {
         </div>
       )}
 
-      <ProfileAchievements achievements={achievements} onAllClick={() => navigate('/achievements')} limit={4} />
+      {!editingBody && (
+        <ProfileAchievements achievements={achievements} onAllClick={() => navigate('/achievements')} limit={4} compact />
+      )}
 
-      <ProfileGoalCard
-        currentWeight={formData.weightKg}
-        startWeight={formData.startWeightKg}
-        targetWeight={formData.targetWeightKg}
-        remainingWeight={goalProgress?.remaining ?? null}
-      />
+      {!editingBody && (
+        <ProfileGoalCard
+          currentWeight={formData.weightKg}
+          startWeight={formData.startWeightKg}
+          targetWeight={formData.targetWeightKg}
+          remainingWeight={goalProgress?.remaining ?? null}
+        />
+      )}
 
       <ProfileBodyCard
         formData={formData}
@@ -158,7 +162,6 @@ export function ProfilePage() {
         saving={saving}
         onSubmit={handleSubmit}
         onChange={handleChange}
-        onToggleEdit={() => setEditingBody((prev) => !prev)}
       />
 
       <div style={{ textAlign: 'center', opacity: 0.7, color: theme.palette.textMuted, fontSize: '12px', marginTop: '10px' }}>
