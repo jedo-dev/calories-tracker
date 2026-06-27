@@ -12,19 +12,19 @@ import { Text } from '../ui/Text';
 const slides = [
   {
     image: onboardingGoals,
-    emoji: '🎯',
+
     title: 'Ставь цели',
     description: 'Укажи вес, рост и желаемый результат — мы рассчитаем норму калорий.',
   },
   {
     image: onboardingTracking,
-    emoji: '📊',
+
     title: 'Считай калории',
     description: 'Добавляй продукты — калории и БЖУ посчитаются автоматически.',
   },
   {
     image: onboardingWorkouts,
-    emoji: '🏋️',
+
     title: 'Тренируйся',
     description: 'Выбирай программы тренировок — мы посчитаем сожжённые калории.',
   },

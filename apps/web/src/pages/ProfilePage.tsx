@@ -9,6 +9,7 @@ import activityMedium from '../assets/12_activity/activity_medium.jpg';
 import activityHigh from '../assets/12_activity/activity_high.jpg';
 import activityVeryHigh from '../assets/12_activity/activity_very_high.jpg';
 import mascotFoxMain from '../assets/08_mascot/mascot_fox_main.jpg';
+import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Achievements } from '../ui/Achievements';
@@ -16,6 +17,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
+import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 
 interface ProfileData {
@@ -182,7 +184,10 @@ export function ProfilePage() {
       {/* Progress Card */}
       {formData.startWeightKg && formData.weightKg && formData.targetWeightKg && (
         <Card style={{ marginBottom: theme.spacing.md }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>📊 Прогресс</Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+            <SectionIcon src={badgeCalorieMaster} alt="" size={24} />
+            <Text variant="h2">Прогресс</Text>
+          </div>
           {(() => {
             const total = Math.abs(formData.startWeightKg - formData.targetWeightKg);
             const current = Math.abs(formData.startWeightKg - formData.weightKg);
@@ -202,7 +207,7 @@ export function ProfilePage() {
       {/* Prediction Card */}
       {prediction?.available && (
         <Card style={{ marginBottom: theme.spacing.md, borderLeft: `3px solid ${prediction.pace === 'too_fast' ? '#FFA500' : prediction.pace === 'stalled' ? theme.palette.danger : theme.palette.success}` }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>🔮 Прогноз</Text>
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>Прогноз</Text>
           {prediction.outlierWarning && (
             <div style={{ 
               padding: theme.spacing.sm, 
@@ -211,7 +216,7 @@ export function ProfilePage() {
               borderRadius: theme.radius.sm,
               border: '1px solid #FFA500'
             }}>
-              <Text variant="small" style={{ color: '#FFA500' }}>⚠️ {prediction.outlierWarning}</Text>
+              <Text variant="small" style={{ color: '#FFA500' }}>{prediction.outlierWarning}</Text>
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
@@ -224,9 +229,9 @@ export function ProfilePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text variant="small" muted>Темп</Text>
               <Text bold style={{ color: prediction.pace === 'too_fast' ? '#FFA500' : prediction.pace === 'stalled' ? theme.palette.danger : prediction.pace === 'too_slow' ? theme.palette.danger : theme.palette.success }}>
-                {prediction.pace === 'too_fast' ? '⚠️ Слишком быстро' :
-                 prediction.pace === 'stalled' ? '⏸️ Вес стоит' :
-                 prediction.pace === 'too_slow' ? '🐌 Слишком медленно' : '✅ Нормально'}
+                {prediction.pace === 'too_fast' ? 'Слишком быстро' :
+                 prediction.pace === 'stalled' ? 'Вес стоит' :
+                 prediction.pace === 'too_slow' ? 'Слишком медленно' : 'Нормально'}
               </Text>
             </div>
             {prediction.estimatedDate && (

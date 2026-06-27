@@ -6,12 +6,17 @@ import rankBronze from '../assets/07_achievements/rank_bronze.jpg';
 import rankSilver from '../assets/07_achievements/rank_silver.jpg';
 import rankGold from '../assets/07_achievements/rank_gold.jpg';
 import rankDiamond from '../assets/07_achievements/rank_diamond.jpg';
+import badgeFirstWorkout from '../assets/07_achievements/badge_first_workout.jpg';
+import badgeHydrationHero from '../assets/07_achievements/badge_hydration_hero.jpg';
+import activityMedium from '../assets/12_activity/activity_medium.jpg';
+import productsImage from '../assets/products.png';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
+import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 
 const LEAGUE_IMAGES: Record<string, string> = {
@@ -178,32 +183,36 @@ export function LeaguePage() {
           )}
 
           {/* Quick Actions */}
-          <Card style={{ marginBottom: theme.spacing.md }}>
+          {/* <Card style={{ marginBottom: theme.spacing.md }}>
             <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('league.quickActions')}</Text>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
               <Button variant="ghost" onClick={() => navigate('/entry/new')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
-                🍽️ {t('league.addFood')}
+                <SectionIcon src={productsImage} alt="" size={18} />
+                {t('league.addFood')}
               </Button>
               <Button variant="ghost" onClick={() => navigate('/workouts')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
-                💪 {t('league.startWorkout')}
+                <SectionIcon src={badgeFirstWorkout} alt="" size={18} />
+                {t('league.startWorkout')}
               </Button>
               <Button variant="ghost" onClick={() => navigate('/today')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
-                💧 {t('league.logWater')}
+                <SectionIcon src={badgeHydrationHero} alt="" size={18} />
+                {t('league.logWater')}
               </Button>
               <Button variant="ghost" onClick={() => navigate('/weight')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
-                ⚖️ {t('league.logWeight')}
+                <SectionIcon src={activityMedium} alt="" size={18} />
+                {t('league.logWeight')}
               </Button>
             </div>
-          </Card>
+          </Card> */}
 
           {/* XP Tips */}
           <Card style={{ marginBottom: theme.spacing.md, borderLeft: `3px solid ${theme.palette.primary}` }}>
             <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('league.howToGetXp')}</Text>
             <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
-              <Text variant="small">📝 {t('league.xpTip1')}</Text>
-              <Text variant="small">➕ {t('league.xpTip2')}</Text>
-              <Text variant="small">💪 {t('league.xpTip3')}</Text>
-              <Text variant="small">💧 {t('league.xpTip4')}</Text>
+              <Text variant="small">{t('league.xpTip1')}</Text>
+              <Text variant="small">{t('league.xpTip2')}</Text>
+              <Text variant="small">{t('league.xpTip3')}</Text>
+              <Text variant="small">{t('league.xpTip4')}</Text>
             </div>
           </Card>
 

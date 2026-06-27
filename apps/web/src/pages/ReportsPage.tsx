@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import emptyReports from '../assets/03_empty_states/empty_reports.jpg';
+import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
+import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 
 function formatDate(d: Date): string {
@@ -95,7 +97,10 @@ export function ReportsPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>📊 {t('report.title')}</Text>
+      <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+        <SectionIcon src={badgeCalorieMaster} alt="" size={28} />
+        <Text variant="h1">{t('report.title')}</Text>
+      </div>
 
       {/* Period selector */}
       <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>

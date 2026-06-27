@@ -10,12 +10,14 @@ import badgeFirstWorkout from '../assets/07_achievements/badge_first_workout.jpg
 import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
 import badgeHydrationHero from '../assets/07_achievements/badge_hydration_hero.jpg';
 import badgeSocialButterfly from '../assets/07_achievements/badge_social_butterfly.jpg';
+import productsImage from '../assets/products.png';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
+import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 
 const BADGE_IMAGES: Record<string, string> = {
@@ -73,7 +75,7 @@ function formatEventText(type: string, payload: Record<string, any>): string {
     case 'xp_gain':
       return `${t('feed.xpGain')} (+${payload.xp || 2} XP)`;
     case 'streak_milestone':
-      return `${t('feed.streakMilestone')} ${payload.streak || 0} ${t('feed.days')} 🔥`;
+      return `${t('feed.streakMilestone')} ${payload.streak || 0} ${t('feed.days')}`;
     case 'follow':
       return t('feed.followEvent');
     case 'workout_completed':
@@ -219,7 +221,10 @@ export function PublicProfilePage() {
           </div>
           <div>
             <Text variant="small" muted>{t('publicProfile.streak')}</Text>
-            <Text variant="h2" bold> {profile.currentStreak} 🔥</Text>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.sm }}>
+              <SectionIcon src={badge7DayStreak} alt="" size={20} />
+              <Text variant="h2" bold>{profile.currentStreak}</Text>
+            </div>
           </div>
         </div>
 
@@ -292,10 +297,9 @@ export function PublicProfilePage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '24px',
                     flexShrink: 0,
                   }}>
-                    🍽️
+                    <SectionIcon src={productsImage} alt="" size={24} />
                   </div>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>

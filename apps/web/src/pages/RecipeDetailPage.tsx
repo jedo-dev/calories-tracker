@@ -9,6 +9,7 @@ import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
 import Loader from '../ui/Loader';
+import productsImage from '../assets/products.png';
 
 interface Ingredient {
   productId?: string;
@@ -195,7 +196,9 @@ export function RecipeDetailPage() {
           <Text variant="h1" style={{ flex: 1 }}>{t('recipes.accessDenied')}</Text>
         </div>
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <Text style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>🔒</Text>
+          <div style={{ marginBottom: theme.spacing.md, display: 'flex', justifyContent: 'center' }}>
+            <img src={productsImage} alt="" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+          </div>
           <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipes.accessDenied')}</Text>
           <Text muted>{t('recipes.accessDeniedDesc')}</Text>
           <Button onClick={() => navigate('/recipes')} style={{ marginTop: theme.spacing.lg }}>
@@ -235,9 +238,9 @@ export function RecipeDetailPage() {
         </Button>
         <Text variant="h1" style={{ flex: 1 }}>{recipe.name}</Text>
         {isMine && (
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/recipes/${recipe._id}/edit`)}>
-            ✏️
-          </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/recipes/${recipe._id}/edit`)}>
+              Edit
+           </Button>
         )}
       </div>
 
@@ -272,13 +275,13 @@ export function RecipeDetailPage() {
                 color: isPublished ? theme.palette.success : theme.palette.textMuted,
                 fontWeight: '600',
               }}>
-                {isPublished ? `🌐 ${t('recipes.published')}` : `🔒 ${t('recipes.private')}`}
+                {isPublished ? ` ${t('recipes.published')}` : ` ${t('recipes.private')}`}
               </span>
               {isPublished && recipe.likesCount !== undefined && recipe.likesCount > 0 && (
-                <Text variant="small" muted>❤️ {recipe.likesCount}</Text>
+                <Text variant="small" muted> {recipe.likesCount}</Text>
               )}
               {isPublished && recipe.forkCount !== undefined && recipe.forkCount > 0 && (
-                <Text variant="small" muted>📋 {recipe.forkCount}</Text>
+                <Text variant="small" muted> {recipe.forkCount}</Text>
               )}
             </div>
             {isPublished ? (
@@ -397,20 +400,20 @@ export function RecipeDetailPage() {
       {/* Actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
         <Button onClick={() => setShowAddToDiary(true)}>
-          📥 {t('recipes.addToDiary')}
+           {t('recipes.addToDiary')}
         </Button>
         {isMine ? (
           <div style={{ display: 'flex', gap: theme.spacing.sm }}>
             <Button variant="secondary" onClick={handleDuplicate} style={{ flex: 1 }}>
-              📋 {t('recipes.duplicate')}
+               {t('recipes.duplicate')}
             </Button>
             <Button variant="danger" onClick={handleArchive} style={{ flex: 1 }}>
-              🗄️ {t('recipes.archive')}
+              {t('recipes.archive')}
             </Button>
           </div>
         ) : (
           <Button variant="secondary" onClick={handleFork}>
-            📋 {t('recipes.fork')}
+             {t('recipes.fork')}
           </Button>
         )}
       </div>

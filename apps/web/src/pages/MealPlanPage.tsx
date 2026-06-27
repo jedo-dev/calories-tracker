@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
+import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 
 interface PlanItem {
@@ -208,9 +210,11 @@ export function MealPlanPage() {
   if (!hasProfile) {
     return (
       <div style={{ padding: theme.spacing.lg, paddingBottom: '100px' }}>
-        <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>🧠 План питания</Text>
+        <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}> План питания</Text>
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <Text style={{ fontSize: '48px', marginBottom: theme.spacing.md }}>📋</Text>
+          <div style={{ marginBottom: theme.spacing.md, display: 'flex', justifyContent: 'center' }}>
+            <SectionIcon src={badgeCalorieMaster} alt="" size={48} />
+          </div>
           <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>Заполните профиль</Text>
           <Text muted style={{ marginBottom: theme.spacing.lg, display: 'block' }}>
             Для составления плана питания нужно указать вес, рост, возраст и цель
@@ -229,9 +233,9 @@ export function MealPlanPage() {
     <div style={{ padding: theme.spacing.lg, paddingBottom: '100px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg }}>
-        <Text variant="h1">🧠 План питания</Text>
+        <Text variant="h1"> План питания</Text>
         <Button variant="ghost" size="sm" onClick={() => setShowHistory(!showHistory)} style={{ width: 'auto' }}>
-          {showHistory ? '← Назад' : '📋 История'}
+          {showHistory ? '← Назад' : ' История'}
         </Button>
       </div>
 
@@ -279,7 +283,7 @@ export function MealPlanPage() {
             <Card style={{ marginBottom: theme.spacing.md, borderLeft: `3px solid ${theme.palette.primary}` }}>
               {plan.explanation.map((exp, i) => (
                 <Text key={i} variant="small" style={{ display: 'block', marginBottom: i < plan.explanation.length - 1 ? theme.spacing.xs : 0 }}>
-                  💡 {exp}
+                   {exp}
                 </Text>
               ))}
             </Card>
@@ -414,18 +418,18 @@ export function MealPlanPage() {
               onClick={handleApply}
               disabled={plan.status === 'applied' || applying}
             >
-              {plan.status === 'applied' ? '✅ Применён' : applying ? 'Применение...' : '📥 Применить в дневник'}
+              {plan.status === 'applied' ? ' Применён' : applying ? 'Применение...' : ' Применить в дневник'}
             </Button>
             <div style={{ display: 'flex', gap: theme.spacing.sm }}>
               <Button variant="secondary" onClick={handleSaveTemplate} style={{ flex: 1 }}>
-                📋 Как шаблон
+                 Как шаблон
               </Button>
               <Button variant="secondary" onClick={handleGenerate} style={{ flex: 1 }}>
                 🔄 Другой план
               </Button>
             </div>
             <Button variant="ghost" onClick={handleArchive}>
-              🗄️ В архив
+              В архив
             </Button>
           </div>
         </div>
@@ -536,7 +540,7 @@ export function MealPlanPage() {
 
           {/* Generate button */}
           <Button onClick={handleGenerate} disabled={generating} size="lg">
-            {generating ? '⏳ Генерация...' : '🧠 Составить план'}
+            {generating ? '⏳ Генерация...' : ' Составить план'}
           </Button>
         </div>
       )}

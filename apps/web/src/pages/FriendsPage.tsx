@@ -148,7 +148,7 @@ export function FriendsPage() {
                 <Text variant="small" muted>{t('friends.xpWeek', { xp: user.xpWeek })}</Text>
               )}
               {user.currentStreak !== undefined && user.currentStreak > 0 && (
-                <Text variant="small" muted>{t('friends.streak', { count: user.currentStreak })} 🔥</Text>
+                <Text variant="small" muted>{t('friends.streak', { count: user.currentStreak })} </Text>
               )}
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import emptyWeight from '../assets/03_empty_states/empty_weight.png';
+import activityMedium from '../assets/12_activity/activity_medium.jpg';
 import DeleteIcon from '../assets/DeleteIcon';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
@@ -9,6 +10,7 @@ import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
+import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 
 interface WeightEntry { _id: string; date: string; weightKg: number }
@@ -73,7 +75,10 @@ export function WeightHistoryPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>⚖️ {t('weight.title')}</Text>
+      <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+        <SectionIcon src={activityMedium} alt="" size={28} />
+        <Text variant="h1">{t('weight.title')}</Text>
+      </div>
 
       {/* Stats */}
       {latest && (

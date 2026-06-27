@@ -5,6 +5,10 @@ import DayChanger from '../features/TodayComponents/DayChanger';
 import FoodList from '../features/TodayComponents/FoodList';
 import { RecentProducts } from '../features/TodayComponents/RecentProducts';
 import { DailyTips } from '../features/TodayComponents/DailyTips';
+import badge7DayStreak from '../assets/07_achievements/badge_7day_streak.jpg';
+import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
+import badgeHydrationHero from '../assets/07_achievements/badge_hydration_hero.jpg';
+import activityMedium from '../assets/12_activity/activity_medium.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -12,6 +16,7 @@ import { Card } from '../ui/Card';
 import { DashboardRing } from '../ui/DashboardRing';
 import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
+import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 
 export interface Entry {
@@ -204,7 +209,10 @@ export function TodayPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <Text variant="small" muted style={{ display: 'block' }}>{t('commandCenter.streak')}</Text>
-              <Text variant="h2" bold>{t('today.streakDays', { count: socialStats.stats.currentStreak })} 🔥</Text>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <SectionIcon src={badge7DayStreak} alt="" size={24} />
+                <Text variant="h2" bold>{t('today.streakDays', { count: socialStats.stats.currentStreak })}</Text>
+              </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <Text variant="small" muted style={{ display: 'block' }}>{t('today.xpWeek')}</Text>
@@ -218,7 +226,8 @@ export function TodayPage() {
       {dashboard && kcalTarget > 0 && (
         <Card style={{ marginBottom: theme.spacing.md }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
-            <Text variant="h2">🔥 {t('today.totals')}</Text>
+            <SectionIcon src={badgeCalorieMaster} alt="" size={24} />
+            <Text variant="h2">{t('today.totals')}</Text>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, textAlign: 'center' }}>
             <div>
@@ -250,7 +259,7 @@ export function TodayPage() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <Text bold>🧠 План питания</Text>
+              <Text bold> План питания</Text>
               <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
                 {entries.length === 0
                   ? 'Составить план на сегодня'
@@ -265,10 +274,13 @@ export function TodayPage() {
       {/* Water Tracking */}
       <Card style={{ marginBottom: theme.spacing.md }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
-          <Text bold>💧 {t('water.title')}</Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+            <SectionIcon src={badgeHydrationHero} alt="" size={24} />
+            <Text bold>{t('water.title')}</Text>
+          </div>
           <Text variant="small" muted>
             {water.totalMl} / {waterGoal} {t('water.ml')}
-            {waterReached && ' ✅'}
+            {waterReached && ' '}
           </Text>
         </div>
         <div style={{ backgroundColor: theme.palette.bg, borderRadius: theme.radius.sm, height: '12px', overflow: 'hidden', marginBottom: theme.spacing.sm }}>
@@ -297,7 +309,10 @@ export function TodayPage() {
       {/* Weight */}
       <Card style={{ marginBottom: theme.spacing.md }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text bold>⚖️ {t('weight.title')}</Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+            <SectionIcon src={activityMedium} alt="" size={24} />
+            <Text bold>{t('weight.title')}</Text>
+          </div>
           {!showWeightInput ? (
             <Button variant="ghost" size="sm" onClick={() => setShowWeightInput(true)}>{t('weight.logWeight')}</Button>
           ) : null}
@@ -332,7 +347,7 @@ export function TodayPage() {
         <Button onClick={() => navigate('/entry/new')} style={{ flex: 1 }}>{t('today.addEntry')}</Button>
         {entries.length > 0 && (
           <Button variant="ghost" onClick={() => setShowSaveTpl(!showSaveTpl)} style={{ width: 'auto', minWidth: '44px' }}>
-            📋
+            <SectionIcon src={badgeCalorieMaster} alt="" size={18} />
           </Button>
         )}
       </div>

@@ -293,7 +293,7 @@ export function RecipesPage() {
                       fontSize: '28px',
                       flexShrink: 0,
                     }}>
-                      🍽️
+                      
                     </div>
                   )}
 
@@ -355,10 +355,10 @@ export function RecipesPage() {
                           {isPublished ? t('recipes.published') : t('recipes.private')}
                         </span>
                         {isPublished && recipe.likesCount !== undefined && recipe.likesCount > 0 && (
-                          <Text variant="small" muted>❤️ {recipe.likesCount}</Text>
+                          <Text variant="small" muted> {recipe.likesCount}</Text>
                         )}
                         {isPublished && recipe.forkCount !== undefined && recipe.forkCount > 0 && (
-                          <Text variant="small" muted>📋 {recipe.forkCount}</Text>
+                          <Text variant="small" muted> {recipe.forkCount}</Text>
                         )}
                       </div>
                     )}
@@ -367,10 +367,10 @@ export function RecipesPage() {
                     {isBoard && (
                       <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: '4px' }}>
                         {recipe.likesCount !== undefined && recipe.likesCount > 0 && (
-                          <Text variant="small" muted>❤️ {recipe.likesCount}</Text>
+                          <Text variant="small" muted> {recipe.likesCount}</Text>
                         )}
                         {recipe.forkCount !== undefined && recipe.forkCount > 0 && (
-                          <Text variant="small" muted>📋 {recipe.forkCount}</Text>
+                          <Text variant="small" muted> {recipe.forkCount}</Text>
                         )}
                       </div>
                     )}
@@ -382,38 +382,38 @@ export function RecipesPage() {
                   {tab === 'my' ? (
                     <>
                       <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
-                        📥 {t('recipes.addToDiary')}
+                         {t('recipes.addToDiary')}
                       </Button>
                       {isPublished ? (
                         <Button size="sm" variant="ghost" onClick={(e) => handleUnpublish(recipe._id, e)}>
-                          🔒 {t('recipes.unpublish')}
+                           {t('recipes.unpublish')}
                         </Button>
                       ) : (
                         <Button size="sm" variant="ghost" onClick={(e) => handlePublish(recipe._id, e)}>
-                          🌐 {t('recipes.publish')}
+                           {t('recipes.publish')}
                         </Button>
                       )}
                       <Button size="sm" variant="ghost" onClick={(e) => handleDuplicate(recipe._id, e)}>
-                        📋 {t('recipes.duplicate')}
+                         {t('recipes.duplicate')}
                       </Button>
                       {recipe.isArchived ? (
                         <Button size="sm" variant="ghost" onClick={(e) => handleUnarchive(recipe._id, e)}>
-                          ♻️ {t('recipes.unarchive')}
+                          {t('recipes.unarchive')}
                         </Button>
                       ) : (
                         <Button size="sm" variant="ghost" onClick={(e) => handleArchive(recipe._id, e)}>
-                          🗄️ {t('recipes.archive')}
+                          {t('recipes.archive')}
                         </Button>
                       )}
                     </>
                   ) : (
                     <>
                       <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
-                        📥 {t('recipes.addToDiary')}
+                         {t('recipes.addToDiary')}
                       </Button>
                       {!recipe.isMine && (
                         <Button size="sm" variant="ghost" onClick={(e) => handleFork(recipe._id, e)}>
-                          📋 {t('recipes.fork')}
+                           {t('recipes.fork')}
                         </Button>
                       )}
                     </>

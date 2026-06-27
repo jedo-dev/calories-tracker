@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 //@ts-ignore
 import logo from '../assets/logo.png';
+import badge7DayStreak from '../assets/07_achievements/badge_7day_streak.jpg';
+import badgeFirstWorkout from '../assets/07_achievements/badge_first_workout.jpg';
+import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
+import activityMedium from '../assets/12_activity/activity_medium.jpg';
 import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 //@ts-ignore
@@ -9,6 +13,7 @@ import { apiClient } from '../api/client';
 import { useTheme } from '../theme/useTheme';
 import { BottomSheet } from '../ui/BottomSheet';
 import { Button } from '../ui/Button';
+import { SectionIcon } from '../ui/SectionIcon';
 import { hapticImpact } from '../utils/hapticFeedback';
 
 interface SocialStats {
@@ -176,7 +181,7 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
                 alignItems: 'center',
               }}
             >
-              <span style={{ fontSize: '24px' }}>🔥</span>
+              <SectionIcon src={badge7DayStreak} alt="" size={24} />
               <div style={{ flex: 1 }}>
                 <div
                   style={{
@@ -217,29 +222,32 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           >
             + {t('commandCenter.addEntry')}
           </Button>
-          <Button variant="secondary" onClick={handleSelectDate} style={{ minHeight: '44px' }}>
-            📅 {t('commandCenter.selectDate')}
-          </Button>
-          <Button variant="secondary" onClick={() => handleNavigate('/workouts')} style={{ minHeight: '44px' }}>
-            🏋️ {t('workout.title')}
-          </Button>
-          <Button variant="secondary" onClick={() => handleNavigate('/weight')} style={{ minHeight: '44px' }}>
-            ⚖️ {t('weight.title')}
-          </Button>
-          <Button variant="secondary" onClick={() => handleNavigate('/reports')} style={{ minHeight: '44px' }}>
-            📊 {t('report.title')}
-          </Button>
-          <Button variant="secondary" onClick={() => handleNavigate('/measurements')} style={{ minHeight: '44px' }}>
-            📏 {t('measurement.title')}
-          </Button>
-          <Button variant="secondary" onClick={() => handleNavigate('/templates')} style={{ minHeight: '44px' }}>
-            📋 {t('template.title')}
+            <Button variant="secondary" onClick={handleSelectDate} style={{ minHeight: '44px' }}>
+              {t('commandCenter.selectDate')}
+            </Button>
+            <Button variant="secondary" onClick={() => handleNavigate('/workouts')} style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
+              <SectionIcon src={badgeFirstWorkout} alt="" size={18} />
+              {t('workout.title')}
+            </Button>
+            <Button variant="secondary" onClick={() => handleNavigate('/weight')} style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
+              <SectionIcon src={activityMedium} alt="" size={18} />
+              {t('weight.title')}
+            </Button>
+            <Button variant="secondary" onClick={() => handleNavigate('/reports')} style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
+              <SectionIcon src={badgeCalorieMaster} alt="" size={18} />
+              {t('report.title')}
+            </Button>
+            <Button variant="secondary" onClick={() => handleNavigate('/measurements')} style={{ minHeight: '44px' }}>
+              {t('measurement.title')}
+            </Button>
+            <Button variant="secondary" onClick={() => handleNavigate('/templates')} style={{ minHeight: '44px' }}>
+              {t('template.title')}
           </Button>
           <Button variant="secondary" onClick={() => handleNavigate('/recipes')} style={{ minHeight: '44px' }}>
-            🍽️ {t('recipes.title')}
+             {t('recipes.title')}
           </Button>
           <Button variant="secondary" onClick={() => handleNavigate('/meal-plan')} style={{ minHeight: '44px' }}>
-            🧠 {t('mealPlan.title')}
+             {t('mealPlan.title')}
           </Button>
         </div>
 

@@ -78,7 +78,7 @@ export function MeasurementsPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>📏 {t('measurement.title')}</Text>
+      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}> {t('measurement.title')}</Text>
 
       <Button onClick={() => setShowForm(!showForm)} style={{ marginBottom: theme.spacing.lg }}>
         {showForm ? t('common.cancel') : '+ ' + t('measurement.save')}

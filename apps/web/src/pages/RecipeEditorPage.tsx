@@ -388,17 +388,17 @@ export function RecipeEditorPage() {
       <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
           <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>
-            ✅ {t('recipeEditor.savedActions')}
+             {t('recipeEditor.savedActions')}
           </Text>
           <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, marginTop: theme.spacing.lg }}>
             <Button onClick={() => navigate(`/entry/new?recipeId=${savedRecipe._id}&recipeName=${encodeURIComponent(savedRecipe.name)}&kcal=${savedRecipe.kcalPer100g}&protein=${savedRecipe.proteinPer100g}&fat=${savedRecipe.fatPer100g}&carb=${savedRecipe.carbPer100g}`)}>
-              📥 {t('recipeEditor.addToDiary')}
+               {t('recipeEditor.addToDiary')}
             </Button>
             <Button variant="secondary" onClick={() => setShowSavedActions(false)}>
-              ✏️ {t('recipeEditor.stayHere')}
+               {t('recipeEditor.stayHere')}
             </Button>
             <Button variant="ghost" onClick={() => navigate('/recipes')}>
-              📋 {t('recipeEditor.goToList')}
+               {t('recipeEditor.goToList')}
             </Button>
           </div>
         </Card>
@@ -532,7 +532,7 @@ export function RecipeEditorPage() {
                   transition: 'all 0.2s',
                 }}
               >
-                🔒 {t('recipes.visibilityPrivate')}
+                 {t('recipes.visibilityPrivate')}
               </button>
               <button
                 onClick={() => { setVisibility('public'); markDirty(); }}
@@ -549,7 +549,7 @@ export function RecipeEditorPage() {
                   transition: 'all 0.2s',
                 }}
               >
-                🌐 {t('recipes.visibilityPublic')}
+                 {t('recipes.visibilityPublic')}
               </button>
             </div>
           </div>
@@ -830,7 +830,7 @@ export function RecipeEditorPage() {
             return (
               <div style={{ marginTop: theme.spacing.sm, padding: theme.spacing.sm, backgroundColor: theme.palette.danger + '20', borderRadius: theme.radius.sm }}>
                 <Text variant="small" style={{ color: theme.palette.danger }}>
-                  ⚠️ Сумма Б+Ж+У = {macrosSum.toFixed(1)}г превышает 100г/100г
+                   Сумма Б+Ж+У = {macrosSum.toFixed(1)}г превышает 100г/100г
                 </Text>
               </div>
             );
@@ -848,7 +848,7 @@ export function RecipeEditorPage() {
               return (
                 <div style={{ marginTop: theme.spacing.sm, padding: theme.spacing.sm, backgroundColor: '#FFA500' + '20', borderRadius: theme.radius.sm }}>
                   <Text variant="small" style={{ color: '#FFA500' }}>
-                    ⚠️ Калории не соответствуют макросам (ожидается ~{Math.round(expectedKcal)} ккал)
+                     Калории не соответствуют макросам (ожидается ~{Math.round(expectedKcal)} ккал)
                   </Text>
                 </div>
               );
