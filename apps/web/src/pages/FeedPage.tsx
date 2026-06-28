@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
-import mascotFoxMain from '../assets/08_mascot/mascot_fox_main.jpg';
+import mascotFoxMain from '../assets/08_mascot/mascot_fox_main.png';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';

@@ -50,6 +50,7 @@ export function ProfileHeader({
         type="button"
         aria-label={editingBody ? t('common.cancel') : t('common.edit')}
         onClick={onToggleEdit}
+        autoFocus
         style={{
           position: 'absolute',
           top: '14px',
@@ -64,6 +65,7 @@ export function ProfileHeader({
           placeItems: 'center',
           cursor: 'pointer',
           fontSize: '18px',
+         
         }}
       >
         {editingBody ? '×' : '✎'}
