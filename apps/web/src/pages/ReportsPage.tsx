@@ -98,7 +98,7 @@ export function ReportsPage() {
         `,
       }}
     >
-      <div style={{ marginBottom: '14px' }}>
+      <div style={{ marginBottom: '8px' }}>
      
 
         <ReportsPeriodSwitcher
@@ -110,7 +110,7 @@ export function ReportsPage() {
         />
       </div>
 
-      <div style={{ marginBottom: '14px' }}>
+      <div style={{ marginBottom: '8px' }}>
         <ReportsPeriodNavigator
           label={periodLabel}
           onPrev={() => setOffset((current) => current - 1)}
@@ -143,7 +143,7 @@ export function ReportsPage() {
         />
       ) : (
         <>
-          <div style={{ marginBottom: '14px' }}>
+          <div style={{ marginBottom: '8px' }}>
             <ReportsKpiGrid
               avgKcal={avgKcal}
               totalBurned={totalBurned}
@@ -154,11 +154,11 @@ export function ReportsPage() {
             />
           </div>
 
-          <div style={{ marginBottom: '14px' }}>
+          <div style={{ marginBottom: '8px' }}>
             <ReportsWeightChart days={data} />
           </div>
 
-          <div style={{ marginBottom: '14px' }}>
+          <div style={{ marginBottom: '8px' }}>
             <ReportsCaloriesChart days={data} goal={550} />
           </div>
         </>
