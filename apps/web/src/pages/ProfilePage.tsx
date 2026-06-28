@@ -1,14 +1,18 @@
-import { type FormEvent, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../api/client';
-import { t } from '../i18n';
-import { useTheme } from '../theme/useTheme';
-import Loader from '../ui/Loader';
-import { ProfileAchievements } from '../widgets/profile/ProfileAchievements';
-import { ProfileBodyCard } from '../widgets/profile/ProfileBodyCard';
-import { ProfileGoalCard } from '../widgets/profile/ProfileGoalCard';
-import { ProfileHeader } from '../widgets/profile/ProfileHeader';
-import type { AchievementState, LeagueState, ProfileData } from '../widgets/profile/types';
+import { type FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { apiClient } from "../api/client";
+import { t } from "../i18n";
+import { useTheme } from "../theme/useTheme";
+import Loader from "../ui/Loader";
+import { ProfileAchievements } from "../widgets/profile/ProfileAchievements";
+import { ProfileBodyCard } from "../widgets/profile/ProfileBodyCard";
+import { ProfileGoalCard } from "../widgets/profile/ProfileGoalCard";
+import { ProfileHeader } from "../widgets/profile/ProfileHeader";
+import type {
+  AchievementState,
+  LeagueState,
+  ProfileData
+} from "../widgets/profile/types";
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -22,8 +26,8 @@ export function ProfilePage() {
   const [league, setLeague] = useState<LeagueState | null>(null);
   const [streakDays, setStreakDays] = useState(0);
   const [achievements, setAchievements] = useState<AchievementState[]>([]);
-  const [formData, setFormData] = useState<ProfileData>({ goal: 'maintain' });
-
+  const [formData, setFormData] = useState<ProfileData>({ goal: "maintain" });
+  console.log(`prediction`, prediction);
   useEffect(() => {
     loadProfile();
   }, []);
@@ -34,13 +38,16 @@ export function ProfilePage() {
     setError(null);
 
     try {
-      const [profileRes, predictionRes, socialRes, leagueRes, achievementsRes] = await Promise.all([
-        apiClient.get('/profile'),
-        apiClient.get('/weight/prediction').catch(() => ({ data: { available: false } })),
-        apiClient.get('/social/me').catch(() => null),
-        apiClient.get('/leaderboard/week/friends').catch(() => null),
-        apiClient.get('/achievements').catch(() => null),
-      ]);
+      const [profileRes, predictionRes, socialRes, leagueRes, achievementsRes] =
+        await Promise.all([
+          apiClient.get("/profile"),
+          apiClient
+            .get("/weight/prediction")
+            .catch(() => ({ data: { available: false } })),
+          apiClient.get("/social/me").catch(() => null),
+          apiClient.get("/leaderboard/week/friends").catch(() => null),
+          apiClient.get("/achievements").catch(() => null)
+        ]);
 
       if (profileRes.data.profile) {
         setFormData({
@@ -49,10 +56,10 @@ export function ProfilePage() {
           age: profileRes.data.profile.age,
           gender: profileRes.data.profile.gender,
           activityLevel: profileRes.data.profile.activityLevel,
-          goal: profileRes.data.profile.goal || 'maintain',
+          goal: profileRes.data.profile.goal || "maintain",
           startWeightKg: profileRes.data.profile.startWeightKg,
           targetWeightKg: profileRes.data.profile.targetWeightKg,
-          targetDate: profileRes.data.profile.targetDate,
+          targetDate: profileRes.data.profile.targetDate
         });
       }
 
@@ -64,12 +71,14 @@ export function ProfilePage() {
         setAchievements(
           achievementsRes.data.map((achievement: any) => ({
             key: achievement.key,
-            unlocked: !!achievement.unlocked,
-          })),
+            unlocked: !!achievement.unlocked
+          }))
         );
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || t('profile.loadFailed'));
+      setError(
+        err.response?.data?.message || err.message || t("profile.loadFailed")
+      );
     } finally {
       setLoading(false);
     }
@@ -81,11 +90,13 @@ export function ProfilePage() {
     setError(null);
 
     try {
-      await apiClient.patch('/profile', formData);
+      await apiClient.patch("/profile", formData);
       setEditingBody(false);
-      navigate('/today');
+      navigate("/today");
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || t('profile.saveFailed'));
+      setError(
+        err.response?.data?.message || err.message || t("profile.saveFailed")
+      );
     } finally {
       setSaving(false);
     }
@@ -94,11 +105,11 @@ export function ProfilePage() {
   const handleChange = (field: keyof ProfileData, value: any) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value === '' ? undefined : value,
+      [field]: value === "" ? undefined : value
     }));
   };
 
-  const displayName = user?.displayName || user?.username || 'User';
+  const displayName = user?.displayName || user?.username || "User";
   const username = user?.username ? `@${user.username}` : null;
   const goalProgress = (() => {
     const start = formData.startWeightKg;
@@ -117,15 +128,15 @@ export function ProfilePage() {
   return (
     <div
       style={{
-        minHeight: 'calc(100vh - 64px)',
-        maxWidth: '520px',
-        margin: '0 auto',
-        padding: '12px 12px 12px',
+        minHeight: "calc(100vh - 64px)",
+        maxWidth: "520px",
+        margin: "0 auto",
+        padding: "12px 12px 12px",
         background: `
           radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
           radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
           linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-        `,
+        `
       }}
     >
       <ProfileHeader
@@ -138,13 +149,20 @@ export function ProfilePage() {
       />
 
       {error && (
-        <div style={{ marginBottom: '10px', color: '#ff8a8a', fontSize: '14px' }}>
+        <div
+          style={{ marginBottom: "10px", color: "#ff8a8a", fontSize: "14px" }}
+        >
           {error}
         </div>
       )}
 
       {!editingBody && (
-        <ProfileAchievements achievements={achievements} onAllClick={() => navigate('/achievements')} limit={4} compact />
+        <ProfileAchievements
+          achievements={achievements}
+          onAllClick={() => navigate("/achievements")}
+          limit={4}
+          compact
+        />
       )}
 
       {!editingBody && (
@@ -163,8 +181,6 @@ export function ProfilePage() {
         onSubmit={handleSubmit}
         onChange={handleChange}
       />
-
-     
     </div>
   );
 }
