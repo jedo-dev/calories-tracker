@@ -306,9 +306,16 @@ export const ru = {
   },
   // Reports
   report: {
-    title: "Отчёты",
+    title: "Статистика",
+    week: "Неделя",
+    month: "Месяц",
     weekly: "Недельный",
     monthly: "Месячный",
+    weightTrend: "Динамика веса",
+    caloriesByDay: "Калории по дням",
+    goal: "цель",
+    kg: "кг",
+    kcal: "ккал",
     avgKcal: "Средние калории",
     totalBurned: "Сожжено всего",
     avgWeight: "Средний вес",
