@@ -86,7 +86,7 @@ export function AchievementsPage() {
         </button>
         <div style={{ textAlign: 'right' }}>
           <Text variant="h1" bold style={{ display: 'block', fontSize: '24px', lineHeight: '1.1' }}>
-            {t('achievements.title')}
+            {t('achievements.title')} 
           </Text>
           <Text variant="small" muted style={{ display: 'block', fontSize: '12px', marginTop: '2px' }}>
             {unlockedCount}/{Math.max(achievements.length, 6)} {t('achievements.progress')}
@@ -100,21 +100,7 @@ export function AchievementsPage() {
         </div>
       )}
 
-      <Card
-        style={{
-          marginBottom: '12px',
-          borderRadius: '22px',
-          background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.94), rgba(10, 32, 46, 0.94))',
-          border: '1px solid rgba(160, 200, 220, 0.18)',
-        }}
-      >
-        <Text variant="h2" bold style={{ display: 'block', fontSize: '18px', marginBottom: '4px' }}>
-          {t('achievements.title')}
-        </Text>
-        <Text variant="small" muted style={{ display: 'block', fontSize: '12px', lineHeight: '1.4' }}>
-          {t('achievements.progress')}: {unlockedCount} / {Math.max(achievements.length, 6)}
-        </Text>
-      </Card>
+    
 
       <AchievementsGallery achievements={achievements} />
     </div>

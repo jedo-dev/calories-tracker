@@ -72,8 +72,8 @@ export function ProfileHeader({
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', paddingRight: '46px' }}>
         <div
           style={{
-            width: '122px',
-            height: '122px',
+            width: '100px',
+            height: '100px',
             borderRadius: '50%',
             border: `5px solid ${theme.palette.primary}`,
             padding: '8px',

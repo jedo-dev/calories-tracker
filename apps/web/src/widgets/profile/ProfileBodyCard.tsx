@@ -153,9 +153,7 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange 
         </div>
 
         <div style={{ marginTop: '10px' }}>
-          <Text variant="small" muted style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '10px' }}>
-            {t('profile.additional')}
-          </Text>
+       
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             {[
               { labelKey: 'profile.goal', value: formatGoal(formData.goal), field: 'goal' as const },

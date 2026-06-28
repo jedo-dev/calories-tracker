@@ -23,7 +23,7 @@ export function ProfileAchievements({ achievements, onAllClick, limit = 4, compa
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
         <Text variant="h2" bold style={{ fontSize: '20px' }}>
-          {t('profile.achievements')}
+          {t('profile.achievements')} 
         </Text>
         <button
           type="button"

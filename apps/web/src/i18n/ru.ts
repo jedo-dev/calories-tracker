@@ -227,7 +227,7 @@ export const ru = {
     calorie_master_desc: "Наберите 500 XP",
     hydration_hero_name: "Гидратация",
     hydration_hero_desc: "Закройте норму воды 5 дней",
-    social_butterfly_name: "Социальная бабочка",
+    social_butterfly_name: "В кругу друзей",
     social_butterfly_desc: "Подпишитесь на 5 пользователей",
   },
   // Workout

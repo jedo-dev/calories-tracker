@@ -8,3 +8,5 @@ build
 .idea
 .vscode
 
+docker-compose.local.yml
+

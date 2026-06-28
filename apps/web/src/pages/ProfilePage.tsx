@@ -120,7 +120,7 @@ export function ProfilePage() {
         minHeight: 'calc(100vh - 64px)',
         maxWidth: '520px',
         margin: '0 auto',
-        padding: '12px 12px 96px',
+        padding: '12px 12px 12px',
         background: `
           radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
           radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
@@ -164,9 +164,7 @@ export function ProfilePage() {
         onChange={handleChange}
       />
 
-      <div style={{ textAlign: 'center', opacity: 0.7, color: theme.palette.textMuted, fontSize: '12px', marginTop: '10px' }}>
-        {prediction?.available ? t('profile.saveHint') : t('profile.saveHintFallback')}
-      </div>
+     
     </div>
   );
 }

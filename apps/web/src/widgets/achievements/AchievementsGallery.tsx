@@ -64,13 +64,13 @@ export function AchievementsGallery({ achievements }: AchievementsGalleryProps) 
               </div>
 
               <div style={{ minWidth: 0, flex: 1 }}>
-                <Text variant="h2" bold style={{ display: 'block', fontSize: '16px', lineHeight: '1.1', marginBottom: '4px' }}>
+                <Text  variant="h2" bold style={{ display: 'block', fontSize: '12px', lineHeight: '1.1', marginBottom: '4px' }}>
                   {name === nameKey ? short : name}
                 </Text>
-                <Text variant="small" muted style={{ display: 'block', fontSize: '12px', lineHeight: '1.25' }}>
+                <Text variant="small" muted style={{ display: 'block', fontSize: '10px', lineHeight: '1.25' }}>
                   {desc === descKey ? short : desc}
                 </Text>
-                <Text
+                {/* <Text
                   variant="small"
                   style={{
                     display: 'inline-block',
@@ -85,7 +85,7 @@ export function AchievementsGallery({ achievements }: AchievementsGalleryProps) 
                   }}
                 >
                   {unlocked ? t('achievements.unlocked') : t('achievements.locked')}
-                </Text>
+                </Text> */}
               </div>
             </div>
           </Card>

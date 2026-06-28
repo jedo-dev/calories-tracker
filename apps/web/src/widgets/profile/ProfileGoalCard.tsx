@@ -87,14 +87,7 @@ export function ProfileGoalCard({ currentWeight, startWeight, targetWeight, rema
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '14px' }}>
-        <Text variant="h2" muted style={{ fontSize: '18px' }}>
-          {t('profile.remaining')}
-        </Text>
-        <Text variant="h1" bold style={{ marginLeft: '8px', color: theme.palette.primary, fontSize: '34px', letterSpacing: '-0.04em' }}>
-          {remainingWeight != null ? `${remainingWeight} ${t('profile.kg')}` : `20 ${t('profile.kg')}`}
-        </Text>
-      </div>
+ 
     </Card>
   );
 }

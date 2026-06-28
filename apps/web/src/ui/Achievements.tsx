@@ -59,7 +59,7 @@ export function Achievements() {
   return (
     <Card style={{ marginBottom: theme.spacing.md }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
-        <Text variant="h2">{t('achievements.title')}</Text>
+        <Text variant="h2">{t('achievements.title')}</Text> 
         <Text variant="small" muted>{unlockedCount}/{achievements.length}</Text>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: theme.spacing.sm }}>
