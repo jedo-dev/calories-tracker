@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 //@ts-ignore
 import logo from '../assets/logo.png';
-import badge7DayStreak from '../assets/07_achievements/badge_7day_streak.jpg';
 import badgeFirstWorkout from '../assets/07_achievements/badge_first_workout.jpg';
 import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
 import activityMedium from '../assets/12_activity/activity_medium.jpg';
@@ -11,44 +10,44 @@ import { t } from '../i18n';
 //@ts-ignore
 import { apiClient } from '../api/client';
 import { useTheme } from '../theme/useTheme';
+import { DailyTips } from '../features/TodayComponents/DailyTips';
 import { BottomSheet } from '../ui/BottomSheet';
 import { Button } from '../ui/Button';
 import { SectionIcon } from '../ui/SectionIcon';
 import { hapticImpact } from '../utils/hapticFeedback';
 
-interface SocialStats {
-  user: {
-    id: string;
-    username?: string;
-    displayName: string;
-    avatarEmoji: string;
-  };
-  stats: {
-    xpTotal: number;
-    xpWeek: number;
-    currentStreak: number;
-    bestStreak: number;
-  };
+interface DashboardData {
+  consumed: { kcal: number; protein: number; fat: number; carb: number };
+  targets: { kcalTarget: number; proteinTargetG: number; fatTargetG: number; carbTargetG: number } | null;
+  progress: { kcalPct: number; proteinPct: number; fatPct: number; carbPct: number } | null;
 }
 
 export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean) => void, isOpen: boolean }) {
   const theme = useTheme();
   const { logout } = useAuth();
-  const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [waterMl, setWaterMl] = useState(0);
   const navigate = useNavigate();
+  const waterGoal = 2000;
+
+  const todayDate = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
 
   useEffect(() => {
     if (isOpen) {
-      loadSocialStats();
+      loadMenuStats();
     }
-  }, [isOpen]);
+  }, [isOpen, todayDate]);
 
-  const loadSocialStats = async () => {
+  const loadMenuStats = async () => {
     try {
-      const response = await apiClient.get('/social/me');
-      setSocialStats(response.data);
+      const [dashboardRes, waterRes] = await Promise.all([
+        apiClient.get('/dashboard/day', { params: { date: todayDate } }),
+        apiClient.get('/water', { params: { date: todayDate } }),
+      ]);
+      setDashboard(dashboardRes.data);
+      setWaterMl(waterRes.data?.totalMl || 0);
     } catch (err) {
-      console.error('Failed to load social stats:', err);
+      console.error('Failed to load menu stats:', err);
     }
   };
 
@@ -161,48 +160,16 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
       }
     >
       <div style={{ padding: `0 ${theme.spacing.lg}`, paddingBottom: theme.spacing.xl }}>
-        {/* User Status Block */}
-        {socialStats && (
+        {/* Daily Tips */}
+        {dashboard && (
           <div
             onClick={() => handleNavigate('/today')}
             style={{
-              padding: theme.spacing.md,
-              backgroundColor: theme.palette.surface,
-              borderRadius: theme.radius.md,
               marginBottom: theme.spacing.lg,
               cursor: 'pointer',
-              border: `1px solid ${theme.palette.border}`,
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                gap: theme.spacing.md,
-                alignItems: 'center',
-              }}
-            >
-              <SectionIcon src={badge7DayStreak} alt="" size={24} />
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    color: theme.palette.text,
-                    fontSize: theme.typography.body.fontSize,
-                    fontWeight: '600',
-                    marginBottom: theme.spacing.xs,
-                  }}
-                >
-                  {t('commandCenter.streak')}: {t('commandCenter.days', { count: socialStats.stats.currentStreak })}
-                </div>
-                <div
-                  style={{
-                    color: theme.palette.textMuted,
-                    fontSize: theme.typography.small.fontSize,
-                  }}
-                >
-                  ⚡ {t('commandCenter.xpWeek')}: {socialStats.stats.xpWeek}
-                </div>
-              </div>
-            </div>
+            <DailyTips dashboard={dashboard} waterMl={waterMl} waterGoal={waterGoal} />
           </div>
         )}
 

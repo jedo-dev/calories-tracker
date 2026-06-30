@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useTheme } from "../../theme/useTheme";
-import { BurgerMenu } from "../BurgerMenu";
 import { Drawer } from "../Drawer";
 import styles from "./styles.module.css";
 
@@ -15,7 +13,6 @@ export const Footer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const theme = useTheme();
 
   const items = [
     { icon: <StarIcon />, label: t("league.title"), path: "/league" },
@@ -33,70 +30,39 @@ export const Footer = () => {
         {leftItems.map((item) => (
           <button
             key={item.path}
-            className={styles.footerItem}
+            className={`${styles.footerItem} ${location.pathname === item.path ? styles.footerItemActive : ""}`}
             onClick={() => navigate(item.path)}
             aria-label={item.label}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '2px',
-              padding: '4px',
-              minWidth: '44px',
-              minHeight: '44px',
-              justifyContent: 'center',
-            }}
+            type="button"
           >
             {item.icon}
-            <span
-              style={{
-                color: theme.palette.gray_100,
-                opacity: location.pathname === item.path ? 1 : 0.5,
-                fontSize: '10px',
-              }}
-            >
-              {item.label}
-            </span>
+            <span className={styles.footerLabel}>{item.label}</span>
           </button>
         ))}
 
-        <div className={styles.footerItem}>
-          <BurgerMenu onClick={() => setIsOpen(!isOpen)} isOpen={isOpen} />
-        </div>
+        <button
+          className={`${styles.centerButton} ${isOpen ? styles.centerButtonActive : ""}`}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? "Закрыть меню" : "Открыть меню"}
+          type="button"
+        >
+          <span className={styles.centerLines} aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+        </button>
 
         {rightItems.map((item) => (
           <button
             key={item.path}
-            className={styles.footerItem}
+            className={`${styles.footerItem} ${location.pathname === item.path ? styles.footerItemActive : ""}`}
             onClick={() => navigate(item.path)}
             aria-label={item.label}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '2px',
-              padding: '4px',
-              minWidth: '44px',
-              minHeight: '44px',
-              justifyContent: 'center',
-            }}
+            type="button"
           >
             {item.icon}
-            <span
-              style={{
-                color: theme.palette.gray_100,
-                opacity: location.pathname === item.path ? 1 : 0.5,
-                fontSize: '10px',
-              }}
-            >
-              {item.label}
-            </span>
+            <span className={styles.footerLabel}>{item.label}</span>
           </button>
         ))}
       </nav>

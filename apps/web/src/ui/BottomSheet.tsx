@@ -243,7 +243,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle }: Botto
   }
 
   const sheetTransform = isAnimating && !isDragging
-    ? 'translateY(0)'
+    ? 'translateY(-80px)'
     : isDragging
       ? undefined
       : 'translateY(100%)';
