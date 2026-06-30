@@ -1,12 +1,35 @@
 import { useTheme } from "../../../theme/useTheme";
 import { Button } from "../../../ui/Button";
+import { Text } from "../../../ui/Text";
 
 const MONTHS_RU = [
-  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  'января',
+  'февраля',
+  'марта',
+  'апреля',
+  'мая',
+  'июня',
+  'июля',
+  'августа',
+  'сентября',
+  'октября',
+  'ноября',
+  'декабря',
 ];
 
 const DAYS_RU = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
 
 function formatDateRu(dateStr: string): string {
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -16,41 +39,71 @@ function formatDateRu(dateStr: string): string {
   return `${dayName}, ${day} ${monthName}`;
 }
 
-const DayChanger = ({ date, setDate, registrationDate }: { registrationDate: Date | undefined, date: string, setDate: (date: string) => void }) => {
-
-  const theme = useTheme()
+const DayChanger = ({
+  date,
+  setDate,
+  registrationDate,
+}: {
+  registrationDate: Date | undefined;
+  date: string;
+  setDate: (date: string) => void;
+}) => {
+  const theme = useTheme();
 
   const changeDate = (days: number) => {
     const currentDate = parseDate(date);
     currentDate.setDate(currentDate.getDate() + days);
     setDate(formatDate(currentDate));
   };
-  function formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
 
-  function parseDate(dateStr: string): Date {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-  const isNeedTodisableBtn = (prev: Date, next: Date) => {
-    return prev > next
-  }
-  return <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg, flexWrap: 'wrap', gap: theme.spacing.md }}>
+  const disablePrev = registrationDate ? parseDate(date) <= new Date(registrationDate) : false;
+  const disableNext = parseDate(date) >= new Date();
 
-    <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center', justifyContent: 'space-between', width: "100%" }}>
-      <Button variant="ghost" size='sm' disabled={isNeedTodisableBtn(new Date(registrationDate || ""), new Date(date),)} onClick={() => changeDate(-1)} style={{ width: 'auto', minWidth: '44px', minHeight: '44px' }} aria-label="Предыдущий день">
-        ←
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 48px', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={disablePrev}
+        onClick={() => changeDate(-1)}
+        style={{
+          width: '48px',
+          height: '48px',
+          padding: 0,
+          fontSize: '28px',
+          borderRadius: '16px',
+          backgroundColor: 'rgba(255,255,255,0.04)',
+        }}
+        aria-label="Предыдущий день"
+      >
+        ‹
       </Button>
 
-      {formatDateRu(date)}
-      <Button variant="ghost" size="sm" disabled={isNeedTodisableBtn(new Date(date), new Date)} onClick={() => changeDate(1)} style={{ width: 'auto', minWidth: '44px', minHeight: '44px' }} aria-label="Следующий день">
-        →
+      <div style={{ textAlign: 'center' }}>
+        <Text variant="body" bold style={{ fontSize: '22px' }}>
+          Сегодня, {formatDateRu(date).slice(4)}
+        </Text>
+      </div>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={disableNext}
+        onClick={() => changeDate(1)}
+        style={{
+          width: '48px',
+          height: '48px',
+          padding: 0,
+          fontSize: '28px',
+          borderRadius: '16px',
+          backgroundColor: 'rgba(255,255,255,0.04)',
+        }}
+        aria-label="Следующий день"
+      >
+        ›
       </Button>
     </div>
-  </div>
-}
+  );
+};
+
 export default DayChanger;

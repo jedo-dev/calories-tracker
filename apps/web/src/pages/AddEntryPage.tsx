@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import { RecentProducts } from '../features/TodayComponents/RecentProducts';
 import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
@@ -257,6 +258,29 @@ export function AddEntryPage() {
           <Text style={{ color: theme.palette.danger }}>
             {t('common.error')}: {error}
           </Text>
+        </Card>
+      )}
+
+      {!isEdit && (
+        <Card
+          style={{
+            marginBottom: theme.spacing.md,
+            background: 'linear-gradient(180deg, rgba(22, 58, 77, 0.96) 0%, rgba(12, 34, 49, 0.98) 100%)',
+            border: '1px solid rgba(146, 188, 221, 0.16)',
+            borderRadius: '24px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: theme.spacing.md, alignItems: 'flex-start', marginBottom: theme.spacing.sm }}>
+            <div>
+              <Text bold style={{ fontSize: '18px', display: 'block' }}>
+                Быстрое добавление
+              </Text>
+              <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
+                Нажми на продукт, чтобы сразу добавить его в дневник
+              </Text>
+            </div>
+          </div>
+          <RecentProducts date={date} onAdded={() => void 0} compact />
         </Card>
       )}
 

@@ -1,23 +1,17 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { apiClient } from '../api/client';
-import DayChanger from '../features/TodayComponents/DayChanger';
-import FoodList from '../features/TodayComponents/FoodList';
-import { RecentProducts } from '../features/TodayComponents/RecentProducts';
-import { DailyTips } from '../features/TodayComponents/DailyTips';
-import badge7DayStreak from '../assets/07_achievements/badge_7day_streak.jpg';
-import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
-import badgeHydrationHero from '../assets/07_achievements/badge_hydration_hero.jpg';
-import activityMedium from '../assets/12_activity/activity_medium.jpg';
-import { t } from '../i18n';
-import { useTheme } from '../theme/useTheme';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { DashboardRing } from '../ui/DashboardRing';
-import { Input } from '../ui/Input';
-import Loader from '../ui/Loader';
-import { SectionIcon } from '../ui/SectionIcon';
-import { Text } from '../ui/Text';
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { apiClient } from "../api/client";
+import DeleteIcon from "../assets/DeleteIcon";
+import EditIcon from "../assets/EditIcon";
+import logo from "../assets/logo.png";
+import DayChanger from "../features/TodayComponents/DayChanger";
+import FoodList, { MealGroup } from "../features/TodayComponents/FoodList";
+import { t } from "../i18n";
+import { useTheme } from "../theme/useTheme";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
+import { DashboardRing } from "../ui/DashboardRing";
+import { Text } from "../ui/Text";
 
 export interface Entry {
   _id: string;
@@ -36,333 +30,640 @@ export interface Entry {
 interface DashboardData {
   date: string;
   consumed: { kcal: number; protein: number; fat: number; carb: number };
-  targets: { kcalTarget: number; proteinTargetG: number; fatTargetG: number; carbTargetG: number } | null;
-  progress: { kcalPct: number; proteinPct: number; fatPct: number; carbPct: number } | null;
+  targets: {
+    kcalTarget: number;
+    proteinTargetG: number;
+    fatTargetG: number;
+    carbTargetG: number;
+  } | null;
+  progress: {
+    kcalPct: number;
+    proteinPct: number;
+    fatPct: number;
+    carbPct: number;
+  } | null;
 }
 
 interface SocialStats {
-  user: { id: string; username?: string; displayName: string; avatarEmoji: string; createdAt: Date };
-  stats: { xpTotal: number; xpWeek: number; weekKey: string; currentStreak: number; bestStreak: number; lastLoggedDate?: string };
+  user: {
+    id: string;
+    username?: string;
+    displayName: string;
+    avatarEmoji: string;
+    createdAt: Date;
+  };
 }
 
-interface WorkoutSession { _id: string; totalCaloriesBurned: number; exerciseCount: number }
+type WaterState = {
+  totalMl: number;
+};
 
-// Sanitize numeric values: return 0 for NaN, Infinity, or unreasonably large numbers
-function safeNum(val: number): number {
-  if (!isFinite(val) || isNaN(val) || Math.abs(val) > 100000) return 0;
-  return val;
-}
-
-// Format to 2 decimal places, trimming trailing zeros
-function fmt2(val: number): string {
-  return safeNum(val).toFixed(2);
-}
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: "Завтрак",
+  lunch: "Обед",
+  dinner: "Ужин",
+  snack: "Перекус",
+  other: "Другие записи"
+};
 
 function formatDate(date: Date): string {
   const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+function WaterDrop({ filled }: { filled: boolean }) {
+  return (
+    <svg width="24" height="32" viewBox="0 0 24 32" aria-hidden="true">
+      <path
+        d="M12 2C12 2 4 11 4 17c0 4.4 3.6 8 8 8s8-3.6 8-8c0-6-8-15-8-15z"
+        fill={filled ? "#5CAEF8" : "transparent"}
+        stroke={filled ? "#5CAEF8" : "rgba(223, 236, 248, 0.8)"}
+        strokeWidth="1.6"
+      />
+    </svg>
+  );
+}
+
+function MacroBar({
+  label,
+  value,
+  target,
+  pct
+}: {
+  label: string;
+  value: number;
+  target: number;
+  pct: number;
+}) {
+  const theme = useTheme();
+
+  return (
+    <div style={{ display: "grid", gap: "6px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: theme.spacing.sm,
+          alignItems: "baseline"
+        }}
+      >
+        <Text style={{ fontSize: "15px", fontWeight: 500 }}>{label}</Text>
+        <Text
+          style={{
+            fontSize: "15px",
+            fontWeight: 600,
+            color: theme.palette.text
+          }}
+        >
+          {Math.round(value)}{" "}
+          <span style={{ color: theme.palette.textMuted }}>
+            / {Math.round(target)} г
+          </span>
+        </Text>
+      </div>
+      <div
+        style={{
+          height: "10px",
+          borderRadius: "999px",
+          backgroundColor: "rgba(255,255,255,0.08)",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            width: `${Math.max(8, Math.min(100, pct * 100))}%`,
+            height: "100%",
+            borderRadius: "999px",
+            background: "linear-gradient(90deg, #58D45D 0%, #79E26C 100%)"
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export function TodayPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
-  const queryDate = searchParams.get('date');
+  const queryDate = searchParams.get("date");
   const date = queryDate || formatDate(new Date());
 
   const setDate = (newDate: string) => {
     setSearchParams({ date: newDate });
   };
+
   const [entries, setEntries] = useState<Entry[]>([]);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
-  const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
-  const [water, setWater] = useState<{ totalMl: number; logs: any[] }>({ totalMl: 0, logs: [] });
-  const [weightInput, setWeightInput] = useState('');
-  const [showWeightInput, setShowWeightInput] = useState(false);
-  const [showSaveTpl, setShowSaveTpl] = useState(false);
-  const [tplName, setTplName] = useState('');
+  const [water, setWater] = useState<WaterState>({ totalMl: 0 });
+  const [selectedGroup, setSelectedGroup] = useState<MealGroup | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const [entriesRes, dashboardRes, socialRes, workoutsRes, waterRes] = await Promise.all([
-        apiClient.get(`/entries?date=${date}`),
-        apiClient.get(`/dashboard/day?date=${date}`),
-        apiClient.get('/social/me'),
-        apiClient.get('/workouts/sessions', { params: { date } }),
-        apiClient.get('/water', { params: { date } }),
-      ]);
+      const [entriesRes, dashboardRes, socialRes, waterRes] = await Promise.all(
+        [
+          apiClient.get(`/entries?date=${date}`),
+          apiClient.get(`/dashboard/day?date=${date}`),
+          apiClient.get("/social/me"),
+          apiClient.get("/water", { params: { date } })
+        ]
+      );
+
       setEntries(entriesRes.data);
       setDashboard(dashboardRes.data);
       setSocialStats(socialRes.data);
-      setWorkouts(workoutsRes.data);
       setWater(waterRes.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || t('dashboard.loadFailed'));
+      setError(
+        err.response?.data?.message || err.message || t("dashboard.loadFailed")
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { loadData(); }, [date]);
-
-  const handleDelete = async (id: string) => {
-    if (!confirm(t('today.deleteConfirm'))) return;
-    try {
-      await apiClient.delete(`/entries/${id}`);
-      await loadData();
-    } catch (err: any) {
-      alert(err.response?.data?.message || t('today.deleteFailed'));
-    }
-  };
+  useEffect(() => {
+    loadData();
+  }, [date]);
 
   const handleAddWater = async (amountMl: number) => {
     try {
-      if (amountMl < 0) {
-        // Remove the most recent water log(s) to approximate the negative amount
-        const remaining = Math.abs(amountMl);
-        let removed = 0;
-        const logsCopy = [...water.logs];
-        while (removed < remaining && logsCopy.length > 0) {
-          const lastLog = logsCopy.shift();
-          if (!lastLog) break;
-          await apiClient.delete(`/water/${lastLog._id}`);
-          removed += lastLog.amountMl;
-        }
-      } else {
-        await apiClient.post('/water', { date, amountMl });
-      }
-      const res = await apiClient.get('/water', { params: { date } });
+      await apiClient.post("/water", { date, amountMl });
+      const res = await apiClient.get("/water", { params: { date } });
       setWater(res.data);
-    } catch (err) { console.error(err); }
-  };
-
-  const handleLogWeight = async () => {
-    if (!weightInput) return;
-    const weight = parseFloat(weightInput);
-    if (isNaN(weight) || weight < 30 || weight > 300) {
-      alert('Введите вес от 30 до 300 кг');
-      return;
+    } catch (err) {
+      console.error(err);
     }
-    try {
-      await apiClient.post('/weight', { date, weightKg: weight });
-      setWeightInput('');
-      setShowWeightInput(false);
-    } catch (err) { console.error(err); }
   };
 
-  const handleSaveAsTemplate = async () => {
-    if (!tplName.trim() || entries.length === 0) return;
+  const handleDeleteEntry = async (id: string) => {
+    if (!confirm(t("today.deleteConfirm"))) return;
     try {
-      await apiClient.post('/templates/from-entries', {
-        name: tplName,
-        entries: entries.map(e => ({
-          productId: e.productId,
-          productName: e.productName,
-          grams: e.grams,
-          kcal: e.kcal,
-          kcalPer100g: e.kcalPer100g,
-        })),
-      });
-      setTplName('');
-      setShowSaveTpl(false);
-      alert(t('template.saved'));
-    } catch (err) { console.error(err); }
+      await apiClient.delete(`/entries/${id}`);
+      await loadData();
+      setSelectedGroup((current) =>
+        current
+          ? {
+              ...current,
+              entries: current.entries.filter((entry) => entry._id !== id),
+              totalKcal: current.entries
+                .filter((entry) => entry._id !== id)
+                .reduce((sum, entry) => sum + entry.kcal, 0)
+            }
+          : current
+      );
+    } catch (err: any) {
+      alert(err.response?.data?.message || t("today.deleteFailed"));
+    }
   };
 
-  const totalBurned = workouts.reduce((s, w) => s + w.totalCaloriesBurned, 0);
-  const kcalEaten = dashboard?.consumed.kcal || 0;
-  const kcalTarget = dashboard?.targets?.kcalTarget || 0;
-  const kcalRemaining = kcalTarget > 0 ? kcalTarget - kcalEaten + totalBurned : 0;
   const waterGoal = 2000;
-  const waterPct = Math.round((water.totalMl / waterGoal) * 100);
   const waterReached = water.totalMl >= waterGoal;
+  const waterDrops = 8;
+  const filledDrops = Math.max(
+    0,
+    Math.min(waterDrops, Math.round((water.totalMl / waterGoal) * waterDrops))
+  );
 
-  if (loading) return <Loader />;
+  if (loading)
+    return <div style={{ minHeight: "100vh", background: theme.palette.bg }} />;
   if (error) {
     return (
       <div style={{ padding: theme.spacing.lg }}>
-        <Text variant="h2" style={{ color: theme.palette.danger }}>{t('common.error')}: {error}</Text>
+        <Text variant="h2" style={{ color: theme.palette.danger }}>
+          {t("common.error")}: {error}
+        </Text>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '80px' }}>
-      <DayChanger setDate={setDate} date={date} registrationDate={socialStats?.user.createdAt} />
-
-      {/* Quick Add */}
-      <RecentProducts date={date} onAdded={loadData} />
-
-      {/* Daily Tips */}
-      <DailyTips dashboard={dashboard} waterMl={water.totalMl} waterGoal={waterGoal} />
-
-      {/* Streak */}
-      {socialStats && (
-        <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '10' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Text variant="small" muted style={{ display: 'block' }}>{t('commandCenter.streak')}</Text>
-              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-                <SectionIcon src={badge7DayStreak} alt="" size={24} />
-                <Text variant="h2" bold>{t('today.streakDays', { count: socialStats.stats.currentStreak })}</Text>
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <Text variant="small" muted style={{ display: 'block' }}>{t('today.xpWeek')}</Text>
-              <Text variant="h2" bold>{socialStats.stats.xpWeek}</Text>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Calorie Balance */}
-      {dashboard && kcalTarget > 0 && (
-        <Card style={{ marginBottom: theme.spacing.md }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
-            <SectionIcon src={badgeCalorieMaster} alt="" size={24} />
-            <Text variant="h2">{t('today.totals')}</Text>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: theme.spacing.sm, textAlign: 'center' }}>
-            <div>
-              <Text variant="small" muted style={{ display: 'block' }}>{t('dashboard.consumed')}</Text>
-              <Text bold style={{ color: theme.palette.success, fontSize: '20px' }}>{fmt2(kcalEaten)}</Text>
-            </div>
-            <div>
-              <Text variant="small" muted style={{ display: 'block' }}>{t('workout.burned')}</Text>
-              <Text bold style={{ color: theme.palette.primary, fontSize: '20px' }}>{fmt2(totalBurned)}</Text>
-            </div>
-            <div>
-              <Text variant="small" muted style={{ display: 'block' }}>Остаток</Text>
-              <Text bold style={{ color: safeNum(kcalRemaining) >= 0 ? theme.palette.text : theme.palette.danger, fontSize: '20px' }}>{fmt2(kcalRemaining)}</Text>
-            </div>
-          </div>
-          {dashboard.progress && (
-            <div style={{ marginTop: theme.spacing.sm }}>
-              <DashboardRing consumed={dashboard.consumed} targets={dashboard.targets!} progress={dashboard.progress} />
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Meal Plan CTA */}
-      {dashboard?.targets && (
-        <Card
-          style={{ marginBottom: theme.spacing.md, cursor: 'pointer' }}
-          onClick={() => navigate(`/meal-plan?considerEaten=${entries.length > 0}`)}
+    <div
+      style={{
+        minHeight: "100dvh",
+        padding: theme.spacing.lg,
+        maxWidth: "600px",
+        margin: "0 auto",
+        paddingBottom: "120px",
+        background:
+          "radial-gradient(circle at top, #173A52 0%, #0D2231 52%, #081826 100%)"
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: theme.spacing.md
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: theme.spacing.sm
+          }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Text bold> План питания</Text>
-              <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
-                {entries.length === 0
-                  ? 'Составить план на сегодня'
-                  : `Добрать остаток ${Math.max(0, safeNum(kcalRemaining)).toFixed(2)} ккал`}
-              </Text>
-            </div>
-            <span style={{ fontSize: '20px' }}>→</span>
-          </div>
-        </Card>
-      )}
-
-      {/* Water Tracking */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-            <SectionIcon src={badgeHydrationHero} alt="" size={24} />
-            <Text bold>{t('water.title')}</Text>
-          </div>
-          <Text variant="small" muted>
-            {water.totalMl} / {waterGoal} {t('water.ml')}
-            {waterReached && ' '}
+          <img
+            src={logo}
+            alt="FlareonFit"
+            style={{ width: "46px", height: "46px", objectFit: "contain" }}
+          />
+          <Text
+            variant="h1"
+            bold
+            style={{
+              fontSize: "34px",
+              lineHeight: 1,
+              letterSpacing: "-0.03em"
+            }}
+          >
+            <span style={{ color: theme.palette.text }}>Flareon</span>
+            <span style={{ color: theme.palette.primary }}>Fit</span>
           </Text>
         </div>
-        <div style={{ backgroundColor: theme.palette.bg, borderRadius: theme.radius.sm, height: '12px', overflow: 'hidden', marginBottom: theme.spacing.sm }}>
-          <div style={{
-            width: `${Math.min(100, waterPct)}%`,
-            height: '100%',
-            backgroundColor: waterReached ? theme.palette.success : '#4A9EFF',
-            borderRadius: theme.radius.sm,
-            transition: 'width 0.3s',
-          }} />
-        </div>
-        {waterReached && (
-          <Text variant="small" style={{ color: theme.palette.success, display: 'block', marginBottom: theme.spacing.sm }}>
-            {waterPct >= 100 ? `Цель достигнута (${waterPct}%)` : ''}
-          </Text>
-        )}
-        <div style={{ display: 'flex', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
-          <Button variant="ghost" size="sm" onClick={() => handleAddWater(250)}>+250 мл</Button>
-          <Button variant="ghost" size="sm" onClick={() => handleAddWater(500)}>+500 мл</Button>
-          {water.totalMl > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => handleAddWater(-250)} style={{ color: theme.palette.danger }}>-250 мл</Button>
-          )}
-        </div>
-      </Card>
-
-      {/* Weight */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-            <SectionIcon src={activityMedium} alt="" size={24} />
-            <Text bold>{t('weight.title')}</Text>
-          </div>
-          {!showWeightInput ? (
-            <Button variant="ghost" size="sm" onClick={() => setShowWeightInput(true)}>{t('weight.logWeight')}</Button>
-          ) : null}
-        </div>
-        {showWeightInput && (
-          <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
-            <Input type="number" placeholder="кг" value={weightInput} onChange={(e) => setWeightInput(e.target.value)} step="0.1" min="20" max="300" />
-            <Button size="sm" onClick={handleLogWeight} style={{ width: 'auto', minWidth: '80px' }}>OK</Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowWeightInput(false)} style={{ width: 'auto', minWidth: '40px' }}>✕</Button>
-          </div>
-        )}
-      </Card>
-
-      {/* Profile banner */}
-      {!dashboard?.targets && (
-        <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '20', border: `2px solid ${theme.palette.primary}` }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>{t('profile.fillProfileBanner')}</Text>
-          <Button onClick={() => navigate('/profile')}>{t('profile.goToProfile')}</Button>
-        </Card>
-      )}
-
-      {/* Totals without targets */}
-      {dashboard && !dashboard.targets && (
-        <Card style={{ marginBottom: theme.spacing.md }}>
-          <Text variant="h2" bold style={{ marginBottom: theme.spacing.sm }}>{t('totals.kcal', { value: dashboard.consumed.kcal.toFixed(0) })}</Text>
-          <Text muted>{t('totals.macros', { protein: dashboard.consumed.protein.toFixed(1), fat: dashboard.consumed.fat.toFixed(1), carb: dashboard.consumed.carb.toFixed(1) })}</Text>
-        </Card>
-      )}
-
-      {/* Add entry button */}
-      <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
-        <Button onClick={() => navigate('/entry/new')} style={{ flex: 1 }}>{t('today.addEntry')}</Button>
-        {entries.length > 0 && (
-          <Button variant="ghost" onClick={() => setShowSaveTpl(!showSaveTpl)} style={{ width: 'auto', minWidth: '44px' }}>
-            <SectionIcon src={badgeCalorieMaster} alt="" size={18} />
-          </Button>
-        )}
       </div>
 
-      {showSaveTpl && (
-        <Card style={{ marginBottom: theme.spacing.lg, border: `2px solid ${theme.palette.primary}` }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('template.save')}</Text>
-          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-            <Input placeholder={t('template.name')} value={tplName} onChange={(e) => setTplName(e.target.value)} style={{ flex: 1 }} />
-            <Button size="sm" onClick={handleSaveAsTemplate} disabled={!tplName.trim()} style={{ width: 'auto', minWidth: '80px' }}>{t('common.save')}</Button>
+      <DayChanger
+        setDate={setDate}
+        date={date}
+        registrationDate={socialStats?.user.createdAt}
+      />
+
+      {dashboard?.targets && dashboard.progress && (
+        <Card
+          style={{
+            marginBottom: theme.spacing.md,
+            background:
+              "linear-gradient(180deg, rgba(18, 56, 79, 0.96) 0%, rgba(12, 37, 54, 0.98) 100%)",
+            border: "1px solid rgba(146, 188, 221, 0.22)",
+            borderRadius: "24px",
+            boxShadow: "0 18px 36px rgba(0, 0, 0, 0.28)"
+          }}
+        >
+          <div style={{ display: "grid", gap: theme.spacing.md }}>
+            <div
+              style={{
+                position: "relative",
+                width: "320px",
+                height: "160px",
+                margin: "0 auto"
+              }}
+            >
+              <DashboardRing
+                consumed={dashboard.consumed}
+                targets={dashboard.targets}
+                progress={dashboard.progress}
+              />
+            </div>
+            <div style={{ display: "grid", gap: theme.spacing.md }}>
+              <MacroBar
+                label="Белки"
+                value={dashboard.consumed.protein}
+                target={dashboard.targets.proteinTargetG}
+                pct={dashboard.progress.proteinPct}
+              />
+              <MacroBar
+                label="Жиры"
+                value={dashboard.consumed.fat}
+                target={dashboard.targets.fatTargetG}
+                pct={dashboard.progress.fatPct}
+              />
+              <MacroBar
+                label="Углеводы"
+                value={dashboard.consumed.carb}
+                target={dashboard.targets.carbTargetG}
+                pct={dashboard.progress.carbPct}
+              />
+            </div>
           </div>
         </Card>
       )}
 
-      <FoodList entries={entries} handleDelete={handleDelete} />
+      {dashboard?.targets && !dashboard.progress && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text variant="h2" bold style={{ marginBottom: theme.spacing.sm }}>
+            {t("today.totals")}
+          </Text>
+          <Text muted>{t("common.loading")}</Text>
+        </Card>
+      )}
+
+      <Card
+        style={{
+          marginBottom: theme.spacing.md,
+          background:
+            "linear-gradient(180deg, rgba(23, 62, 83, 0.96) 0%, rgba(15, 39, 56, 0.98) 100%)",
+          border: "1px solid rgba(146, 188, 221, 0.18)",
+          borderRadius: "24px"
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: theme.spacing.sm
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: theme.spacing.sm
+            }}
+          >
+            <Text bold style={{ fontSize: "18px" }}>
+              Вода
+            </Text>
+          </div>
+          <Text variant="small" muted>
+            <span
+              style={{
+                color: theme.palette.primary,
+                fontSize: "22px",
+                fontWeight: 700
+              }}
+            >
+              {water.totalMl}
+            </span>{" "}
+            / {waterGoal} мл
+          </Text>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "6px",
+            flexWrap: "wrap",
+            marginBottom: theme.spacing.md
+          }}
+        >
+          {Array.from({ length: waterDrops }).map((_, index) => (
+            <WaterDrop key={index} filled={index < filledDrops} />
+          ))}
+        </div>
+
+        <div style={{ display: "flex", gap: theme.spacing.sm }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleAddWater(250)}
+            style={{
+              flex: 1,
+              borderColor: "rgba(88, 212, 93, 0.8)",
+              color: theme.palette.primary,
+              backgroundColor: "rgba(88, 212, 93, 0.06)"
+            }}
+          >
+            +250 мл
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleAddWater(500)}
+            style={{
+              flex: 1,
+              borderColor: "rgba(88, 212, 93, 0.8)",
+              color: theme.palette.primary,
+              backgroundColor: "rgba(88, 212, 93, 0.06)"
+            }}
+          >
+            +500 мл
+          </Button>
+        </div>
+
+        {waterReached && (
+          <Text
+            variant="small"
+            style={{
+              color: theme.palette.primary,
+              display: "block",
+              marginTop: theme.spacing.sm
+            }}
+          >
+            Вода закрыта на сегодня.
+          </Text>
+        )}
+      </Card>
+
+      <Button
+        onClick={() => navigate("/entry/new")}
+        style={{
+          marginBottom: theme.spacing.md,
+          minHeight: "58px",
+          borderRadius: "18px",
+          fontSize: "18px",
+          boxShadow: "0 14px 28px rgba(81, 210, 105, 0.18)"
+        }}
+      >
+        + Добавить запись
+      </Button>
+
+      {!dashboard?.targets && (
+        <Card
+          style={{
+            marginBottom: theme.spacing.md,
+            backgroundColor: theme.palette.primary + "18",
+            border: `1px solid ${theme.palette.primary}`
+          }}
+        >
+          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>
+            Заполни профиль
+          </Text>
+          <Text
+            variant="small"
+            muted
+            style={{ display: "block", marginBottom: theme.spacing.md }}
+          >
+            Нужны вес, рост и цель, чтобы рассчитать норму и показать круг
+            прогресса.
+          </Text>
+          <Button
+            onClick={() => navigate("/profile")}
+            style={{ width: "auto", minWidth: "180px" }}
+          >
+            Открыть профиль
+          </Button>
+        </Card>
+      )}
+
+      {dashboard && !dashboard.targets && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text variant="h2" bold style={{ marginBottom: theme.spacing.sm }}>
+            {t("totals.kcal", { value: dashboard.consumed.kcal.toFixed(0) })}
+          </Text>
+          <Text muted>
+            {t("totals.macros", {
+              protein: dashboard.consumed.protein.toFixed(1),
+              fat: dashboard.consumed.fat.toFixed(1),
+              carb: dashboard.consumed.carb.toFixed(1),
+              kcal: dashboard.consumed.kcal.toFixed(0)
+            })}
+          </Text>
+        </Card>
+      )}
+
+      <FoodList
+        entries={entries}
+        onMealClick={(group) => setSelectedGroup(group)}
+      />
+
+      {selectedGroup && (
+        <div
+          onClick={() => setSelectedGroup(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.55)",
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            padding: theme.spacing.sm,
+            zIndex: 40
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(600px, 100%)",
+              maxHeight: "78vh",
+              overflow: "hidden",
+              borderRadius: "28px",
+              padding: 0,
+              background:
+                "linear-gradient(180deg, rgba(18, 52, 72, 0.98) 0%, rgba(9, 28, 42, 1) 100%)",
+              border: "1px solid rgba(146, 188, 221, 0.18)",
+              boxShadow: "0 -18px 50px rgba(0,0,0,0.45)",
+              transform: "translateY(-60px)"
+            }}
+          >
+            <div
+              style={{
+                padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                borderBottom: "1px solid rgba(255,255,255,0.08)"
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: theme.spacing.sm
+                }}
+              >
+                <div>
+                  <Text variant="h2" bold style={{ display: "block" }}>
+                    {MEAL_LABELS[selectedGroup.mealType] ||
+                      selectedGroup.mealType}
+                  </Text>
+                  <Text
+                    variant="small"
+                    muted
+                    style={{ display: "block", marginTop: "2px" }}
+                  >
+                    {selectedGroup.entries.length} записей
+                  </Text>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedGroup(null)}
+                  style={{
+                    width: "auto",
+                    minWidth: "40px",
+                    minHeight: "40px",
+                    padding: 0
+                  }}
+                >
+                  ×
+                </Button>
+              </div>
+            </div>
+
+            <div style={{ overflowY: "auto", maxHeight: "calc(78vh - 76px)" }}>
+              {selectedGroup.entries.map((entry, index) => (
+                <div
+                  key={entry._id}
+                  style={{
+                    padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                    borderTop:
+                      index === 0 ? "none" : "1px solid rgba(255,255,255,0.08)"
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: theme.spacing.sm,
+                      alignItems: "flex-start"
+                    }}
+                  >
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <Text bold style={{ display: "block", fontSize: "17px" }}>
+                        {entry.productName}
+                      </Text>
+                      <Text
+                        variant="small"
+                        muted
+                        style={{ display: "block", marginTop: "3px" }}
+                      >
+                        {entry.grams} г · {entry.kcal.toFixed(0)} ккал
+                      </Text>
+                      <Text
+                        variant="small"
+                        muted
+                        style={{ display: "block", marginTop: "2px" }}
+                      >
+                        Б: {entry.protein.toFixed(1)} · Ж:{" "}
+                        {entry.fat.toFixed(1)} · У: {entry.carb.toFixed(1)}
+                      </Text>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/entry/${entry._id}`)}
+                        style={{
+                          width: "auto",
+                          minWidth: "44px",
+                          minHeight: "44px",
+                          padding: "0 10px"
+                        }}
+                        aria-label="Редактировать"
+                      >
+                        <EditIcon />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteEntry(entry._id)}
+                        style={{
+                          width: "auto",
+                          minWidth: "44px",
+                          minHeight: "44px",
+                          padding: "0 10px"
+                        }}
+                        aria-label="Удалить"
+                      >
+                        <DeleteIcon />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
