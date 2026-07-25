@@ -15,9 +15,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { randomUUID } from 'crypto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { StorageService } from '../storage/storage.service';
 import { RecipesService } from './recipes.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
@@ -26,14 +26,28 @@ import { QueryBoardDto } from './dto/query-board.dto';
 import { QueryUserRecipesDto } from './dto/query-user-recipes.dto';
 import { CreateEntryFromRecipeDto } from './dto/create-entry-from-recipe.dto';
 
-const UPLOAD_DIR = join(__dirname, '..', '..', 'uploads', 'recipes');
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
+
+const imageFileInterceptor = (field: string) =>
+  FileInterceptor(field, {
+    limits: { fileSize: MAX_FILE_SIZE },
+    fileFilter: (_req, file, cb) => {
+      if (ALLOWED_MIMES.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new BadRequestException('Only JPEG, PNG, WebP images are allowed'), false);
+      }
+    },
+  });
 
 @Controller('recipes')
 @UseGuards(JwtAuthGuard)
 export class RecipesController {
-  constructor(private recipesService: RecipesService) {}
+  constructor(
+    private recipesService: RecipesService,
+    private storage: StorageService,
+  ) {}
 
   @Get()
   async findAll(@Query(ValidationPipe) query: QueryRecipesDto, @Request() req: any) {
@@ -109,19 +123,24 @@ export class RecipesController {
     return this.recipesService.toggleLike(id, req.user.id);
   }
 
+  // Inline images inserted into the description by the rich-text editor.
+  // Orphaned objects (image uploaded, recipe never saved) are accepted for now:
+  // keys are prefixed with userId, so a future cleanup job can reconcile them
+  // against img srcs in recipe descriptions.
+  @Post('uploads')
+  @UseInterceptors(imageFileInterceptor('image'))
+  async uploadInlineImage(@UploadedFile() file: Express.Multer.File, @Request() req: any) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const ext = file.mimetype.split('/')[1];
+    const key = `inline/${req.user.id}/${randomUUID()}.${ext}`;
+    const url = await this.storage.uploadObject(key, file.buffer, file.mimetype);
+    return { url };
+  }
+
   @Post(':id/photo')
-  @UseInterceptors(
-    FileInterceptor('photo', {
-      limits: { fileSize: MAX_FILE_SIZE },
-      fileFilter: (_req, file, cb) => {
-        if (ALLOWED_MIMES.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(new BadRequestException('Only JPEG, PNG, WebP images are allowed'), false);
-        }
-      },
-    }),
-  )
+  @UseInterceptors(imageFileInterceptor('photo'))
   async uploadPhoto(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
@@ -131,22 +150,22 @@ export class RecipesController {
       throw new BadRequestException('No file uploaded');
     }
 
-    if (!existsSync(UPLOAD_DIR)) {
-      mkdirSync(UPLOAD_DIR, { recursive: true });
-    }
+    const existing = await this.recipesService.findById(id, req.user.id);
+    const oldUrl = existing.photoUrl;
 
     const ext = file.mimetype.split('/')[1];
-    const filename = `${id}_${Date.now()}.${ext}`;
-    const filepath = join(UPLOAD_DIR, filename);
-    writeFileSync(filepath, file.buffer);
+    const key = `covers/${req.user.id}/${id}_${Date.now()}.${ext}`;
+    const photoUrl = await this.storage.uploadObject(key, file.buffer, file.mimetype);
 
-    const photoUrl = `/uploads/recipes/${filename}`;
     const recipe = await this.recipesService.updatePhoto(id, photoUrl, req.user.id);
+    await this.storage.deleteObjectByUrl(oldUrl);
     return { photoUrl: recipe.photoUrl };
   }
 
   @Delete(':id/photo')
   async deletePhoto(@Param('id') id: string, @Request() req: any) {
+    const existing = await this.recipesService.findById(id, req.user.id);
+    await this.storage.deleteObjectByUrl(existing.photoUrl);
     const recipe = await this.recipesService.deletePhoto(id, req.user.id);
     return { ok: true, photoUrl: recipe.photoUrl };
   }

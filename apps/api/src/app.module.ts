@@ -20,6 +20,7 @@ import { TemplateModule } from './templates/template.module';
 import { MeasurementModule } from './measurements/measurement.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MealPlanModule } from './meal-plan/meal-plan.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { MealPlanModule } from './meal-plan/meal-plan.module';
     MeasurementModule,
     RecipesModule,
     MealPlanModule,
+    StorageModule,
   ],
   providers: [
     {

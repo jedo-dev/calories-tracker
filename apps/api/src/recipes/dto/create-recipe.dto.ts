@@ -8,6 +8,7 @@ import {
   Min,
   Max,
   IsNotEmpty,
+  MaxLength,
   ValidateNested,
   ArrayMinSize,
 } from 'class-validator';
@@ -57,6 +58,7 @@ export class CreateRecipeDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(50000)
   description?: string;
 
   @IsString()

@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
+import { usePaginatedList } from '../hooks/usePaginatedList';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
-import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
-import Loader from '../ui/Loader';
+import { RecipeCardSkeleton } from '../ui/RecipeCardSkeleton';
 
 interface Recipe {
   _id: string;
@@ -36,78 +35,115 @@ interface Recipe {
   };
 }
 
+const PAGE_SIZE = 20;
+
 const modeBadge: Record<string, { label: string; color: string }> = {
   manual: { label: t('recipes.manual'), color: '#6366f1' },
   ingredients: { label: t('recipes.fromIngredients'), color: '#10b981' },
   mixed: { label: t('recipes.mixed'), color: '#f59e0b' },
 };
 
+const cardStyle: React.CSSProperties = {
+  borderRadius: '22px',
+  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
+  border: '1px solid rgba(160, 200, 220, 0.18)',
+  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
+  padding: '14px',
+};
+
+function Chip({
+  active,
+  onClick,
+  children,
+  activeColor,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  activeColor?: string;
+}) {
+  const theme = useTheme();
+  const color = activeColor || theme.palette.primary;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: '8px 12px',
+        borderRadius: '12px',
+        border: `1px solid ${active ? color : 'rgba(255,255,255,0.12)'}`,
+        background: active
+          ? `linear-gradient(180deg, ${color}33, ${color}1f)`
+          : 'rgba(255,255,255,0.06)',
+        color: active ? color : theme.palette.textMuted,
+        fontSize: '12px',
+        fontWeight: 700,
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SearchIcon({ color }: { color: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </svg>
+  );
+}
+
 export function RecipesPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const [tab, setTab] = useState<'my' | 'board'>('my');
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [includeArchived, setIncludeArchived] = useState(false);
   const [boardSort, setBoardSort] = useState<'newest' | 'popular' | 'forks'>('newest');
   const debouncedSearch = useDebounce(search, 300);
 
-  useEffect(() => {
-    if (tab === 'my') {
-      loadMyRecipes();
-    } else {
-      loadBoard();
-    }
-  }, [debouncedSearch, includeArchived, tab, boardSort]);
-
-  const loadMyRecipes = async () => {
-    setLoading(true);
-    try {
-      const params: any = { limit: 50 };
+  const fetchPage = useCallback(
+    async (offset: number, limit: number): Promise<Recipe[]> => {
+      const params: any = { limit, offset };
       if (debouncedSearch.trim()) params.search = debouncedSearch;
-      if (includeArchived) params.includeArchived = true;
-      const response = await apiClient.get('/recipes', { params });
-      setRecipes(response.data);
-    } catch (err) {
-      console.error('Failed to load recipes', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadBoard = async () => {
-    setLoading(true);
-    try {
-      const params: any = { limit: 50, sort: boardSort };
-      if (debouncedSearch.trim()) params.search = debouncedSearch;
+      if (tab === 'my') {
+        if (includeArchived) params.includeArchived = true;
+        const response = await apiClient.get('/recipes', { params });
+        return response.data;
+      }
+      params.sort = boardSort;
       const response = await apiClient.get('/recipes/board', { params });
-      setRecipes(response.data);
-    } catch (err) {
-      console.error('Failed to load board', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return response.data;
+    },
+    [tab, debouncedSearch, includeArchived, boardSort],
+  );
 
-  const handlePublish = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const { items: recipes, loading, loadingMore, hasMore, sentinelRef, reload } = usePaginatedList(
+    fetchPage,
+    [tab, debouncedSearch, includeArchived, boardSort],
+    PAGE_SIZE,
+  );
+
+  const mutate = async (action: () => Promise<unknown>) => {
     try {
-      await apiClient.post(`/recipes/${id}/publish`);
-      if (tab === 'my') loadMyRecipes();
+      await action();
+      reload();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleUnpublish = async (id: string, e: React.MouseEvent) => {
+  const handlePublish = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      await apiClient.post(`/recipes/${id}/unpublish`);
-      if (tab === 'my') loadMyRecipes();
-    } catch (err) {
-      console.error(err);
-    }
+    mutate(() => apiClient.post(`/recipes/${id}/publish`));
+  };
+
+  const handleUnpublish = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    mutate(() => apiClient.post(`/recipes/${id}/unpublish`));
   };
 
   const handleFork = async (id: string, e: React.MouseEvent) => {
@@ -120,34 +156,19 @@ export function RecipesPage() {
     }
   };
 
-  const handleDuplicate = async (id: string, e: React.MouseEvent) => {
+  const handleDuplicate = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      await apiClient.post(`/recipes/${id}/duplicate`);
-      loadMyRecipes();
-    } catch (err) {
-      console.error(t('recipes.duplicateFailed'), err);
-    }
+    mutate(() => apiClient.post(`/recipes/${id}/duplicate`));
   };
 
-  const handleArchive = async (id: string, e: React.MouseEvent) => {
+  const handleArchive = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      await apiClient.delete(`/recipes/${id}`);
-      loadMyRecipes();
-    } catch (err) {
-      console.error(t('recipes.archiveFailed'), err);
-    }
+    mutate(() => apiClient.delete(`/recipes/${id}`));
   };
 
-  const handleUnarchive = async (id: string, e: React.MouseEvent) => {
+  const handleUnarchive = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      await apiClient.post(`/recipes/${id}/unarchive`);
-      loadMyRecipes();
-    } catch (err) {
-      console.error(err);
-    }
+    mutate(() => apiClient.post(`/recipes/${id}/unarchive`));
   };
 
   const handleAddToDiary = (recipe: Recipe, e: React.MouseEvent) => {
@@ -155,85 +176,113 @@ export function RecipesPage() {
     navigate(`/entry/new?recipeId=${recipe._id}&recipeName=${encodeURIComponent(recipe.name)}&kcal=${recipe.kcalPer100g}&protein=${recipe.proteinPer100g}&fat=${recipe.fatPer100g}&carb=${recipe.carbPer100g}`);
   };
 
-  if (loading && recipes.length === 0) {
-    return <Loader />;
-  }
-
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
-        <Button
-          variant={tab === 'my' ? 'primary' : 'ghost'}
-          onClick={() => { setTab('my'); setSearch(''); }}
-          style={{ flex: 1 }}
-        >
-          {t('recipes.myRecipes')}
-        </Button>
-        <Button
-          variant={tab === 'board' ? 'primary' : 'ghost'}
-          onClick={() => { setTab('board'); setSearch(''); }}
-          style={{ flex: 1 }}
-        >
-          {t('recipes.board')}
-        </Button>
-      </div>
-
+    <div
+      style={{
+        minHeight: 'calc(100vh - 64px)',
+        maxWidth: '520px',
+        margin: '0 auto',
+        padding: '12px',
+        paddingBottom: '100px',
+        background: `
+          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+        `,
+      }}
+    >
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md }}>
-        <Text variant="h1">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <Text variant="h2" bold style={{ fontSize: '20px' }}>
           {tab === 'my' ? t('recipes.myRecipes') : t('recipes.boardTitle')}
         </Text>
         {tab === 'my' && (
-          <Button size="sm" onClick={() => navigate('/recipes/new')}>
-            + {t('recipes.create')}
-          </Button>
+          <button
+            type="button"
+            onClick={() => navigate('/recipes/new')}
+            title={t('recipes.create')}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+              color: '#07210f',
+              fontSize: '22px',
+              fontWeight: 700,
+              lineHeight: 1,
+              cursor: 'pointer',
+              boxShadow: '0 10px 20px rgba(83, 212, 107, 0.24)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            +
+          </button>
         )}
       </div>
 
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+        <Chip active={tab === 'my'} onClick={() => { setTab('my'); setSearch(''); }}>
+          {t('recipes.myRecipes')}
+        </Chip>
+        <Chip active={tab === 'board'} onClick={() => { setTab('board'); setSearch(''); }}>
+          {t('recipes.board')}
+        </Chip>
+      </div>
+
       {/* Search */}
-      <div style={{ marginBottom: theme.spacing.md }}>
-        <Input
+      <div style={{ position: 'relative', marginBottom: '12px' }}>
+        <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
+          <SearchIcon color={theme.palette.textMuted} />
+        </div>
+        <input
           type="text"
           placeholder={t('recipes.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            height: '46px',
+            padding: '0 14px 0 40px',
+            borderRadius: '16px',
+            border: '1px solid rgba(160, 200, 220, 0.18)',
+            background: 'rgba(255, 255, 255, 0.06)',
+            color: theme.palette.text,
+            fontSize: '15px',
+            outline: 'none',
+          }}
         />
       </div>
 
-      {/* Board sort */}
-      {tab === 'board' && (
-        <div style={{ display: 'flex', gap: theme.spacing.xs, marginBottom: theme.spacing.md }}>
+      {/* Filters */}
+      {tab === 'board' ? (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
           {(['newest', 'popular', 'forks'] as const).map((s) => (
-            <Button
-              key={s}
-              variant={boardSort === s ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setBoardSort(s)}
-              style={{ flex: 1 }}
-            >
+            <Chip key={s} active={boardSort === s} onClick={() => setBoardSort(s)}>
               {s === 'newest' ? t('recipes.sortNewest') : s === 'popular' ? t('recipes.sortPopular') : t('recipes.sortForks')}
-            </Button>
+            </Chip>
           ))}
         </div>
-      )}
-
-      {/* Archive filter for my recipes */}
-      {tab === 'my' && (
-        <div style={{ marginBottom: theme.spacing.md, display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs, cursor: 'pointer', fontSize: theme.typography.small.fontSize, color: theme.palette.textMuted }}>
-            <input
-              type="checkbox"
-              checked={includeArchived}
-              onChange={(e) => setIncludeArchived(e.target.checked)}
-            />
+      ) : (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+          <Chip active={includeArchived} onClick={() => setIncludeArchived(!includeArchived)} activeColor="#f59e0b">
             {t('recipes.archived')}
-          </label>
+          </Chip>
         </div>
       )}
 
       {/* Recipe list */}
-      {recipes.length === 0 ? (
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <RecipeCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : recipes.length === 0 ? (
         tab === 'my' ? (
           <EmptyState
             title={t('recipes.noRecipes')}
@@ -251,7 +300,7 @@ export function RecipesPage() {
           />
         )
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {recipes.map((recipe) => {
             const badge = modeBadge[recipe.calculationMode] || modeBadge.manual;
             const isPublished = recipe.visibility === 'public';
@@ -259,16 +308,16 @@ export function RecipesPage() {
             const author = recipe.authorSnapshot;
 
             return (
-              <Card
+              <div
                 key={recipe._id}
-                onClick={() => navigate(isBoard ? `/recipes/${recipe._id}` : `/recipes/${recipe._id}`)}
+                onClick={() => navigate(`/recipes/${recipe._id}`)}
                 style={{
-                  opacity: recipe.isArchived ? 0.5 : 1,
-                  padding: theme.spacing.md,
+                  ...cardStyle,
+                  opacity: recipe.isArchived ? 0.55 : 1,
                   cursor: 'pointer',
                 }}
               >
-                <div style={{ display: 'flex', gap: theme.spacing.md, alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                   {recipe.photoUrl ? (
                     <img
                       src={recipe.photoUrl}
@@ -276,58 +325,67 @@ export function RecipesPage() {
                       style={{
                         width: '64px',
                         height: '64px',
-                        borderRadius: theme.radius.md,
+                        borderRadius: '14px',
                         objectFit: 'cover',
                         flexShrink: 0,
+                        border: '1px solid rgba(255,255,255,0.08)',
                       }}
                     />
                   ) : (
-                    <div style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: theme.radius.md,
-                      backgroundColor: theme.palette.surface,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '28px',
-                      flexShrink: 0,
-                    }}>
-                      
+                    <div
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '14px',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={theme.palette.textMuted} strokeWidth="1.6" strokeLinecap="round">
+                        <path d="M4 19h16M6 19v-2a6 6 0 0 1 12 0v2M12 11V8" />
+                        <circle cx="12" cy="6" r="1.6" />
+                      </svg>
                     </div>
                   )}
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs, marginBottom: theme.spacing.xs }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                       <Text bold style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {recipe.name}
                       </Text>
-                      <span style={{
-                        fontSize: '11px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        backgroundColor: badge.color + '20',
-                        color: badge.color,
-                        fontWeight: '600',
-                        whiteSpace: 'nowrap',
-                      }}>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          padding: '3px 8px',
+                          borderRadius: '10px',
+                          backgroundColor: badge.color + '26',
+                          color: badge.color,
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
                         {badge.label}
                       </span>
                       {isBoard && recipe.isMine && (
-                        <span style={{
-                          fontSize: '10px',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          backgroundColor: theme.palette.primary + '20',
-                          color: theme.palette.primary,
-                          fontWeight: '600',
-                        }}>
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            padding: '3px 8px',
+                            borderRadius: '10px',
+                            backgroundColor: theme.palette.primary + '26',
+                            color: theme.palette.primary,
+                            fontWeight: 700,
+                          }}
+                        >
                           {t('recipes.myRecipe')}
                         </span>
                       )}
                     </div>
 
-                    {/* Author for board */}
                     {isBoard && author && !recipe.isMine && (
                       <Text variant="small" muted style={{ display: 'block', marginBottom: '2px' }}>
                         {author.avatarEmoji} {author.displayName || author.username}
@@ -341,60 +399,56 @@ export function RecipesPage() {
                       {t('recipes.totalWeight')}: {recipe.totalCookedWeightG}г
                     </Text>
 
-                    {/* Visibility badge for my recipes */}
                     {tab === 'my' && (
-                      <div style={{ display: 'flex', gap: theme.spacing.xs, marginTop: '4px', alignItems: 'center' }}>
-                        <span style={{
-                          fontSize: '10px',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          backgroundColor: isPublished ? theme.palette.success + '20' : theme.palette.surface,
-                          color: isPublished ? theme.palette.success : theme.palette.textMuted,
-                          fontWeight: '600',
-                        }}>
+                      <div style={{ display: 'flex', gap: '6px', marginTop: '6px', alignItems: 'center' }}>
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            padding: '3px 8px',
+                            borderRadius: '10px',
+                            backgroundColor: isPublished ? theme.palette.success + '26' : 'rgba(255,255,255,0.06)',
+                            color: isPublished ? theme.palette.success : theme.palette.textMuted,
+                            fontWeight: 700,
+                          }}
+                        >
                           {isPublished ? t('recipes.published') : t('recipes.private')}
                         </span>
-                        {isPublished && recipe.likesCount !== undefined && recipe.likesCount > 0 && (
-                          <Text variant="small" muted> {recipe.likesCount}</Text>
+                        {isPublished && !!recipe.likesCount && (
+                          <Text variant="small" muted>♥ {recipe.likesCount}</Text>
                         )}
-                        {isPublished && recipe.forkCount !== undefined && recipe.forkCount > 0 && (
-                          <Text variant="small" muted> {recipe.forkCount}</Text>
+                        {isPublished && !!recipe.forkCount && (
+                          <Text variant="small" muted>⑂ {recipe.forkCount}</Text>
                         )}
                       </div>
                     )}
 
-                    {/* Board stats */}
                     {isBoard && (
-                      <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: '4px' }}>
-                        {recipe.likesCount !== undefined && recipe.likesCount > 0 && (
-                          <Text variant="small" muted> {recipe.likesCount}</Text>
-                        )}
-                        {recipe.forkCount !== undefined && recipe.forkCount > 0 && (
-                          <Text variant="small" muted> {recipe.forkCount}</Text>
-                        )}
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+                        {!!recipe.likesCount && <Text variant="small" muted>♥ {recipe.likesCount}</Text>}
+                        {!!recipe.forkCount && <Text variant="small" muted>⑂ {recipe.forkCount}</Text>}
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: theme.spacing.xs, marginTop: theme.spacing.sm, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
                   {tab === 'my' ? (
                     <>
                       <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
-                         {t('recipes.addToDiary')}
+                        {t('recipes.addToDiary')}
                       </Button>
                       {isPublished ? (
                         <Button size="sm" variant="ghost" onClick={(e) => handleUnpublish(recipe._id, e)}>
-                           {t('recipes.unpublish')}
+                          {t('recipes.unpublish')}
                         </Button>
                       ) : (
                         <Button size="sm" variant="ghost" onClick={(e) => handlePublish(recipe._id, e)}>
-                           {t('recipes.publish')}
+                          {t('recipes.publish')}
                         </Button>
                       )}
                       <Button size="sm" variant="ghost" onClick={(e) => handleDuplicate(recipe._id, e)}>
-                         {t('recipes.duplicate')}
+                        {t('recipes.duplicate')}
                       </Button>
                       {recipe.isArchived ? (
                         <Button size="sm" variant="ghost" onClick={(e) => handleUnarchive(recipe._id, e)}>
@@ -409,19 +463,27 @@ export function RecipesPage() {
                   ) : (
                     <>
                       <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
-                         {t('recipes.addToDiary')}
+                        {t('recipes.addToDiary')}
                       </Button>
                       {!recipe.isMine && (
                         <Button size="sm" variant="ghost" onClick={(e) => handleFork(recipe._id, e)}>
-                           {t('recipes.fork')}
+                          {t('recipes.fork')}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
-              </Card>
+              </div>
             );
           })}
+
+          {loadingMore && (
+            <>
+              <RecipeCardSkeleton />
+              <RecipeCardSkeleton />
+            </>
+          )}
+          {hasMore && !loadingMore && <div ref={sentinelRef} style={{ height: '1px' }} />}
         </div>
       )}
     </div>

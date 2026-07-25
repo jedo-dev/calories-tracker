@@ -9,7 +9,39 @@ import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
 import Loader from '../ui/Loader';
+import { RichTextViewer } from '../ui/RichTextViewer';
 import productsImage from '../assets/products.png';
+
+const cardStyle: React.CSSProperties = {
+  borderRadius: '22px',
+  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
+  border: '1px solid rgba(160, 200, 220, 0.18)',
+  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
+  padding: '14px',
+};
+
+const pageBackground = (bg: string) => `
+  radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+  radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+  linear-gradient(180deg, #07111d 0%, ${bg} 28%, #081523 100%)
+`;
+
+const overlayButtonStyle: React.CSSProperties = {
+  width: '36px',
+  height: '36px',
+  borderRadius: '12px',
+  border: '1px solid rgba(255,255,255,0.18)',
+  background: 'rgba(3, 18, 28, 0.72)',
+  color: '#fff',
+  fontSize: '16px',
+  fontWeight: 700,
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backdropFilter: 'blur(6px)',
+  padding: 0,
+};
 
 interface Ingredient {
   productId?: string;
@@ -188,14 +220,14 @@ export function RecipeDetailPage() {
 
   if (error) {
     return (
-      <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', paddingBottom: '100px', backgroundColor: theme.palette.bg, minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ padding: '12px', maxWidth: '520px', margin: '0 auto', paddingBottom: '100px', background: pageBackground(theme.palette.bg), minHeight: 'calc(100vh - 64px)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
           <Button variant="ghost" size="sm" onClick={() => navigate('/recipes')} style={{ minWidth: '40px' }}>
             ←
           </Button>
           <Text variant="h1" style={{ flex: 1 }}>{t('recipes.accessDenied')}</Text>
         </div>
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+        <Card style={{ ...cardStyle, textAlign: 'center', padding: theme.spacing.xl }}>
           <div style={{ marginBottom: theme.spacing.md, display: 'flex', justifyContent: 'center' }}>
             <img src={productsImage} alt="" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
           </div>
@@ -230,24 +262,57 @@ export function RecipeDetailPage() {
   };
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', paddingBottom: '100px', backgroundColor: theme.palette.bg, minHeight: 'calc(100vh - 64px)' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/recipes')} style={{ minWidth: '40px' }}>
-          ←
-        </Button>
-        <Text variant="h1" style={{ flex: 1 }}>{recipe.name}</Text>
-        {isMine && (
+    <div style={{ padding: '12px', maxWidth: '520px', margin: '0 auto', paddingBottom: '100px', background: pageBackground(theme.palette.bg), minHeight: 'calc(100vh - 64px)' }}>
+      {/* Header / cover hero */}
+      {recipe.photoUrl ? (
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ position: 'relative' }}>
+            <img
+              src={recipe.photoUrl}
+              alt={recipe.name}
+              style={{
+                width: '100%',
+                height: '220px',
+                objectFit: 'cover',
+                borderRadius: '22px',
+                display: 'block',
+                border: '1px solid rgba(160, 200, 220, 0.18)',
+                boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
+              }}
+            />
+            <button type="button" onClick={() => navigate('/recipes')} style={{ ...overlayButtonStyle, position: 'absolute', top: '10px', left: '10px' }}>
+              ←
+            </button>
+            {isMine && (
+              <button
+                type="button"
+                onClick={() => navigate(`/recipes/${recipe._id}/edit`)}
+                style={{ ...overlayButtonStyle, position: 'absolute', top: '10px', right: '10px', width: 'auto', padding: '0 12px', fontSize: '12px' }}
+              >
+                {t('recipes.edit')}
+              </button>
+            )}
+          </div>
+          <Text variant="h1" style={{ display: 'block', marginTop: '12px' }}>{recipe.name}</Text>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/recipes')} style={{ minWidth: '40px' }}>
+            ←
+          </Button>
+          <Text variant="h1" style={{ flex: 1 }}>{recipe.name}</Text>
+          {isMine && (
             <Button variant="ghost" size="sm" onClick={() => navigate(`/recipes/${recipe._id}/edit`)}>
-              Edit
-           </Button>
-        )}
-      </div>
+              {t('recipes.edit')}
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Author info for public recipes */}
       {!isMine && author && (
         <Card
-          style={{ marginBottom: theme.spacing.md, cursor: 'pointer' }}
+          style={{ ...cardStyle, marginBottom: '12px', cursor: 'pointer' }}
           onClick={() => navigate(`/users/${author.userId}`)}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
@@ -264,7 +329,7 @@ export function RecipeDetailPage() {
 
       {/* Visibility badge for own recipes */}
       {isMine && (
-        <Card style={{ marginBottom: theme.spacing.md }}>
+        <Card style={{ ...cardStyle, marginBottom: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
               <span style={{
@@ -297,31 +362,15 @@ export function RecipeDetailPage() {
         </Card>
       )}
 
-      {/* Photo */}
-      {recipe.photoUrl && (
-        <div style={{ marginBottom: theme.spacing.md }}>
-          <img
-            src={recipe.photoUrl}
-            alt={recipe.name}
-            style={{
-              width: '100%',
-              maxHeight: '250px',
-              objectFit: 'cover',
-              borderRadius: theme.radius.md,
-            }}
-          />
-        </div>
-      )}
-
       {/* Description */}
       {recipe.description && (
-        <Card style={{ marginBottom: theme.spacing.md }}>
-          <Text>{recipe.description}</Text>
+        <Card style={{ ...cardStyle, marginBottom: '12px' }}>
+          <RichTextViewer html={recipe.description} />
         </Card>
       )}
 
       {/* KBJU per 100g */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
+      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
         <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipes.per100g')}</Text>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: theme.spacing.sm, textAlign: 'center' }}>
           <div>
@@ -344,7 +393,7 @@ export function RecipeDetailPage() {
       </Card>
 
       {/* Info */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
+      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: theme.spacing.sm }}>
           <Text variant="small" muted>{t('recipes.totalWeight')}</Text>
           <Text bold>{recipe.totalCookedWeightG}г</Text>
@@ -363,7 +412,7 @@ export function RecipeDetailPage() {
 
       {/* Ingredients */}
       {recipe.ingredients.length > 0 && (
-        <Card style={{ marginBottom: theme.spacing.md }}>
+        <Card style={{ ...cardStyle, marginBottom: '12px' }}>
           <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipes.ingredients')}</Text>
           {recipe.ingredients.map((ing, index) => (
             <div
@@ -399,9 +448,24 @@ export function RecipeDetailPage() {
 
       {/* Actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
-        <Button onClick={() => setShowAddToDiary(true)}>
-           {t('recipes.addToDiary')}
-        </Button>
+        <button
+          type="button"
+          onClick={() => setShowAddToDiary(true)}
+          style={{
+            width: '100%',
+            height: '52px',
+            borderRadius: '18px',
+            border: 'none',
+            background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+            color: '#07210f',
+            fontSize: '16px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 18px 30px rgba(83, 212, 107, 0.24)',
+          }}
+        >
+          {t('recipes.addToDiary')}
+        </button>
         {isMine ? (
           <div style={{ display: 'flex', gap: theme.spacing.sm }}>
             <Button variant="secondary" onClick={handleDuplicate} style={{ flex: 1 }}>
@@ -487,7 +551,7 @@ export function RecipeDetailPage() {
           </div>
 
           {diaryGramsNum > 0 && (
-            <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '15' }}>
+            <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '15', borderRadius: '16px' }}>
               <Text variant="small" bold style={{ display: 'block' }}>
                 {recipe.name} · {diaryGramsNum}г
               </Text>

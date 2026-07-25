@@ -391,7 +391,7 @@ export const ru = {
   // Command Center
   commandCenter: {
     addEntry: "Добавить запись",
-    selectDate: "Выбрать дату",
+    selectDate: "Главная",
     favoriteProducts: "Избранные продукты",
     streak: "Серия",
     xpWeek: "XP за неделю",
@@ -462,6 +462,7 @@ export const ru = {
     visibility: "Видимость",
     visibilityPrivate: "Личное",
     visibilityPublic: "На доске",
+    edit: "Изменить",
   },
   // Recipe Editor
   recipeEditor: {
@@ -511,6 +512,15 @@ export const ru = {
     goToList: "К списку блюд",
     photoTooLarge: "Фото не должно превышать 5 МБ",
     photoUploadFailed: "Не удалось загрузить фото",
+    coverPhoto: "Обложка",
+    bold: "Жирный",
+    italic: "Курсив",
+    heading: "Заголовок",
+    list: "Список",
+    numberedList: "Нумерованный список",
+    insertImage: "Вставить фото",
+    imageTooLarge: "Фото не должно превышать 5 МБ",
+    imageUploadFailed: "Не удалось загрузить фото",
   },
   // Recipe Validation
   recipeValidation: {

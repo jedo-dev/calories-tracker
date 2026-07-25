@@ -9,6 +9,15 @@ import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
 import Loader from '../ui/Loader';
+import { RichTextEditor, isRichTextEmpty } from '../ui/RichTextEditor';
+
+const cardStyle: React.CSSProperties = {
+  borderRadius: '22px',
+  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
+  border: '1px solid rgba(160, 200, 220, 0.18)',
+  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
+  padding: '14px',
+};
 
 interface Ingredient {
   productId?: string;
@@ -206,11 +215,24 @@ export function RecipeEditorPage() {
         }
       : calculatedPer100g;
 
+  // The api client defaults Content-Type to application/json, which makes
+  // axios >=1.2 serialize FormData to JSON — override it so multipart is sent.
   const uploadRecipePhoto = async (recipeId: string, file: File) => {
     const formData = new FormData();
     formData.append('photo', file);
-    const response = await apiClient.post(`/recipes/${recipeId}/photo`, formData);
+    const response = await apiClient.post(`/recipes/${recipeId}/photo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data.photoUrl as string;
+  };
+
+  const uploadInlineImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await apiClient.post('/recipes/uploads', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.url as string;
   };
 
   const validate = (): string | null => {
@@ -251,7 +273,7 @@ export function RecipeEditorPage() {
       const isLocalPhotoPreview = photoUrl.startsWith('data:');
       const payload: any = {
         name: name.trim(),
-        description: description.trim() || undefined,
+        description: isRichTextEmpty(description) ? undefined : description,
         photoUrl: !isLocalPhotoPreview && photoUrl ? photoUrl : undefined,
         calculationMode,
         totalCookedWeightG: weight,
@@ -385,8 +407,20 @@ export function RecipeEditorPage() {
   // Show saved actions dialog
   if (showSavedActions && savedRecipe) {
     return (
-      <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg }}>
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+      <div
+        style={{
+          padding: '12px',
+          maxWidth: '520px',
+          margin: '0 auto',
+          minHeight: 'calc(100vh - 64px)',
+          background: `
+            radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+            radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+            linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+          `,
+        }}
+      >
+        <Card style={{ ...cardStyle, textAlign: 'center', padding: theme.spacing.xl }}>
           <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>
              {t('recipeEditor.savedActions')}
           </Text>
@@ -407,7 +441,20 @@ export function RecipeEditorPage() {
   }
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', paddingBottom: '100px', backgroundColor: theme.palette.bg, minHeight: 'calc(100vh - 64px)' }}>
+    <div
+      style={{
+        padding: '12px',
+        maxWidth: '520px',
+        margin: '0 auto',
+        paddingBottom: '100px',
+        minHeight: 'calc(100vh - 64px)',
+        background: `
+          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+        `,
+      }}
+    >
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} style={{ minWidth: '40px' }}>
@@ -419,14 +466,14 @@ export function RecipeEditorPage() {
       </div>
 
       {error && (
-        <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.danger + '20' }}>
+        <Card style={{ ...cardStyle, marginBottom: '12px', border: '1px solid rgba(255,120,120,0.35)' }}>
           <Text style={{ color: theme.palette.danger }}>{error}</Text>
         </Card>
       )}
 
-      {/* Photo */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
-        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.photo')}</Text>
+      {/* Cover photo */}
+      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
+        <Text variant="h2" bold style={{ marginBottom: theme.spacing.sm, fontSize: '18px' }}>{t('recipeEditor.coverPhoto')}</Text>
         {photoUrl ? (
           <div style={{ position: 'relative' }}>
             <img
@@ -434,18 +481,48 @@ export function RecipeEditorPage() {
               alt={name}
               style={{
                 width: '100%',
-                maxHeight: '200px',
+                aspectRatio: '16 / 9',
                 objectFit: 'cover',
-                borderRadius: theme.radius.md,
+                borderRadius: '14px',
+                display: 'block',
+                border: '1px solid rgba(255,255,255,0.08)',
               }}
             />
-            <div style={{ display: 'flex', gap: theme.spacing.xs, marginTop: theme.spacing.sm }}>
-              <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()}>
+            <div style={{ position: 'absolute', right: '10px', bottom: '10px', display: 'flex', gap: '6px' }}>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  background: 'rgba(3, 18, 28, 0.72)',
+                  color: theme.palette.text,
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(6px)',
+                }}
+              >
                 {t('recipeEditor.replacePhoto')}
-              </Button>
-              <Button size="sm" variant="danger" onClick={handleRemovePhoto}>
+              </button>
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,120,120,0.35)',
+                  background: 'rgba(3, 18, 28, 0.72)',
+                  color: '#ff8a8a',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(6px)',
+                }}
+              >
                 {t('recipeEditor.removePhoto')}
-              </Button>
+              </button>
             </div>
           </div>
         ) : (
@@ -453,9 +530,11 @@ export function RecipeEditorPage() {
             onClick={() => fileInputRef.current?.click()}
             style={{
               width: '100%',
-              height: '140px',
-              border: `2px dashed ${theme.palette.border}`,
-              borderRadius: theme.radius.md,
+              aspectRatio: '16 / 9',
+              boxSizing: 'border-box',
+              border: '2px dashed rgba(160, 200, 220, 0.28)',
+              borderRadius: '14px',
+              background: 'rgba(255,255,255,0.03)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -464,7 +543,11 @@ export function RecipeEditorPage() {
               gap: theme.spacing.xs,
             }}
           >
-            <Text style={{ fontSize: '32px' }}>📷</Text>
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke={theme.palette.textMuted} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="4" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
             <Text variant="small" muted>{t('recipeEditor.addPhoto')}</Text>
           </div>
         )}
@@ -478,7 +561,7 @@ export function RecipeEditorPage() {
       </Card>
 
       {/* Basic Info */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
+      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
           <Input
             label={t('recipeEditor.name')}
@@ -490,24 +573,11 @@ export function RecipeEditorPage() {
             <label style={{ display: 'block', marginBottom: theme.spacing.xs, fontWeight: '600', color: theme.palette.text, fontSize: theme.typography.small.fontSize }}>
               {t('recipeEditor.description')}
             </label>
-            <textarea
-              placeholder={t('recipeEditor.descriptionPlaceholder')}
+            <RichTextEditor
               value={description}
-              onChange={(e) => { setDescription(e.target.value); markDirty(); }}
-              style={{
-                width: '100%',
-                minHeight: '60px',
-                padding: theme.spacing.sm,
-                fontSize: theme.typography.body.fontSize,
-                backgroundColor: theme.palette.bg,
-                color: theme.palette.text,
-                border: `1px solid ${theme.palette.border}`,
-                borderRadius: theme.radius.sm,
-                resize: 'vertical',
-                boxSizing: 'border-box',
-                outline: 'none',
-                fontFamily: 'inherit',
-              }}
+              onChange={(html) => { setDescription(html); markDirty(); }}
+              onUploadImage={uploadInlineImage}
+              placeholder={t('recipeEditor.descriptionPlaceholder')}
             />
           </div>
 
@@ -557,7 +627,7 @@ export function RecipeEditorPage() {
       </Card>
 
       {/* Calculation Mode */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
+      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
         <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.calculationMode')}</Text>
         <div style={{ display: 'flex', gap: theme.spacing.xs }}>
           {(['manual', 'ingredients', 'mixed'] as const).map((mode) => (
@@ -585,7 +655,7 @@ export function RecipeEditorPage() {
 
       {/* Manual KBJU */}
       {(calculationMode === 'manual' || calculationMode === 'mixed') && (
-        <Card style={{ marginBottom: theme.spacing.md }}>
+        <Card style={{ ...cardStyle, marginBottom: '12px' }}>
           <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>
             {calculationMode === 'mixed' ? t('recipeEditor.mixed') + ' — КБЖУ' : t('recipeEditor.manual') + ' — КБЖУ'}
           </Text>
@@ -631,7 +701,7 @@ export function RecipeEditorPage() {
 
       {/* Ingredients */}
       {calculationMode !== 'manual' && (
-        <Card style={{ marginBottom: theme.spacing.md }}>
+        <Card style={{ ...cardStyle, marginBottom: '12px' }}>
           <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.ingredientsTitle')}</Text>
 
           <Input
@@ -753,7 +823,7 @@ export function RecipeEditorPage() {
       )}
 
       {/* Total Weight */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
+      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
         <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.totalWeight')}</Text>
         <Text variant="small" muted style={{ marginBottom: theme.spacing.sm, display: 'block' }}>
           {t('recipeEditor.totalWeightHint')}
@@ -781,7 +851,7 @@ export function RecipeEditorPage() {
       </Card>
 
       {/* Serving info */}
-      <Card style={{ marginBottom: theme.spacing.md }}>
+      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
         <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.servingName')}</Text>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
           <Input
@@ -802,7 +872,7 @@ export function RecipeEditorPage() {
       </Card>
 
       {/* Result summary */}
-      <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.primary + '15' }}>
+      <Card style={{ ...cardStyle, marginBottom: '12px', border: `1px solid ${theme.palette.primary}55` }}>
         <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.resultTitle')}</Text>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: theme.spacing.sm, textAlign: 'center' }}>
           <div>
@@ -871,12 +941,14 @@ export function RecipeEditorPage() {
         position: 'sticky',
         bottom: '0',
         padding: theme.spacing.md,
-        backgroundColor: theme.palette.bg,
-        borderTop: `1px solid ${theme.palette.border}`,
+        background: 'rgba(8, 21, 35, 0.92)',
+        backdropFilter: 'blur(8px)',
+        borderTop: '1px solid rgba(160, 200, 220, 0.18)',
         zIndex: 5,
         marginTop: theme.spacing.md,
+        margin: `${theme.spacing.md} -12px 0`,
       }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '520px', margin: '0 auto', padding: '0 12px' }}>
           <Button onClick={handleSave} disabled={saving} size="lg">
             {saving ? t('common.saving') : isEdit ? t('recipeEditor.saveChanges') : t('recipeEditor.save')}
           </Button>

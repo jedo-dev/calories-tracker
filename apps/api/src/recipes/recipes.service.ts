@@ -16,6 +16,8 @@ import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { QueryRecipesDto } from './dto/query-recipes.dto';
 import { QueryBoardDto } from './dto/query-board.dto';
 import { QueryUserRecipesDto } from './dto/query-user-recipes.dto';
+import { StorageService } from '../storage/storage.service';
+import { sanitizeDescription } from './recipe-sanitizer';
 
 @Injectable()
 export class RecipesService {
@@ -25,7 +27,14 @@ export class RecipesService {
     @InjectModel(Entry.name) private entryModel: Model<EntryDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
+    private storage: StorageService,
   ) {}
+
+  private cleanDescription(description: string | undefined): string | undefined {
+    if (description === undefined) return undefined;
+    const sanitized = sanitizeDescription(description, this.storage.publicUrlPrefix());
+    return sanitized.trim() || undefined;
+  }
 
   normalizeName(name: string): string {
     return name.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -174,7 +183,7 @@ export class RecipesService {
       userId: new Types.ObjectId(userId),
       name: createRecipeDto.name.trim().replace(/\s+/g, ' '),
       nameNormalized: this.normalizeName(createRecipeDto.name),
-      description: createRecipeDto.description,
+      description: this.cleanDescription(createRecipeDto.description),
       photoUrl: createRecipeDto.photoUrl,
       mealTypes: createRecipeDto.mealTypes || [],
       tags: createRecipeDto.tags || [],
@@ -242,7 +251,8 @@ export class RecipesService {
       updateData.name = updateRecipeDto.name.trim().replace(/\s+/g, ' ');
       updateData.nameNormalized = this.normalizeName(updateRecipeDto.name);
     }
-    if (updateRecipeDto.description !== undefined) updateData.description = updateRecipeDto.description;
+    if (updateRecipeDto.description !== undefined)
+      updateData.description = this.cleanDescription(updateRecipeDto.description);
     if (updateRecipeDto.photoUrl !== undefined) updateData.photoUrl = updateRecipeDto.photoUrl;
     if (updateRecipeDto.mealTypes !== undefined) updateData.mealTypes = updateRecipeDto.mealTypes;
     if (updateRecipeDto.tags !== undefined) updateData.tags = updateRecipeDto.tags;

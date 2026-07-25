@@ -65,20 +65,6 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
     handleNavigate('/entry/new');
   };
 
-  const handleSelectDate = () => {
-    const dateInput = document.createElement('input');
-    dateInput.type = 'date';
-    const now = new Date();
-    dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    dateInput.onchange = (e: any) => {
-      const selectedDate = e.target.value;
-      if (selectedDate) {
-        handleClose();
-        navigate(`/today?date=${selectedDate}`);
-      }
-    };
-    dateInput.click();
-  };
 
   return (
     <BottomSheet
@@ -189,7 +175,7 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           >
             + {t('commandCenter.addEntry')}
           </Button>
-            <Button variant="secondary" onClick={handleSelectDate} style={{ minHeight: '44px' }}>
+            <Button variant="secondary" onClick={()=> handleNavigate('/today')} style={{ minHeight: '44px' }}>
               {t('commandCenter.selectDate')}
             </Button>
             <Button variant="secondary" onClick={() => handleNavigate('/workouts')} style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>

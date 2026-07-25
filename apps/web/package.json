@@ -9,12 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tiptap/extension-image": "^3.29.0",
+    "@tiptap/extension-placeholder": "^3.29.0",
+    "@tiptap/react": "^3.29.0",
+    "@tiptap/starter-kit": "^3.29.0",
     "axios": "^1.6.2",
+    "dompurify": "^3.4.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.1"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.2.0",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",

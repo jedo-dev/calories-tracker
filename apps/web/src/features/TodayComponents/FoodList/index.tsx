@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import emptyFood from '../../../assets/03_empty_states/empty_food.jpg';
+import emptyFood from '../../../assets/03_empty_states/empty_food.png';
 import { t } from '../../../i18n';
 import { useTheme } from '../../../theme/useTheme';
 import { Card } from '../../../ui/Card';
