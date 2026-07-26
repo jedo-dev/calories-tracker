@@ -9,6 +9,16 @@ import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
 import { Text } from '../ui/Text';
 import { RecipeCardSkeleton } from '../ui/RecipeCardSkeleton';
+import { IconButton } from '../ui/IconButton';
+import {
+  ArchiveIcon,
+  DiaryPlusIcon,
+  DuplicateIcon,
+  ForkIcon,
+  PublishIcon,
+  UnarchiveIcon,
+  UnpublishIcon,
+} from '../ui/icons';
 
 interface Recipe {
   _id: string;
@@ -84,6 +94,17 @@ function Chip({
     >
       {children}
     </button>
+  );
+}
+
+export const MACRO_COLORS = { protein: '#5AC8FA', fat: '#FFCC66', carb: '#C792EA' };
+
+function MacroStat({ letter, value, color, textColor }: { letter: string; value: number; color: string; textColor: string }) {
+  return (
+    <span style={{ whiteSpace: 'nowrap' }}>
+      <span style={{ fontSize: '11px', fontWeight: 800, color }}>{letter}</span>
+      <span style={{ fontSize: '14px', fontWeight: 700, color: textColor }}> {value.toFixed(1)}</span>
+    </span>
   );
 }
 
@@ -392,9 +413,18 @@ export function RecipesPage() {
                       </Text>
                     )}
 
-                    <Text variant="small" muted>
-                      {recipe.kcalPer100g.toFixed(0)} ккал · Б{recipe.proteinPer100g.toFixed(1)} Ж{recipe.fatPer100g.toFixed(1)} У{recipe.carbPer100g.toFixed(1)} {t('recipes.per100g')}
-                    </Text>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
+                      <span style={{ whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '17px', fontWeight: 800, color: theme.palette.primary }}>
+                          {recipe.kcalPer100g.toFixed(0)}
+                        </span>
+                        <span style={{ fontSize: '11px', color: theme.palette.textMuted }}> ккал</span>
+                      </span>
+                      <MacroStat letter="Б" value={recipe.proteinPer100g} color={MACRO_COLORS.protein} textColor={theme.palette.text} />
+                      <MacroStat letter="Ж" value={recipe.fatPer100g} color={MACRO_COLORS.fat} textColor={theme.palette.text} />
+                      <MacroStat letter="У" value={recipe.carbPer100g} color={MACRO_COLORS.carb} textColor={theme.palette.text} />
+                      <span style={{ fontSize: '11px', color: theme.palette.textMuted }}>{t('recipes.per100g')}</span>
+                    </div>
                     <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
                       {t('recipes.totalWeight')}: {recipe.totalCookedWeightG}г
                     </Text>
@@ -432,43 +462,43 @@ export function RecipesPage() {
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                   {tab === 'my' ? (
                     <>
-                      <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
-                        {t('recipes.addToDiary')}
-                      </Button>
+                      <IconButton label={t('recipes.addToDiary')} onClick={(e) => handleAddToDiary(recipe, e)} active>
+                        <DiaryPlusIcon />
+                      </IconButton>
                       {isPublished ? (
-                        <Button size="sm" variant="ghost" onClick={(e) => handleUnpublish(recipe._id, e)}>
-                          {t('recipes.unpublish')}
-                        </Button>
+                        <IconButton label={t('recipes.unpublish')} onClick={(e) => handleUnpublish(recipe._id, e)}>
+                          <UnpublishIcon />
+                        </IconButton>
                       ) : (
-                        <Button size="sm" variant="ghost" onClick={(e) => handlePublish(recipe._id, e)}>
-                          {t('recipes.publish')}
-                        </Button>
+                        <IconButton label={t('recipes.publish')} onClick={(e) => handlePublish(recipe._id, e)}>
+                          <PublishIcon />
+                        </IconButton>
                       )}
-                      <Button size="sm" variant="ghost" onClick={(e) => handleDuplicate(recipe._id, e)}>
-                        {t('recipes.duplicate')}
-                      </Button>
+                      <IconButton label={t('recipes.duplicate')} onClick={(e) => handleDuplicate(recipe._id, e)}>
+                        <DuplicateIcon />
+                      </IconButton>
                       {recipe.isArchived ? (
-                        <Button size="sm" variant="ghost" onClick={(e) => handleUnarchive(recipe._id, e)}>
-                          {t('recipes.unarchive')}
-                        </Button>
+                        <IconButton label={t('recipes.unarchive')} onClick={(e) => handleUnarchive(recipe._id, e)}>
+                          <UnarchiveIcon />
+                        </IconButton>
                       ) : (
-                        <Button size="sm" variant="ghost" onClick={(e) => handleArchive(recipe._id, e)}>
-                          {t('recipes.archive')}
-                        </Button>
+                        <IconButton label={t('recipes.archive')} onClick={(e) => handleArchive(recipe._id, e)} danger>
+                          <ArchiveIcon />
+                        </IconButton>
                       )}
                     </>
                   ) : (
                     <>
-                      <Button size="sm" variant="ghost" onClick={(e) => handleAddToDiary(recipe, e)}>
-                        {t('recipes.addToDiary')}
-                      </Button>
+                      <IconButton label={t('recipes.addToDiary')} onClick={(e) => handleAddToDiary(recipe, e)} active>
+                        <DiaryPlusIcon />
+                      </IconButton>
                       {!recipe.isMine && (
-                        <Button size="sm" variant="ghost" onClick={(e) => handleFork(recipe._id, e)}>
-                          {t('recipes.fork')}
-                        </Button>
+                        <IconButton label={t('recipes.fork')} onClick={(e) => handleFork(recipe._id, e)}>
+                          <ForkIcon />
+                        </IconButton>
                       )}
                     </>
                   )}

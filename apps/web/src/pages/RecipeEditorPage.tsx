@@ -10,6 +10,8 @@ import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
 import Loader from '../ui/Loader';
 import { RichTextEditor, isRichTextEmpty } from '../ui/RichTextEditor';
+import { IconButton } from '../ui/IconButton';
+import { BackIcon } from '../ui/icons';
 
 const cardStyle: React.CSSProperties = {
   borderRadius: '22px',
@@ -456,11 +458,11 @@ export function RecipeEditorPage() {
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} style={{ minWidth: '40px' }}>
-          ←
-        </Button>
-        <Text variant="h1">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: theme.spacing.lg }}>
+        <IconButton label={t('common.back')} onClick={() => navigate(-1)}>
+          <BackIcon />
+        </IconButton>
+        <Text variant="h2" bold style={{ fontSize: '20px' }}>
           {isEdit ? t('recipeEditor.editTitle') : t('recipeEditor.newTitle')}
         </Text>
       </div>

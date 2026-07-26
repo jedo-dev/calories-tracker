@@ -10,6 +10,17 @@ import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
 import Loader from '../ui/Loader';
 import { RichTextViewer } from '../ui/RichTextViewer';
+import { IconButton } from '../ui/IconButton';
+import { MACRO_COLORS } from './RecipesPage';
+import {
+  ArchiveIcon,
+  BackIcon,
+  DuplicateIcon,
+  EditIcon,
+  ForkIcon,
+  PublishIcon,
+  UnpublishIcon,
+} from '../ui/icons';
 import productsImage from '../assets/products.png';
 
 const cardStyle: React.CSSProperties = {
@@ -221,10 +232,10 @@ export function RecipeDetailPage() {
   if (error) {
     return (
       <div style={{ padding: '12px', maxWidth: '520px', margin: '0 auto', paddingBottom: '100px', background: pageBackground(theme.palette.bg), minHeight: 'calc(100vh - 64px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/recipes')} style={{ minWidth: '40px' }}>
-            ←
-          </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: theme.spacing.lg }}>
+          <IconButton label={t('common.back')} onClick={() => navigate('/recipes')}>
+            <BackIcon />
+          </IconButton>
           <Text variant="h1" style={{ flex: 1 }}>{t('recipes.accessDenied')}</Text>
         </div>
         <Card style={{ ...cardStyle, textAlign: 'center', padding: theme.spacing.xl }}>
@@ -296,15 +307,15 @@ export function RecipeDetailPage() {
           <Text variant="h1" style={{ display: 'block', marginTop: '12px' }}>{recipe.name}</Text>
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/recipes')} style={{ minWidth: '40px' }}>
-            ←
-          </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: theme.spacing.lg }}>
+          <IconButton label={t('common.back')} onClick={() => navigate('/recipes')}>
+            <BackIcon />
+          </IconButton>
           <Text variant="h1" style={{ flex: 1 }}>{recipe.name}</Text>
           {isMine && (
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/recipes/${recipe._id}/edit`)}>
-              {t('recipes.edit')}
-            </Button>
+            <IconButton label={t('recipes.edit')} onClick={() => navigate(`/recipes/${recipe._id}/edit`)}>
+              <EditIcon />
+            </IconButton>
           )}
         </div>
       )}
@@ -349,15 +360,6 @@ export function RecipeDetailPage() {
                 <Text variant="small" muted> {recipe.forkCount}</Text>
               )}
             </div>
-            {isPublished ? (
-              <Button size="sm" variant="ghost" onClick={handleUnpublish}>
-                {t('recipes.unpublish')}
-              </Button>
-            ) : (
-              <Button size="sm" variant="ghost" onClick={handlePublish}>
-                {t('recipes.publish')}
-              </Button>
-            )}
           </div>
         </Card>
       )}
@@ -379,15 +381,15 @@ export function RecipeDetailPage() {
           </div>
           <div>
             <Text bold style={{ fontSize: '22px', display: 'block' }}>{recipe.proteinPer100g.toFixed(1)}</Text>
-            <Text variant="small" muted>белки</Text>
+            <Text variant="small" style={{ color: MACRO_COLORS.protein }}>белки</Text>
           </div>
           <div>
             <Text bold style={{ fontSize: '22px', display: 'block' }}>{recipe.fatPer100g.toFixed(1)}</Text>
-            <Text variant="small" muted>жиры</Text>
+            <Text variant="small" style={{ color: MACRO_COLORS.fat }}>жиры</Text>
           </div>
           <div>
             <Text bold style={{ fontSize: '22px', display: 'block' }}>{recipe.carbPer100g.toFixed(1)}</Text>
-            <Text variant="small" muted>углеводы</Text>
+            <Text variant="small" style={{ color: MACRO_COLORS.carb }}>углеводы</Text>
           </div>
         </div>
       </Card>
@@ -466,20 +468,31 @@ export function RecipeDetailPage() {
         >
           {t('recipes.addToDiary')}
         </button>
-        {isMine ? (
-          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-            <Button variant="secondary" onClick={handleDuplicate} style={{ flex: 1 }}>
-               {t('recipes.duplicate')}
-            </Button>
-            <Button variant="danger" onClick={handleArchive} style={{ flex: 1 }}>
-              {t('recipes.archive')}
-            </Button>
-          </div>
-        ) : (
-          <Button variant="secondary" onClick={handleFork}>
-             {t('recipes.fork')}
-          </Button>
-        )}
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          {isMine ? (
+            <>
+              {isPublished ? (
+                <IconButton label={t('recipes.unpublish')} onClick={handleUnpublish} size={44}>
+                  <UnpublishIcon size={20} />
+                </IconButton>
+              ) : (
+                <IconButton label={t('recipes.publish')} onClick={handlePublish} size={44}>
+                  <PublishIcon size={20} />
+                </IconButton>
+              )}
+              <IconButton label={t('recipes.duplicate')} onClick={handleDuplicate} size={44}>
+                <DuplicateIcon size={20} />
+              </IconButton>
+              <IconButton label={t('recipes.archive')} onClick={handleArchive} danger size={44}>
+                <ArchiveIcon size={20} />
+              </IconButton>
+            </>
+          ) : (
+            <IconButton label={t('recipes.fork')} onClick={handleFork} size={44}>
+              <ForkIcon size={20} />
+            </IconButton>
+          )}
+        </div>
       </div>
 
       {/* Add to diary bottom sheet */}

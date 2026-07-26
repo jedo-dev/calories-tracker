@@ -14,7 +14,8 @@ export const ru = {
     edit: "Редактировать",
     add: "Добавить",
     search: "Поиск...",
-    all: "Все"
+    all: "Все",
+    back: "Назад"
   },
 
   // Auth
