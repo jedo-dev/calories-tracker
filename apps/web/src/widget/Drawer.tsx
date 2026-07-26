@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-//@ts-ignore
-import logo from '../assets/logo.png';
+import logo from '../assets/01_brand/logo_main.jpg';
 import badgeFirstWorkout from '../assets/07_achievements/badge_first_workout.jpg';
 import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
 import activityMedium from '../assets/12_activity/activity_medium.jpg';
@@ -12,7 +11,6 @@ import { apiClient } from '../api/client';
 import { useTheme } from '../theme/useTheme';
 import { DailyTips } from '../features/TodayComponents/DailyTips';
 import { BottomSheet } from '../ui/BottomSheet';
-import { Button } from '../ui/Button';
 import { SectionIcon } from '../ui/SectionIcon';
 import { hapticImpact } from '../utils/hapticFeedback';
 
@@ -31,6 +29,11 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
   const waterGoal = 2000;
 
   const todayDate = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+
+  // Prefetch on mount, so the first open animates without a content pop-in
+  useEffect(() => {
+    loadMenuStats();
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -64,6 +67,37 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
     hapticImpact('medium');
     handleNavigate('/entry/new');
   };
+
+  const MenuTile = ({ path, icon, children }: { path: string; icon?: React.ReactNode; children: React.ReactNode }) => (
+    <button
+      type="button"
+      onClick={() => handleNavigate(path)}
+      style={{
+        minHeight: '48px',
+        padding: '10px 12px',
+        borderRadius: '14px',
+        border: '1px solid rgba(160, 200, 220, 0.18)',
+        background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.9), rgba(10, 32, 46, 0.9))',
+        color: theme.palette.text,
+        fontSize: '14px',
+        fontWeight: 700,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: theme.spacing.xs,
+        outline: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        transition: 'transform 0.15s ease, border-color 0.15s ease',
+      }}
+      onPointerDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)'; }}
+      onPointerUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+      onPointerLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+    >
+      {icon}
+      {children}
+    </button>
+  );
 
 
   return (
@@ -168,40 +202,40 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
             marginBottom: theme.spacing.md,
           }}
         >
-          <Button
-            variant="primary"
+          <button
+            type="button"
             onClick={handleAddEntry}
-            style={{ gridColumn: '1 / -1', minHeight: '48px' }}
+            style={{
+              gridColumn: '1 / -1',
+              minHeight: '50px',
+              borderRadius: '16px',
+              border: 'none',
+              background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+              color: '#07210f',
+              fontSize: '15px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
+              outline: 'none',
+              WebkitTapHighlightColor: 'transparent',
+            }}
           >
             + {t('commandCenter.addEntry')}
-          </Button>
-            <Button variant="secondary" onClick={()=> handleNavigate('/today')} style={{ minHeight: '44px' }}>
-              {t('commandCenter.selectDate')}
-            </Button>
-            <Button variant="secondary" onClick={() => handleNavigate('/workouts')} style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
-              <SectionIcon src={badgeFirstWorkout} alt="" size={18} />
-              {t('workout.title')}
-            </Button>
-            <Button variant="secondary" onClick={() => handleNavigate('/weight')} style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
-              <SectionIcon src={activityMedium} alt="" size={18} />
-              {t('weight.title')}
-            </Button>
-            <Button variant="secondary" onClick={() => handleNavigate('/reports')} style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xs }}>
-              <SectionIcon src={badgeCalorieMaster} alt="" size={18} />
-              {t('report.title')}
-            </Button>
-            <Button variant="secondary" onClick={() => handleNavigate('/measurements')} style={{ minHeight: '44px' }}>
-              {t('measurement.title')}
-            </Button>
-            <Button variant="secondary" onClick={() => handleNavigate('/templates')} style={{ minHeight: '44px' }}>
-              {t('template.title')}
-          </Button>
-          <Button variant="secondary" onClick={() => handleNavigate('/recipes')} style={{ minHeight: '44px' }}>
-             {t('recipes.title')}
-          </Button>
-          <Button variant="secondary" onClick={() => handleNavigate('/meal-plan')} style={{ minHeight: '44px' }}>
-             {t('mealPlan.title')}
-          </Button>
+          </button>
+          <MenuTile path="/today">{t('commandCenter.selectDate')}</MenuTile>
+          <MenuTile path="/workouts" icon={<SectionIcon src={badgeFirstWorkout} alt="" size={18} />}>
+            {t('workout.title')}
+          </MenuTile>
+          <MenuTile path="/weight" icon={<SectionIcon src={activityMedium} alt="" size={18} />}>
+            {t('weight.title')}
+          </MenuTile>
+          <MenuTile path="/reports" icon={<SectionIcon src={badgeCalorieMaster} alt="" size={18} />}>
+            {t('report.title')}
+          </MenuTile>
+          <MenuTile path="/measurements">{t('measurement.title')}</MenuTile>
+          <MenuTile path="/templates">{t('template.title')}</MenuTile>
+          <MenuTile path="/recipes">{t('recipes.title')}</MenuTile>
+          <MenuTile path="/meal-plan">{t('mealPlan.title')}</MenuTile>
         </div>
 
         {/* Logout */}

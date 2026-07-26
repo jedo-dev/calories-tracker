@@ -24,6 +24,16 @@ export const Footer = () => {
   const leftItems = items.slice(0, 2);
   const rightItems = items.slice(2, 4);
 
+  // While the drawer is open, a tap on the nav bar acts like a tap on the
+  // backdrop: it only dismisses the menu.
+  const handleNavClick = (path: string) => {
+    if (isOpen) {
+      setIsOpen(false);
+      return;
+    }
+    navigate(path);
+  };
+
   return (
     <div className={styles.footerWrapper}>
       <nav className={styles.footer} role="navigation" aria-label="Основная навигация">
@@ -31,7 +41,7 @@ export const Footer = () => {
           <button
             key={item.path}
             className={`${styles.footerItem} ${location.pathname === item.path ? styles.footerItemActive : ""}`}
-            onClick={() => navigate(item.path)}
+            onClick={() => handleNavClick(item.path)}
             aria-label={item.label}
             type="button"
           >
@@ -57,7 +67,7 @@ export const Footer = () => {
           <button
             key={item.path}
             className={`${styles.footerItem} ${location.pathname === item.path ? styles.footerItemActive : ""}`}
-            onClick={() => navigate(item.path)}
+            onClick={() => handleNavClick(item.path)}
             aria-label={item.label}
             type="button"
           >
@@ -67,7 +77,7 @@ export const Footer = () => {
         ))}
       </nav>
       <Drawer
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(open) => setIsOpen(open)}
         isOpen={isOpen}
       />
     </div>

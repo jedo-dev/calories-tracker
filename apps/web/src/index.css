@@ -5,6 +5,14 @@
   box-sizing: border-box;
 }
 
+/* No blue tap ring on pointer clicks; keep the ring for keyboard focus */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .manrope {
   font-family: "Manrope", sans-serif;
   font-optical-sizing: auto;

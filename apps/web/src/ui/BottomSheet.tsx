@@ -65,7 +65,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle }: Botto
       const timer = setTimeout(() => {
         setIsVisible(false);
         setIsDragging(false);
-      }, 200);
+      }, 260);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -243,16 +243,16 @@ export function BottomSheet({ isOpen, onClose, children, header, handle }: Botto
   }
 
   const sheetTransform = isAnimating && !isDragging
-    ? 'translateY(-80px)'
+    ? 'translate3d(0, -80px, 0)'
     : isDragging
       ? undefined
-      : 'translateY(100%)';
+      : 'translate3d(0, 100%, 0)';
 
   const sheetTransition = isDragging
     ? 'none'
     : isAnimating
-      ? 'transform 280ms cubic-bezier(0.2, 0.9, 0.2, 1)'
-      : 'transform 200ms ease-in';
+      ? 'transform 420ms cubic-bezier(0.22, 0.9, 0.24, 1)'
+      : 'transform 260ms cubic-bezier(0.4, 0, 0.7, 1)';
 
   const backdropOpacity = isAnimating && !isDragging
     ? '0.45'
@@ -260,7 +260,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle }: Botto
 
   const backdropTransition = isDragging
     ? 'none'
-    : 'opacity 280ms cubic-bezier(0.2, 0.9, 0.2, 1)';
+    : 'opacity 420ms cubic-bezier(0.22, 0.9, 0.24, 1)';
 
   return (
     <>
@@ -301,7 +301,8 @@ export function BottomSheet({ isOpen, onClose, children, header, handle }: Botto
           borderTopRightRadius: theme.radius.lg,
           transform: sheetTransform,
           transition: sheetTransition,
-          zIndex: 10  ,
+          willChange: 'transform',
+          zIndex: 10,
           display: 'flex',
           flexDirection: 'column',
           overflowY: 'auto',
