@@ -271,6 +271,8 @@ export const ru = {
     sec: "сек",
     selectCategory: "Выберите категорию",
     todayWorkouts: "Тренировки сегодня",
+    customWorkout: "Своя тренировка",
+    kcal: "ккал",
     noWorkoutsToday: "Нет тренировок сегодня",
   },
   // Water

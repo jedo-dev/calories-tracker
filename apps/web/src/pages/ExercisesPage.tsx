@@ -3,10 +3,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
+import { IconButton } from '../ui/IconButton';
+import { BackIcon } from '../ui/icons';
+import {
+  workoutCardStyle,
+  workoutPageBackground,
+  formatDate,
+  estimateExerciseKcal,
+  useUserWeight,
+} from './workoutShared';
 
 interface Exercise {
   _id: string;
@@ -23,17 +30,56 @@ interface Exercise {
   defaultDurationSec?: number;
 }
 
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+const difficultyColor: Record<string, string> = {
+  beginner: '#53D46B',
+  intermediate: '#FFCC66',
+  advanced: '#FF8A8A',
+};
+
+function ExerciseThumb({ src, alt, size }: { src: string; alt: string; size: number }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !src) {
+    return (
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '14px',
+          background: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: size / 2.5,
+          flexShrink: 0,
+        }}
+      >
+        💪
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setFailed(true)}
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'cover',
+        borderRadius: '14px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        flexShrink: 0,
+      }}
+    />
+  );
 }
 
 export function ExercisesPage() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
+  const userWeight = useUserWeight();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [categoryName, setCategoryName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -48,16 +94,13 @@ export function ExercisesPage() {
   const loadExercises = async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get('/workouts/exercises', { params: { categoryId } });
-      setExercises(res.data);
-      // Select first 4 exercises by default
-      const defaultSelected = new Set<string>(res.data.slice(0, 4).map((e: Exercise) => e._id));
-      setSelectedIds(defaultSelected);
-      if (res.data.length > 0) {
-        const catRes = await apiClient.get('/workouts/categories');
-        const cat = catRes.data.find((c: any) => c._id === categoryId);
-        if (cat) setCategoryName(cat.name);
-      }
+      const [exRes, catRes] = await Promise.all([
+        apiClient.get('/workouts/exercises', { params: { categoryId } }),
+        apiClient.get('/workouts/categories'),
+      ]);
+      setExercises(exRes.data);
+      const cat = catRes.data.find((c: any) => c._id === categoryId);
+      if (cat) setCategoryName(cat.name);
     } catch (err) {
       console.error('Failed to load exercises', err);
     } finally {
@@ -68,11 +111,8 @@ export function ExercisesPage() {
   const toggleExercise = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -81,15 +121,12 @@ export function ExercisesPage() {
     if (selectedIds.size === 0) return;
     setStarting(true);
     try {
-      const today = formatDate(new Date());
       const sessionRes = await apiClient.post('/workouts/sessions', {
-        date: today,
+        date: formatDate(new Date()),
         categoryId,
         name: categoryName,
       });
       const sessionId = sessionRes.data._id;
-
-      // Add selected exercises to session
       const addPromises = exercises
         .filter((ex) => selectedIds.has(ex._id))
         .map((ex) =>
@@ -98,7 +135,7 @@ export function ExercisesPage() {
             sets: ex.defaultSets,
             reps: ex.defaultReps,
             durationSec: ex.defaultDurationSec,
-          })
+          }),
         );
       await Promise.all(addPromises);
       navigate(`/workout/${sessionId}`);
@@ -121,141 +158,226 @@ export function ExercisesPage() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
-        {categoryName || t('workout.exercises')}
-      </Text>
-
-      <Card style={{ marginBottom: theme.spacing.md }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
-          <Text variant="small" muted>Выбрано: {selectedIds.size}</Text>
-        </div>
-        <Button
-          onClick={handleStartWorkout}
-          size="lg"
-          disabled={selectedIds.size === 0 || starting}
-          style={{ width: '100%' }}
-        >
-          {starting ? 'Создание...' : `Начать с выбранными (${selectedIds.size})`}
-        </Button>
-      </Card>
+    <div
+      style={{
+        padding: '12px',
+        maxWidth: '520px',
+        margin: '0 auto',
+        minHeight: 'calc(100vh - 64px)',
+        paddingBottom: '120px',
+        background: workoutPageBackground(theme.palette.bg),
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+        <IconButton label={t('common.back')} onClick={() => navigate('/workouts')}>
+          <BackIcon />
+        </IconButton>
+        <Text variant="h2" bold style={{ fontSize: '20px', flex: 1 }}>
+          {categoryName || t('workout.exercises')}
+        </Text>
+        <Text variant="small" muted>{exercises.length}</Text>
+      </div>
 
       {exercises.map((ex) => {
         const isSelected = selectedIds.has(ex._id);
+        const isExpanded = expandedId === ex._id;
+        const kcal = estimateExerciseKcal(ex, userWeight);
         return (
-          <Card
+          <div
             key={ex._id}
             style={{
-              marginBottom: theme.spacing.md,
-              padding: 0,
-              overflow: 'hidden',
-              border: isSelected ? `2px solid ${theme.palette.primary}` : `1px solid ${theme.palette.border}`,
+              ...workoutCardStyle,
+              marginBottom: '10px',
+              padding: '12px',
+              border: isSelected ? `1px solid ${theme.palette.primary}` : (workoutCardStyle.border as string),
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', padding: theme.spacing.md, gap: theme.spacing.sm }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div onClick={() => setExpandedId(isExpanded ? null : ex._id)} style={{ cursor: 'pointer' }}>
+                <ExerciseThumb src={ex.gifUrl} alt={ex.name} size={56} />
+              </div>
+              <div
+                style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                onClick={() => setExpandedId(isExpanded ? null : ex._id)}
+              >
+                <Text bold style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {ex.name}
+                </Text>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      padding: '3px 8px',
+                      borderRadius: '10px',
+                      backgroundColor: (difficultyColor[ex.difficulty] || '#53D46B') + '26',
+                      color: difficultyColor[ex.difficulty] || '#53D46B',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {getDifficultyLabel(ex.difficulty)}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      padding: '3px 8px',
+                      borderRadius: '10px',
+                      backgroundColor: 'rgba(96,165,250,0.16)',
+                      color: '#7cb8ff',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {ex.type === 'cardio' ? t('workout.cardio') : t('workout.strength')}
+                  </span>
+                  <span style={{ fontSize: '12px', fontWeight: 800, color: theme.palette.primary, whiteSpace: 'nowrap' }}>
+                    ~{kcal} {t('workout.kcal')}
+                  </span>
+                </div>
+              </div>
               <button
+                type="button"
                 onClick={() => toggleExercise(ex._id)}
                 aria-label={isSelected ? `Снять выделение с ${ex.name}` : `Выбрать ${ex.name}`}
                 style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '4px',
-                  border: `2px solid ${isSelected ? theme.palette.primary : theme.palette.border}`,
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '10px',
+                  border: `2px solid ${isSelected ? theme.palette.primary : 'rgba(255,255,255,0.2)'}`,
                   backgroundColor: isSelected ? theme.palette.primary : 'transparent',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  color: 'white',
-                  fontSize: '14px',
+                  color: '#07210f',
+                  fontSize: '15px',
+                  fontWeight: 800,
+                  padding: 0,
                 }}
               >
                 {isSelected && '✓'}
               </button>
-              <div
-                style={{ flex: 1, cursor: 'pointer' }}
-                onClick={() => setExpandedId(expandedId === ex._id ? null : ex._id)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text bold style={{ color: theme.palette.text }}>{ex.name}</Text>
-                  <Text variant="small" muted>{expandedId === ex._id ? '▲' : '▼'}</Text>
-                </div>
-                <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: theme.spacing.xs, flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontSize: '11px',
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    backgroundColor: theme.palette.primary + '20',
-                    color: theme.palette.primary,
-                  }}>
-                    {getDifficultyLabel(ex.difficulty)}
-                  </span>
-                  <span style={{
-                    fontSize: '11px',
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    backgroundColor: theme.palette.secondary + '20',
-                    color: theme.palette.secondaryText,
-                  }}>
-                    {ex.type === 'cardio' ? t('workout.cardio') : t('workout.strength')}
-                  </span>
-                </div>
-              </div>
             </div>
 
-            {expandedId === ex._id && (
-              <div style={{ borderTop: `1px solid ${theme.palette.border}` }}>
-                <div style={{ textAlign: 'center', padding: theme.spacing.md, backgroundColor: theme.palette.surface }}>
-                  <img
-                    src={ex.gifUrl}
-                    alt={ex.name}
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '250px',
-                      borderRadius: theme.radius.md,
-                      objectFit: 'contain',
-                    }}
-                    onError={(e) => {
-                      const img = e.target as HTMLImageElement;
-                      img.style.display = 'none';
-                      const placeholder = document.createElement('div');
-                      placeholder.style.cssText = `max-width:100%;max-height:250px;border-radius:${theme.radius.md};background:${theme.palette.surface};display:flex;align-items:center;justify-content:center;font-size:64px;padding:${theme.spacing.xl};`;
-                      placeholder.textContent = '💪';
-                      img.parentNode?.insertBefore(placeholder, img);
-                    }}
+            {isExpanded && (
+              <div style={{ marginTop: '12px' }}>
+                <ExerciseAnimation src={ex.gifUrl} alt={ex.name} />
+                {ex.description && (
+                  <Text variant="small" muted style={{ display: 'block', marginTop: '10px', lineHeight: 1.45 }}>
+                    {ex.description}
+                  </Text>
+                )}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                  <InfoPill label={t('workout.sets')} value={String(ex.defaultSets)} />
+                  <InfoPill
+                    label={ex.defaultDurationSec ? t('workout.duration') : t('workout.reps')}
+                    value={ex.defaultDurationSec ? `${ex.defaultDurationSec} ${t('workout.sec')}` : String(ex.defaultReps)}
                   />
+                  <InfoPill label="MET" value={String(ex.metValue)} />
+                  {ex.equipment && <InfoPill label={t('workout.equipment')} value={ex.equipment} />}
                 </div>
-
-                <div style={{ padding: theme.spacing.md }}>
-                  {ex.description && (
-                    <Text muted style={{ marginBottom: theme.spacing.sm }}>{ex.description}</Text>
-                  )}
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
-                    <div>
-                      <Text variant="small" muted>{t('workout.sets')}</Text>
-                      <Text bold>{ex.defaultSets}</Text>
-                    </div>
-                    <div>
-                      <Text variant="small" muted>{t('workout.reps')}</Text>
-                      <Text bold>{ex.defaultDurationSec ? `${ex.defaultDurationSec} ${t('workout.sec')}` : ex.defaultReps}</Text>
-                    </div>
-                    <div>
-                      <Text variant="small" muted>{t('workout.muscleGroups')}</Text>
-                      <Text variant="small">{ex.muscleGroups.join(', ')}</Text>
-                    </div>
-                    <div>
-                      <Text variant="small" muted>{t('workout.equipment')}</Text>
-                      <Text variant="small">{ex.equipment || t('workout.noEquipment')}</Text>
-                    </div>
+                {ex.muscleGroups.length > 0 && (
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                    {ex.muscleGroups.map((m) => (
+                      <span
+                        key={m}
+                        style={{
+                          fontSize: '10px',
+                          padding: '3px 8px',
+                          borderRadius: '10px',
+                          background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          color: theme.palette.textMuted,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {m}
+                      </span>
+                    ))}
                   </div>
-                </div>
+                )}
               </div>
             )}
-          </Card>
+          </div>
         );
       })}
+
+      {/* Sticky start bar */}
+      <div
+        style={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: '64px',
+          padding: '10px 12px',
+          background: 'rgba(8, 21, 35, 0.92)',
+          backdropFilter: 'blur(8px)',
+          borderTop: '1px solid rgba(160, 200, 220, 0.18)',
+          zIndex: 5,
+        }}
+      >
+        <div style={{ maxWidth: '520px', margin: '0 auto' }}>
+          <button
+            type="button"
+            onClick={handleStartWorkout}
+            disabled={selectedIds.size === 0 || starting}
+            style={{
+              width: '100%',
+              height: '48px',
+              borderRadius: '16px',
+              border: 'none',
+              background:
+                selectedIds.size === 0
+                  ? 'rgba(255,255,255,0.08)'
+                  : 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+              color: selectedIds.size === 0 ? theme.palette.textMuted : '#07210f',
+              fontSize: '15px',
+              fontWeight: 700,
+              cursor: selectedIds.size === 0 ? 'default' : 'pointer',
+              boxShadow: selectedIds.size === 0 ? 'none' : '0 14px 26px rgba(83, 212, 107, 0.22)',
+            }}
+          >
+            {starting ? t('common.saving') : `${t('workout.startWorkout')}${selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}`}
+          </button>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
+  return (
+    <div
+      style={{
+        padding: '6px 10px',
+        borderRadius: '12px',
+        background: 'rgba(255,255,255,0.06)',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}
+    >
+      <span style={{ fontSize: '10px', color: theme.palette.textMuted }}>{label} </span>
+      <span style={{ fontSize: '12px', fontWeight: 700, color: theme.palette.text }}>{value}</span>
+    </div>
+  );
+}
+
+function ExerciseAnimation({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !src) return null;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setFailed(true)}
+      style={{
+        width: '100%',
+        maxHeight: '220px',
+        objectFit: 'contain',
+        borderRadius: '16px',
+        display: 'block',
+        background: 'rgba(3, 18, 28, 0.5)',
+      }}
+    />
   );
 }

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#113145"/>
+      <stop offset="1" stop-color="#0A202E"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="238" height="178" rx="20" fill="url(#bg)" stroke="rgba(160,200,220,0.18)" stroke-width="2"/>
+  <circle cx="120" cy="30" r="70" fill="#53D46B" opacity="0.06"/>
+  <line x1="30" y1="152" x2="210" y2="152" stroke="rgba(255,255,255,0.14)" stroke-width="3" stroke-linecap="round"/>
+  <g>
+    <animateTransform attributeName="transform" type="translate" dur="2.6s" repeatCount="indefinite"
+      calcMode="spline" keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+      values="0 0;0 3;0 0"/>
+    <g stroke="#53D46B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M55,150 L110,124 L156,118"/>
+      <path d="M156,118 L154,138 L176,148"/>
+    </g>
+    <circle cx="172" cy="108" r="11" fill="#53D46B"/>
+  </g>
+  <g stroke="#53D46B" stroke-width="4" stroke-linecap="round" opacity="0.7">
+    <line x1="196" y1="96" x2="204" y2="88">
+      <animate attributeName="opacity" dur="2.6s" repeatCount="indefinite" values="0;0.8;0" keyTimes="0;0.5;1"/>
+    </line>
+    <line x1="192" y1="82" x2="197" y2="72">
+      <animate attributeName="opacity" dur="2.6s" repeatCount="indefinite" values="0.8;0;0.8" keyTimes="0;0.5;1"/>
+    </line>
+  </g>
+</svg>

@@ -26,9 +26,9 @@ export class WorkoutController {
     return this.workoutService.getCategories();
   }
 
-  // Exercises
+  // Exercises (all when categoryId is omitted — used by the custom workout builder)
   @Get('exercises')
-  async getExercisesByCategory(@Query('categoryId') categoryId: string) {
+  async getExercisesByCategory(@Query('categoryId') categoryId?: string) {
     return this.workoutService.getExercisesByCategory(categoryId);
   }
 

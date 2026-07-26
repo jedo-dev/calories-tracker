@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#113145"/>
+      <stop offset="1" stop-color="#0A202E"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="238" height="178" rx="20" fill="url(#bg)" stroke="rgba(160,200,220,0.18)" stroke-width="2"/>
+  <circle cx="120" cy="40" r="70" fill="#53D46B" opacity="0.06"/>
+  <line x1="60" y1="28" x2="180" y2="28" stroke="rgba(255,255,255,0.35)" stroke-width="5" stroke-linecap="round"/>
+  <line x1="66" y1="28" x2="60" y2="14" stroke="rgba(255,255,255,0.18)" stroke-width="4" stroke-linecap="round"/>
+  <line x1="174" y1="28" x2="180" y2="14" stroke="rgba(255,255,255,0.18)" stroke-width="4" stroke-linecap="round"/>
+  <g stroke="#53D46B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M95,28 L100,54 L108,76">
+      <animate attributeName="d" dur="2.2s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="M95,28 L100,54 L108,76;M95,28 L91,44 L108,52;M95,28 L100,54 L108,76"/>
+    </path>
+    <path d="M145,28 L140,54 L132,76">
+      <animate attributeName="d" dur="2.2s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="M145,28 L140,54 L132,76;M145,28 L149,44 L132,52;M145,28 L140,54 L132,76"/>
+    </path>
+    <path d="M108,76 L132,76">
+      <animate attributeName="d" dur="2.2s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="M108,76 L132,76;M108,52 L132,52;M108,76 L132,76"/>
+    </path>
+    <path d="M120,76 L120,112">
+      <animate attributeName="d" dur="2.2s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="M120,76 L120,112;M120,52 L120,88;M120,76 L120,112"/>
+    </path>
+    <path d="M120,112 L112,132 L116,152">
+      <animate attributeName="d" dur="2.2s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="M120,112 L112,132 L116,152;M120,88 L110,106 L118,124;M120,112 L112,132 L116,152"/>
+    </path>
+    <path d="M120,112 L128,132 L124,152">
+      <animate attributeName="d" dur="2.2s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="M120,112 L128,132 L124,152;M120,88 L130,106 L122,124;M120,112 L128,132 L124,152"/>
+    </path>
+  </g>
+  <circle r="11" fill="#53D46B" cx="120" cy="60">
+    <animate attributeName="cy" dur="2.2s" repeatCount="indefinite" calcMode="spline"
+      keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" values="60;37;60"/>
+  </circle>
+</svg>

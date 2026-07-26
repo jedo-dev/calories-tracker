@@ -27,8 +27,9 @@ export class WorkoutService {
   }
 
   // Exercises
-  async getExercisesByCategory(categoryId: string): Promise<ExerciseDocument[]> {
-    return this.exerciseModel.find({ categoryId: new Types.ObjectId(categoryId) }).exec();
+  async getExercisesByCategory(categoryId?: string): Promise<ExerciseDocument[]> {
+    const filter = categoryId ? { categoryId: new Types.ObjectId(categoryId) } : {};
+    return this.exerciseModel.find(filter).sort({ name: 1 }).exec();
   }
 
   async getExerciseById(id: string): Promise<ExerciseDocument> {

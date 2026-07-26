@@ -1,19 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
+import { IconButton } from '../ui/IconButton';
+import { BackIcon } from '../ui/icons';
+import {
+  workoutCardStyle,
+  workoutPageBackground,
+  formatDuration,
+  estimateExerciseKcal,
+  useUserWeight,
+} from './workoutShared';
 
 interface Exercise {
   _id: string;
   name: string;
   gifUrl: string;
   type: string;
+  metValue: number;
+  categoryId?: string;
   defaultSets: number;
   defaultReps: number;
   defaultDurationSec?: number;
@@ -41,25 +51,50 @@ interface WorkoutSession {
   finishedAt?: string;
 }
 
-function formatDuration(sec: number): string {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  if (m === 0) return `${s}${t('workout.sec')}`;
-  return `${m}${t('workout.min')} ${s > 0 ? s + t('workout.sec') : ''}`;
+function Thumb({ src, alt, size }: { src?: string; alt: string; size: number }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '12px',
+          background: 'rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: size / 2.5,
+          flexShrink: 0,
+        }}
+      >
+        💪
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setFailed(true)}
+      style={{ width: size, height: size, objectFit: 'cover', borderRadius: '12px', flexShrink: 0, border: '1px solid rgba(255,255,255,0.08)' }}
+    />
+  );
 }
 
 export function ActiveWorkoutPage() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
+  const userWeight = useUserWeight();
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [addingExercise, setAddingExercise] = useState<string | null>(null);
+  const [addingExercise, setAddingExercise] = useState<Exercise | null>(null);
 
-  // Form state for adding exercise
   const [formSets, setFormSets] = useState('');
   const [formReps, setFormReps] = useState('');
   const [formWeight, setFormWeight] = useState('');
@@ -84,33 +119,33 @@ export function ActiveWorkoutPage() {
     loadData();
   }, [sessionId]);
 
-  const loadExercisesForCategory = async () => {
-    if (!session?.categoryId) {
-      // If no category, load all exercises
-      try {
-        const catRes = await apiClient.get('/workouts/categories');
-        const allExercises: Exercise[] = [];
-        for (const cat of catRes.data) {
-          const exRes = await apiClient.get('/workouts/exercises', { params: { categoryId: cat._id } });
-          allExercises.push(...exRes.data);
-        }
-        setAvailableExercises(allExercises);
-      } catch (err) {
-        console.error('Failed to load exercises', err);
-      }
-    } else {
-      try {
-        const res = await apiClient.get('/workouts/exercises', { params: { categoryId: session.categoryId } });
-        setAvailableExercises(res.data);
-      } catch (err) {
-        console.error('Failed to load exercises', err);
-      }
+  const openExercisePicker = async () => {
+    try {
+      // one request for the whole catalog; filter client-side
+      const res = await apiClient.get('/workouts/exercises');
+      setAvailableExercises(res.data);
+      setPickerSearch('');
+      setShowExercisePicker(true);
+    } catch (err) {
+      console.error('Failed to load exercises', err);
     }
-    setShowExercisePicker(true);
   };
 
+  const filteredExercises = useMemo(() => {
+    const q = pickerSearch.trim().toLowerCase();
+    let list = availableExercises;
+    if (session?.categoryId && !q) {
+      // show the session's category first
+      list = [...list].sort((a, b) =>
+        (b.categoryId === session.categoryId ? 1 : 0) - (a.categoryId === session.categoryId ? 1 : 0),
+      );
+    }
+    if (!q) return list;
+    return list.filter((ex) => ex.name.toLowerCase().includes(q));
+  }, [availableExercises, pickerSearch, session?.categoryId]);
+
   const handleSelectExercise = (exercise: Exercise) => {
-    setAddingExercise(exercise._id);
+    setAddingExercise(exercise);
     setFormSets(exercise.defaultSets.toString());
     setFormReps(exercise.defaultReps.toString());
     setFormWeight('');
@@ -122,17 +157,13 @@ export function ActiveWorkoutPage() {
     if (!addingExercise) return;
     try {
       await apiClient.post(`/workouts/sessions/${sessionId}/exercises`, {
-        exerciseId: addingExercise,
+        exerciseId: addingExercise._id,
         sets: formSets ? parseInt(formSets, 10) : undefined,
         reps: formReps ? parseInt(formReps, 10) : undefined,
         weightKg: formWeight ? parseFloat(formWeight) : undefined,
         durationSec: formDuration ? parseInt(formDuration, 10) : undefined,
       });
       setAddingExercise(null);
-      setFormSets('');
-      setFormReps('');
-      setFormWeight('');
-      setFormDuration('');
       await loadData();
     } catch (err) {
       console.error('Failed to add exercise', err);
@@ -172,142 +203,89 @@ export function ActiveWorkoutPage() {
   if (!session) return <Text>{t('common.error')}</Text>;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
-      {/* Header with stats */}
-      <Card style={{ marginBottom: theme.spacing.lg, backgroundColor: theme.palette.primary + '10' }}>
-        <Text variant="h2" style={{ marginBottom: theme.spacing.sm, color: theme.palette.text }}>
+    <div
+      style={{
+        padding: '12px',
+        maxWidth: '520px',
+        margin: '0 auto',
+        minHeight: 'calc(100vh - 64px)',
+        paddingBottom: '100px',
+        background: workoutPageBackground(theme.palette.bg),
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+        <IconButton label={t('common.back')} onClick={() => navigate('/workouts')}>
+          <BackIcon />
+        </IconButton>
+        <Text variant="h2" bold style={{ fontSize: '20px', flex: 1 }}>
           {session.name || t('workout.activeWorkout')}
         </Text>
-        <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
-          <div>
-            <Text variant="h2" bold style={{ color: theme.palette.primary }}>
-              {Math.round(session.totalCaloriesBurned)}
-            </Text>
-            <Text variant="small" muted> {t('workout.totalCalories')}</Text>
-          </div>
-          <div>
-            <Text variant="h2" bold style={{ color: theme.palette.text }}>
-              {session.exerciseCount}
-            </Text>
-            <Text variant="small" muted> {t('workout.exerciseCount')}</Text>
-          </div>
-          <div>
-            <Text variant="h2" bold style={{ color: theme.palette.text }}>
-              {formatDuration(session.totalDurationSec)}
-            </Text>
-            <Text variant="small" muted> {t('workout.totalDuration')}</Text>
-          </div>
-        </div>
-      </Card>
+      </div>
 
-      {/* Exercise list */}
+      {/* Stats */}
+      <div style={{ ...workoutCardStyle, marginBottom: '12px', display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+        <div>
+          <span style={{ fontSize: '22px', fontWeight: 800, color: theme.palette.primary, display: 'block' }}>
+            {Math.round(session.totalCaloriesBurned)}
+          </span>
+          <Text variant="small" muted style={{ fontSize: '11px' }}>{t('workout.totalCalories')}</Text>
+        </div>
+        <div>
+          <span style={{ fontSize: '22px', fontWeight: 800, color: theme.palette.text, display: 'block' }}>
+            {session.exerciseCount}
+          </span>
+          <Text variant="small" muted style={{ fontSize: '11px' }}>{t('workout.exerciseCount')}</Text>
+        </div>
+        <div>
+          <span style={{ fontSize: '22px', fontWeight: 800, color: theme.palette.text, display: 'block' }}>
+            {formatDuration(session.totalDurationSec)}
+          </span>
+          <Text variant="small" muted style={{ fontSize: '11px' }}>{t('workout.totalDuration')}</Text>
+        </div>
+      </div>
+
+      {/* Exercise logs */}
       {logs.length === 0 && !addingExercise && !showExercisePicker ? (
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl, marginBottom: theme.spacing.lg }}>
+        <div style={{ ...workoutCardStyle, textAlign: 'center', padding: theme.spacing.xl, marginBottom: '12px' }}>
           <Text muted>{t('workout.noExercises')}</Text>
-        </Card>
+        </div>
       ) : (
         logs.map((log) => (
-          <Card key={log._id} style={{ marginBottom: theme.spacing.sm }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <Text bold style={{ color: theme.palette.text }}>{log.exerciseName}</Text>
-                <div style={{ display: 'flex', gap: theme.spacing.md, marginTop: theme.spacing.xs, flexWrap: 'wrap' }}>
-                  <Text variant="small" muted>
-                    {log.sets}×{log.reps}
-                    {log.weightKg ? ` × ${log.weightKg}кг` : ''}
-                  </Text>
-                  {log.durationSec > 0 && (
-                    <Text variant="small" muted>{formatDuration(log.durationSec)}</Text>
-                  )}
-                </div>
-              </div>
-              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-                <div>
-                  <Text bold style={{ color: theme.palette.primary }}>
-                    {Math.round(log.caloriesBurned)} ккал
-                  </Text>
-                </div>
-                <button
-                  onClick={() => handleRemoveExercise(log._id)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: theme.palette.danger,
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    padding: '4px',
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
+          <div key={log._id} style={{ ...workoutCardStyle, marginBottom: '10px', padding: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Thumb src={log.gifUrl} alt={log.exerciseName} size={52} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text bold style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {log.exerciseName}
+              </Text>
+              <Text variant="small" muted>
+                {log.sets}×{log.reps}
+                {log.weightKg ? ` × ${log.weightKg}кг` : ''}
+                {log.durationSec > 0 ? ` · ${formatDuration(log.durationSec)}` : ''}
+              </Text>
             </div>
-
-            {/* Show GIF thumbnail */}
-            {log.gifUrl && (
-              <div style={{ marginTop: theme.spacing.sm }}>
-                <img
-                  src={log.gifUrl}
-                  alt={log.exerciseName}
-                  style={{
-                    width: '80px',
-                    height: '80px',
-                    objectFit: 'cover',
-                    borderRadius: theme.radius.sm,
-                  }}
-                  onError={(e) => {
-                    const img = e.target as HTMLImageElement;
-                    img.style.display = 'none';
-                    const placeholder = document.createElement('div');
-                    placeholder.style.cssText = `width:80px;height:80px;border-radius:${theme.radius.sm};background:${theme.palette.surface};display:flex;align-items:center;justify-content:center;font-size:32px;`;
-                    placeholder.textContent = '💪';
-                    img.parentNode?.insertBefore(placeholder, img);
-                  }}
-                />
-              </div>
-            )}
-          </Card>
+            <span style={{ fontSize: '15px', fontWeight: 800, color: theme.palette.primary, whiteSpace: 'nowrap' }}>
+              {Math.round(log.caloriesBurned)} <span style={{ fontSize: '10px', color: theme.palette.textMuted, fontWeight: 600 }}>{t('workout.kcal')}</span>
+            </span>
+            <IconButton label={t('common.delete')} onClick={() => handleRemoveExercise(log._id)} danger size={30}>
+              <span style={{ fontSize: '14px', lineHeight: 1 }}>✕</span>
+            </IconButton>
+          </div>
         ))
       )}
 
       {/* Add exercise form */}
       {addingExercise && (
-        <Card style={{ marginBottom: theme.spacing.lg, border: `2px solid ${theme.palette.primary}` }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.md, color: theme.palette.text }}>
-            {t('workout.addExercise')}
-          </Text>
+        <div style={{ ...workoutCardStyle, marginBottom: '12px', border: `1px solid ${theme.palette.primary}66` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: theme.spacing.md }}>
+            <Thumb src={addingExercise.gifUrl} alt={addingExercise.name} size={44} />
+            <Text bold style={{ fontSize: '16px' }}>{addingExercise.name}</Text>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
-            <Input
-              label={t('workout.sets')}
-              type="number"
-              value={formSets}
-              onChange={(e) => setFormSets(e.target.value)}
-              min="1"
-            />
-            <Input
-              label={t('workout.reps')}
-              type="number"
-              value={formReps}
-              onChange={(e) => setFormReps(e.target.value)}
-              min="1"
-            />
-            <Input
-              label={t('workout.weight')}
-              type="number"
-              value={formWeight}
-              onChange={(e) => setFormWeight(e.target.value)}
-              min="0"
-              step="0.5"
-              placeholder="0"
-            />
-            <Input
-              label={t('workout.duration')}
-              type="number"
-              value={formDuration}
-              onChange={(e) => setFormDuration(e.target.value)}
-              min="0"
-              placeholder="0"
-            />
+            <Input label={t('workout.sets')} type="number" value={formSets} onChange={(e) => setFormSets(e.target.value)} min="1" />
+            <Input label={t('workout.reps')} type="number" value={formReps} onChange={(e) => setFormReps(e.target.value)} min="1" />
+            <Input label={t('workout.weight')} type="number" value={formWeight} onChange={(e) => setFormWeight(e.target.value)} min="0" step="0.5" placeholder="0" />
+            <Input label={t('workout.duration')} type="number" value={formDuration} onChange={(e) => setFormDuration(e.target.value)} min="0" placeholder="0" />
           </div>
           <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: theme.spacing.md }}>
             <Button variant="secondary" onClick={() => setAddingExercise(null)} style={{ flex: 1 }}>
@@ -317,68 +295,112 @@ export function ActiveWorkoutPage() {
               {t('common.add')}
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Exercise picker */}
       {showExercisePicker && (
-        <Card style={{ marginBottom: theme.spacing.lg, border: `2px solid ${theme.palette.primary}`, maxHeight: '400px', overflowY: 'auto' }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.md, color: theme.palette.text }}>
-            {t('workout.selectCategory')}
-          </Text>
-          {availableExercises.map((ex) => (
-            <div
-              key={ex._id}
-              onClick={() => handleSelectExercise(ex)}
-              style={{
-                padding: theme.spacing.sm,
-                cursor: 'pointer',
-                borderBottom: `1px solid ${theme.palette.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: theme.spacing.md,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = theme.palette.surface; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-            >
-              <img
-                src={ex.gifUrl}
-                alt={ex.name}
-                style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: theme.radius.sm }}
-                onError={(e) => {
-                  const img = e.target as HTMLImageElement;
-                  img.style.display = 'none';
-                  const placeholder = document.createElement('div');
-                  placeholder.style.cssText = `width:48px;height:48px;border-radius:${theme.radius.sm};background:${theme.palette.surface};display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;`;
-                  placeholder.textContent = '💪';
-                  img.parentNode?.insertBefore(placeholder, img);
+        <div style={{ ...workoutCardStyle, marginBottom: '12px', border: `1px solid ${theme.palette.primary}66` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
+            <Text variant="h2" bold style={{ fontSize: '17px' }}>{t('workout.addExercise')}</Text>
+            <IconButton label={t('common.cancel')} onClick={() => setShowExercisePicker(false)} size={30}>
+              <span style={{ fontSize: '14px', lineHeight: 1 }}>✕</span>
+            </IconButton>
+          </div>
+          <input
+            type="text"
+            placeholder={t('common.search')}
+            value={pickerSearch}
+            onChange={(e) => setPickerSearch(e.target.value)}
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              height: '40px',
+              padding: '0 12px',
+              borderRadius: '12px',
+              border: '1px solid rgba(160, 200, 220, 0.18)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: theme.palette.text,
+              fontSize: '14px',
+              outline: 'none',
+              marginBottom: theme.spacing.sm,
+            }}
+          />
+          <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+            {filteredExercises.map((ex) => (
+              <div
+                key={ex._id}
+                onClick={() => handleSelectExercise(ex)}
+                style={{
+                  padding: '8px 0',
+                  cursor: 'pointer',
+                  borderBottom: '1px solid rgba(255,255,255,0.07)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
                 }}
-              />
-              <div>
-                <Text bold style={{ color: theme.palette.text }}>{ex.name}</Text>
-                <Text variant="small" muted>{ex.defaultSets}×{ex.defaultReps}</Text>
+              >
+                <Thumb src={ex.gifUrl} alt={ex.name} size={40} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text bold style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</Text>
+                  <Text variant="small" muted>{ex.defaultSets}×{ex.defaultReps}</Text>
+                </div>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: theme.palette.primary, whiteSpace: 'nowrap' }}>
+                  ~{estimateExerciseKcal(ex, userWeight)} {t('workout.kcal')}
+                </span>
               </div>
-            </div>
-          ))}
-          <Button variant="secondary" onClick={() => setShowExercisePicker(false)} style={{ marginTop: theme.spacing.md }}>
-            {t('common.cancel')}
-          </Button>
-        </Card>
+            ))}
+            {filteredExercises.length === 0 && (
+              <Text variant="small" muted style={{ display: 'block', padding: '10px 0' }}>{t('workout.noExercises')}</Text>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Bottom actions */}
-      <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: theme.spacing.lg }}>
-        <Button variant="danger" onClick={handleCancel} style={{ flex: 1 }}>
+      {!showExercisePicker && !addingExercise && (
+        <button
+          type="button"
+          onClick={openExercisePicker}
+          style={{
+            width: '100%',
+            height: '46px',
+            borderRadius: '16px',
+            border: '1px dashed rgba(160, 200, 220, 0.35)',
+            background: 'rgba(255,255,255,0.04)',
+            color: theme.palette.text,
+            fontSize: '14px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            marginBottom: '12px',
+          }}
+        >
+          + {t('workout.addExercise')}
+        </button>
+      )}
+
+      <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+        <Button variant="danger" onClick={handleCancel} style={{ flex: 1, borderRadius: '16px' }}>
           {t('workout.cancelWorkout')}
         </Button>
-        {!showExercisePicker && !addingExercise && (
-          <Button variant="secondary" onClick={loadExercisesForCategory} style={{ flex: 1 }}>
-            + {t('workout.addExercise')}
-          </Button>
-        )}
-        <Button onClick={handleFinish} style={{ flex: 1 }}>
+        <button
+          type="button"
+          onClick={handleFinish}
+          style={{
+            flex: 2,
+            height: '48px',
+            borderRadius: '16px',
+            border: 'none',
+            background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+            color: '#07210f',
+            fontSize: '15px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
+          }}
+        >
           {t('workout.finishWorkout')}
-        </Button>
+        </button>
       </div>
     </div>
   );

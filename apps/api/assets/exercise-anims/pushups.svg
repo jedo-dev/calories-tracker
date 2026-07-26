@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#113145"/>
+      <stop offset="1" stop-color="#0A202E"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="238" height="178" rx="20" fill="url(#bg)" stroke="rgba(160,200,220,0.18)" stroke-width="2"/>
+  <circle cx="120" cy="30" r="70" fill="#53D46B" opacity="0.06"/>
+  <line x1="30" y1="152" x2="210" y2="152" stroke="rgba(255,255,255,0.14)" stroke-width="3" stroke-linecap="round"/>
+  <g stroke="#53D46B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M45,150 L95,118 L145,105">
+      <animate attributeName="d" dur="1.8s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="M45,150 L95,118 L145,105;M45,150 L97,140 L147,133;M45,150 L95,118 L145,105"/>
+    </path>
+    <path d="M145,105 L149,128 L152,150">
+      <animate attributeName="d" dur="1.8s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="M145,105 L149,128 L152,150;M147,133 L166,143 L152,150;M145,105 L149,128 L152,150"/>
+    </path>
+  </g>
+  <circle r="11" fill="#53D46B" cx="163" cy="96">
+    <animate attributeName="cx" dur="1.8s" repeatCount="indefinite" calcMode="spline"
+      keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" values="163;167;163"/>
+    <animate attributeName="cy" dur="1.8s" repeatCount="indefinite" calcMode="spline"
+      keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" values="96;125;96"/>
+  </circle>
+</svg>
