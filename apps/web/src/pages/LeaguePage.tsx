@@ -90,7 +90,7 @@ export function LeaguePage() {
   const leagueImg = data?.me?.league ? LEAGUE_IMAGES[data.me.league.name] || rankBronze : rankBronze;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
       <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
         <Button
           variant={mode === 'friends' ? 'primary' : 'secondary'}

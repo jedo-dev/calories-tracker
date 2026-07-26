@@ -152,7 +152,7 @@ export function WorkoutsPage() {
         padding: '12px',
         maxWidth: '520px',
         margin: '0 auto',
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: '100vh',
         paddingBottom: '100px',
         background: workoutPageBackground(theme.palette.bg),
       }}

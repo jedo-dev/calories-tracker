@@ -128,7 +128,7 @@ export function ProfilePage() {
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 64px)",
+        minHeight: "100vh",
         maxWidth: "520px",
         margin: "0 auto",
         padding: "12px 12px 12px",

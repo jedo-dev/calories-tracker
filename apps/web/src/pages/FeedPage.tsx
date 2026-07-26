@@ -136,7 +136,7 @@ export function FeedPage() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: 'calc(100vh - 64px)', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
+    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>{t('feed.title')}</Text>
 
       {error && (

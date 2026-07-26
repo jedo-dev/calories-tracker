@@ -1,5 +1,8 @@
+/* The bar itself is position:fixed; pages reserve space for it with their own
+   paddingBottom, so the in-flow wrapper must not add height (it caused a
+   permanent ~28px overflow scroll on every page). */
 .footerWrapper {
-  height: calc(92px + env(safe-area-inset-bottom, 0px));
+  height: 0;
 }
 
 .footer {

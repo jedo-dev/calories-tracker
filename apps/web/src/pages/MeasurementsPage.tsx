@@ -311,7 +311,7 @@ export function MeasurementsPage() {
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 64px)",
+        minHeight: "100vh",
         background:
           "radial-gradient(circle at top left, rgba(83, 212, 107, 0.12), transparent 26%), radial-gradient(circle at top right, rgba(0, 155, 255, 0.09), transparent 28%), linear-gradient(180deg, #020d17 0%, #061726 100%)",
         padding: "22px 20px 28px",

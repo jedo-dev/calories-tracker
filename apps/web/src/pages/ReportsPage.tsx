@@ -87,7 +87,7 @@ export function ReportsPage() {
   return (
     <div
       style={{
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: '100vh',
         maxWidth: '520px',
         margin: '0 auto',
         padding: '14px 14px 1px',

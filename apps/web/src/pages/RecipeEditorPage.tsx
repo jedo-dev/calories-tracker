@@ -414,7 +414,7 @@ export function RecipeEditorPage() {
           padding: '12px',
           maxWidth: '520px',
           margin: '0 auto',
-          minHeight: 'calc(100vh - 64px)',
+          minHeight: '100vh',
           background: `
             radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
             radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
@@ -449,7 +449,7 @@ export function RecipeEditorPage() {
         maxWidth: '520px',
         margin: '0 auto',
         paddingBottom: '100px',
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: '100vh',
         background: `
           radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
           radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),

@@ -6,7 +6,7 @@ const Loader = () => {
   return (
     <div
       style={{
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: '100vh',
         backgroundColor: theme.palette.bg,
         display: 'flex',
         flexDirection: 'column',

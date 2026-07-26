@@ -231,7 +231,7 @@ export function RecipeDetailPage() {
 
   if (error) {
     return (
-      <div style={{ padding: '12px', maxWidth: '520px', margin: '0 auto', paddingBottom: '100px', background: pageBackground(theme.palette.bg), minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ padding: '12px', maxWidth: '520px', margin: '0 auto', paddingBottom: '100px', background: pageBackground(theme.palette.bg), minHeight: '100vh' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: theme.spacing.lg }}>
           <IconButton label={t('common.back')} onClick={() => navigate('/recipes')}>
             <BackIcon />
@@ -273,7 +273,7 @@ export function RecipeDetailPage() {
   };
 
   return (
-    <div style={{ padding: '12px', maxWidth: '520px', margin: '0 auto', paddingBottom: '100px', background: pageBackground(theme.palette.bg), minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ padding: '12px', maxWidth: '520px', margin: '0 auto', paddingBottom: '100px', background: pageBackground(theme.palette.bg), minHeight: '100vh' }}>
       {/* Header / cover hero */}
       {recipe.photoUrl ? (
         <div style={{ marginBottom: '12px' }}>

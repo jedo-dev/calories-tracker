@@ -284,7 +284,7 @@ export function WeightHistoryPage() {
         padding: '12px',
         maxWidth: '520px',
         margin: '0 auto',
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: '100vh',
         paddingBottom: '100px',
         background: `
           radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
