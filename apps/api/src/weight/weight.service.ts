@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { WeightLog, WeightLogDocument } from './schemas/weight-log.schema';
@@ -12,9 +12,22 @@ export class WeightService {
   ) {}
 
   async log(userId: string, date: string, weightKg: number): Promise<WeightLogDocument> {
+    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date))) {
+      throw new BadRequestException('Некорректная дата');
+    }
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (date > today) {
+      throw new BadRequestException('Нельзя записать вес на будущую дату');
+    }
+    const weight = Number(weightKg);
+    if (!isFinite(weight) || weight < 20 || weight > 300) {
+      throw new BadRequestException('Вес должен быть от 20 до 300 кг');
+    }
+
     return this.weightModel.findOneAndUpdate(
       { userId: new Types.ObjectId(userId), date },
-      { weightKg },
+      { weightKg: Math.round(weight * 10) / 10 },
       { upsert: true, new: true },
     ).exec();
   }

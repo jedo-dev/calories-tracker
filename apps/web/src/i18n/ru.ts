@@ -295,6 +295,13 @@ export const ru = {
     noHistory: "Нет записей веса",
     kg: "кг",
     today: "Сегодня",
+    chartMonth: "Динамика за месяц",
+    errorNoWeight: "Введите вес",
+    errorWeightRange: "Вес должен быть от {min} до {max} кг",
+    errorFutureDate: "Нельзя записать вес на будущую дату",
+    confirmDelete: "Удалить запись веса?",
+    pagePrev: "Назад",
+    pageNext: "Вперёд",
   },
   // Templates
   template: {
