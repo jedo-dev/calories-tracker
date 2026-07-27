@@ -11,7 +11,8 @@
     "seed:workouts": "ts-node -r tsconfig-paths/register scripts/seed-workouts.ts",
     "seed:products-ru": "ts-node -r tsconfig-paths/register scripts/seed-products-ru.ts",
     "seed:recipes": "ts-node -r tsconfig-paths/register scripts/seed-recipes.ts",
-    "seed:exercise-anims": "ts-node -r tsconfig-paths/register scripts/upload-exercise-anims.ts"
+    "seed:exercise-anims": "ts-node -r tsconfig-paths/register scripts/upload-exercise-anims.ts",
+    "seed:wger-images": "ts-node -r tsconfig-paths/register scripts/mirror-wger-images.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1095.0",

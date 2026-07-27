@@ -5,10 +5,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductsDto } from './dto/query-products.dto';
 import { Product, ProductDocument } from './schemas/product.schema';
+import { OpenFoodFactsService } from './openfoodfacts.service';
 
 @Injectable()
 export class ProductsService {
-  constructor(@InjectModel(Product.name) private productModel: Model<ProductDocument>) {}
+  constructor(
+    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    private openFoodFacts: OpenFoodFactsService,
+  ) {}
 
   normalizeName(name: string): string {
     return name.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -52,12 +56,46 @@ export class ProductsService {
     return this.productModel.findById(id).exec();
   }
 
+  // Our catalog first; on a miss, ask Open Food Facts and cache the answer
+  // locally so the next scan of the same product works offline.
   async findByBarcode(barcode: string): Promise<any> {
-    const product = await this.productModel.findOne({ barcode }).exec();
-    if (!product) {
-      return { found: false, barcode };
+    const normalized = (barcode || '').trim();
+    if (!/^\d{6,14}$/.test(normalized)) {
+      return { found: false, barcode: normalized };
     }
-    return { found: true, ...product.toObject() };
+
+    const existing = await this.productModel.findOne({ barcode: normalized }).exec();
+    if (existing) {
+      return { found: true, ...existing.toObject(), origin: 'local' };
+    }
+
+    const off = await this.openFoodFacts.findByBarcode(normalized);
+    if (!off) {
+      return { found: false, barcode: normalized };
+    }
+
+    const saved = await this.productModel
+      .findOneAndUpdate(
+        { barcode: normalized },
+        {
+          $setOnInsert: {
+            name: off.name,
+            nameNormalized: this.normalizeName(off.name),
+            brand: off.brand,
+            barcode: normalized,
+            kcalPer100g: off.kcalPer100g,
+            proteinPer100g: off.proteinPer100g,
+            fatPer100g: off.fatPer100g,
+            carbPer100g: off.carbPer100g,
+            source: 'OFF',
+            sourceId: normalized,
+          },
+        },
+        { upsert: true, new: true },
+      )
+      .exec();
+
+    return { found: true, ...saved.toObject(), origin: 'openfoodfacts' };
   }
 
   async create(createProductDto: CreateProductDto, userId?: string): Promise<ProductDocument> {

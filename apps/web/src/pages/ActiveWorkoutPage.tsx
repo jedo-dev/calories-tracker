@@ -20,10 +20,14 @@ import {
 interface Exercise {
   _id: string;
   name: string;
+  description?: string;
   gifUrl: string;
   type: string;
   metValue: number;
   categoryId?: string;
+  muscleGroups?: string[];
+  difficulty?: string;
+  equipment?: string;
   defaultSets: number;
   defaultReps: number;
   defaultDurationSec?: number;
@@ -94,6 +98,7 @@ export function ActiveWorkoutPage() {
   const [pickerSearch, setPickerSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [addingExercise, setAddingExercise] = useState<Exercise | null>(null);
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
   const [formSets, setFormSets] = useState('');
   const [formReps, setFormReps] = useState('');
@@ -117,18 +122,22 @@ export function ActiveWorkoutPage() {
 
   useEffect(() => {
     loadData();
+    // full catalog: powers the picker and the expanded technique cards
+    apiClient
+      .get('/workouts/exercises')
+      .then((res) => setAvailableExercises(res.data))
+      .catch((err) => console.error('Failed to load exercises', err));
   }, [sessionId]);
 
-  const openExercisePicker = async () => {
-    try {
-      // one request for the whole catalog; filter client-side
-      const res = await apiClient.get('/workouts/exercises');
-      setAvailableExercises(res.data);
-      setPickerSearch('');
-      setShowExercisePicker(true);
-    } catch (err) {
-      console.error('Failed to load exercises', err);
-    }
+  const exerciseById = useMemo(() => {
+    const map = new Map<string, Exercise>();
+    availableExercises.forEach((ex) => map.set(ex._id, ex));
+    return map;
+  }, [availableExercises]);
+
+  const openExercisePicker = () => {
+    setPickerSearch('');
+    setShowExercisePicker(true);
   };
 
   const filteredExercises = useMemo(() => {
@@ -251,27 +260,112 @@ export function ActiveWorkoutPage() {
           <Text muted>{t('workout.noExercises')}</Text>
         </div>
       ) : (
-        logs.map((log) => (
-          <div key={log._id} style={{ ...workoutCardStyle, marginBottom: '10px', padding: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Thumb src={log.gifUrl} alt={log.exerciseName} size={52} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text bold style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {log.exerciseName}
-              </Text>
-              <Text variant="small" muted>
-                {log.sets}×{log.reps}
-                {log.weightKg ? ` × ${log.weightKg}кг` : ''}
-                {log.durationSec > 0 ? ` · ${formatDuration(log.durationSec)}` : ''}
-              </Text>
+        logs.map((log, index) => {
+          const detail = exerciseById.get(log.exerciseId);
+          const isExpanded = expandedLogId === log._id;
+          return (
+            <div key={log._id} style={{ ...workoutCardStyle, marginBottom: '10px', padding: '12px' }}>
+              <div
+                onClick={() => setExpandedLogId(isExpanded ? null : log._id)}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+              >
+                <span
+                  style={{
+                    width: '20px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    color: theme.palette.textMuted,
+                    flexShrink: 0,
+                    textAlign: 'center',
+                  }}
+                >
+                  {index + 1}
+                </span>
+                <Thumb src={log.gifUrl} alt={log.exerciseName} size={52} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text bold style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {log.exerciseName}
+                  </Text>
+                  <Text variant="small" muted>
+                    {log.sets}×{log.reps}
+                    {log.weightKg ? ` × ${log.weightKg}кг` : ''}
+                    {log.durationSec > 0 ? ` · ${formatDuration(log.durationSec)}` : ''}
+                  </Text>
+                </div>
+                <span style={{ fontSize: '15px', fontWeight: 800, color: theme.palette.primary, whiteSpace: 'nowrap' }}>
+                  {Math.round(log.caloriesBurned)} <span style={{ fontSize: '10px', color: theme.palette.textMuted, fontWeight: 600 }}>{t('workout.kcal')}</span>
+                </span>
+                <IconButton label={t('common.delete')} onClick={(e) => { e.stopPropagation(); handleRemoveExercise(log._id); }} danger size={30}>
+                  <span style={{ fontSize: '14px', lineHeight: 1 }}>✕</span>
+                </IconButton>
+              </div>
+
+              {/* Technique details */}
+              {isExpanded && (
+                <div style={{ marginTop: '12px' }}>
+                  {log.gifUrl && (
+                    <img
+                      src={log.gifUrl}
+                      alt={log.exerciseName}
+                      style={{
+                        width: '100%',
+                        maxHeight: '200px',
+                        objectFit: 'contain',
+                        borderRadius: '16px',
+                        display: 'block',
+                        background: 'rgba(3, 18, 28, 0.5)',
+                      }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
+                  {detail?.description ? (
+                    <Text variant="small" muted style={{ display: 'block', marginTop: '10px', lineHeight: 1.5 }}>
+                      {detail.description}
+                    </Text>
+                  ) : (
+                    <Text variant="small" muted style={{ display: 'block', marginTop: '10px' }}>
+                      {t('workout.noTechnique')}
+                    </Text>
+                  )}
+                  {detail && (detail.muscleGroups?.length || detail.equipment) && (
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                      {(detail.muscleGroups || []).map((m) => (
+                        <span
+                          key={m}
+                          style={{
+                            fontSize: '10px',
+                            padding: '3px 8px',
+                            borderRadius: '10px',
+                            background: 'rgba(255,255,255,0.06)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: theme.palette.textMuted,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {m}
+                        </span>
+                      ))}
+                      {detail.equipment && (
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            padding: '3px 8px',
+                            borderRadius: '10px',
+                            background: 'rgba(96,165,250,0.16)',
+                            color: '#7cb8ff',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {detail.equipment}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <span style={{ fontSize: '15px', fontWeight: 800, color: theme.palette.primary, whiteSpace: 'nowrap' }}>
-              {Math.round(log.caloriesBurned)} <span style={{ fontSize: '10px', color: theme.palette.textMuted, fontWeight: 600 }}>{t('workout.kcal')}</span>
-            </span>
-            <IconButton label={t('common.delete')} onClick={() => handleRemoveExercise(log._id)} danger size={30}>
-              <span style={{ fontSize: '14px', lineHeight: 1 }}>✕</span>
-            </IconButton>
-          </div>
-        ))
+          );
+        })
       )}
 
       {/* Add exercise form */}

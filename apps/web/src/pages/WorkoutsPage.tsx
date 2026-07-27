@@ -14,6 +14,7 @@ import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 import { workoutCardStyle, workoutPageBackground, formatDuration, formatDate } from './workoutShared';
+import { FLAT_BELLY_PROGRAM, WorkoutProgramDay } from './workoutPrograms';
 
 interface WorkoutCategory {
   _id: string;
@@ -93,6 +94,8 @@ export function WorkoutsPage() {
   const [tab, setTab] = useState<'categories' | 'history'>('categories');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [startingProgram, setStartingProgram] = useState<string | null>(null);
+  const [expandedProgram, setExpandedProgram] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -129,6 +132,41 @@ export function WorkoutsPage() {
       console.error('Failed to create custom workout', err);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleStartProgramDay = async (day: WorkoutProgramDay) => {
+    if (startingProgram) return;
+    setStartingProgram(day.key);
+    try {
+      const exRes = await apiClient.get('/workouts/exercises');
+      const byName = new Map<string, any>(exRes.data.map((e: any) => [e.name, e]));
+      const missing = day.exercises.filter((pe) => !byName.has(pe.name)).map((pe) => pe.name);
+      if (missing.length > 0) {
+        alert(`${t('workout.programMissingExercises')}: ${missing.join(', ')}`);
+      }
+      const sessionRes = await apiClient.post('/workouts/sessions', {
+        date: formatDate(new Date()),
+        name: day.title,
+      });
+      const sessionId = sessionRes.data._id;
+      await Promise.all(
+        day.exercises
+          .filter((pe) => byName.has(pe.name))
+          .map((pe) =>
+            apiClient.post(`/workouts/sessions/${sessionId}/exercises`, {
+              exerciseId: byName.get(pe.name)._id,
+              sets: pe.sets,
+              reps: pe.reps ?? 1,
+              durationSec: pe.durationSec,
+            }),
+          ),
+      );
+      navigate(`/workout/${sessionId}`);
+    } catch (err) {
+      console.error('Failed to start program day', err);
+    } finally {
+      setStartingProgram(null);
     }
   };
 
@@ -190,6 +228,92 @@ export function WorkoutsPage() {
           >
             + {t('workout.customWorkout')}
           </button>
+
+          {/* Program: flat belly */}
+          <div style={{ marginBottom: '14px' }}>
+            <Text variant="h2" bold style={{ marginBottom: '4px', fontSize: '18px' }}>{t('workout.programTitle')}</Text>
+            <Text variant="small" muted style={{ display: 'block', marginBottom: '8px' }}>{t('workout.programSubtitle')}</Text>
+            {FLAT_BELLY_PROGRAM.map((day) => {
+              const isExpanded = expandedProgram === day.key;
+              return (
+                <div key={day.key} style={{ ...workoutCardStyle, marginBottom: '10px', padding: '12px' }}>
+                  <div
+                    onClick={() => setExpandedProgram(isExpanded ? null : day.key)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+                  >
+                    <img
+                      src={day.cover}
+                      alt={day.title}
+                      style={{
+                        width: '84px',
+                        height: '63px',
+                        objectFit: 'cover',
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text bold style={{ display: 'block' }}>{day.title}</Text>
+                      <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
+                        {day.subtitle} · {day.exercises.length} {t('workout.exerciseCount').toLowerCase()}
+                      </Text>
+                    </div>
+                    <span
+                      style={{
+                        color: theme.palette.textMuted,
+                        fontSize: '12px',
+                        transform: isExpanded ? 'rotate(90deg)' : 'none',
+                        transition: 'transform 0.2s',
+                      }}
+                    >
+                      ▸
+                    </span>
+                  </div>
+                  {isExpanded && (
+                    <div style={{ marginTop: '10px' }}>
+                      {day.exercises.map((pe, i) => (
+                        <div
+                          key={pe.name}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '6px 0',
+                            borderBottom: i < day.exercises.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                          }}
+                        >
+                          <Text variant="small">{i + 1}. {pe.name}</Text>
+                          <Text variant="small" muted>
+                            {pe.durationSec ? `${pe.sets}×${pe.durationSec}с` : `${pe.sets}×${pe.reps}`}
+                          </Text>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleStartProgramDay(day)}
+                    disabled={startingProgram !== null}
+                    style={{
+                      width: '100%',
+                      marginTop: '10px',
+                      height: '40px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+                      color: '#07210f',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      opacity: startingProgram === null || startingProgram === day.key ? 1 : 0.5,
+                    }}
+                  >
+                    {startingProgram === day.key ? t('common.saving') : t('workout.startWorkout')}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
 
           {todaySessions.length > 0 && (
             <div style={{ marginBottom: '14px' }}>

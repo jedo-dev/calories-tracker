@@ -275,6 +275,17 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           >
             version: {__APP_VERSION__}
           </div>
+          <div
+            style={{
+              color: theme.palette.textMuted,
+              fontSize: '11px',
+              textAlign: 'center',
+              marginTop: '4px',
+              opacity: 0.7,
+            }}
+          >
+            Иллюстрации упражнений: wger.de (CC BY-SA)
+          </div>
         </div>
       </div>
     </BottomSheet>

@@ -9,6 +9,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
+import { BarcodeScanner } from '../ui/BarcodeScanner';
 
 interface Product {
   _id: string;
@@ -65,6 +66,8 @@ export function AddEntryPage() {
   const [barcodeSearching, setBarcodeSearching] = useState(false);
   const [barcodeNotFound, setBarcodeNotFound] = useState(false);
   const [notFoundBarcode, setNotFoundBarcode] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
+  const [foundInOff, setFoundInOff] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -130,18 +133,21 @@ export function AddEntryPage() {
     }
   };
 
-  const handleBarcodeSearch = async () => {
-    if (!barcodeInput.trim()) return;
+  const handleBarcodeSearch = async (code?: string) => {
+    const barcode = (code ?? barcodeInput).trim();
+    if (!barcode) return;
     setBarcodeSearching(true);
     setBarcodeNotFound(false);
     setNotFoundBarcode('');
+    setFoundInOff(false);
     setError(null);
 
     try {
-      const response = await apiClient.get(`/products/barcode/${barcodeInput.trim()}`);
+      const response = await apiClient.get(`/products/barcode/${barcode}`);
       const data = response.data;
 
       if (data.found) {
+        setFoundInOff(data.origin === 'openfoodfacts');
         setSelectedProduct({
           _id: data._id,
           name: data.name,
@@ -156,7 +162,7 @@ export function AddEntryPage() {
         setBarcodeNotFound(false);
       } else {
         setBarcodeNotFound(true);
-        setNotFoundBarcode(barcodeInput);
+        setNotFoundBarcode(barcode);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка поиска по штрихкоду');
@@ -286,28 +292,64 @@ export function AddEntryPage() {
 
       {/* Barcode Scanner Section */}
       <Card style={{ marginBottom: theme.spacing.md }}>
-        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>📷 Штрихкод</Text>
+        <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('barcode.title')}</Text>
+
+        <button
+          type="button"
+          onClick={() => setShowScanner(true)}
+          style={{
+            width: '100%',
+            height: '48px',
+            borderRadius: '16px',
+            border: 'none',
+            background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+            color: '#07210f',
+            fontSize: '15px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            marginBottom: theme.spacing.sm,
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" />
+            <path d="M7 8v8M10.5 8v8M14 8v8M17 8v8" />
+          </svg>
+          {t('barcode.scan')}
+        </button>
+
         <div style={{ display: 'flex', gap: theme.spacing.sm }}>
           <Input
             type="text"
-            placeholder="Введите штрихкод"
+            inputMode="numeric"
+            placeholder={t('barcode.placeholder')}
             value={barcodeInput}
             onChange={(e) => setBarcodeInput(e.target.value)}
             style={{ flex: 1 }}
           />
           <Button
-            onClick={handleBarcodeSearch}
+            onClick={() => handleBarcodeSearch()}
             disabled={barcodeSearching || !barcodeInput.trim()}
             style={{ minWidth: '100px' }}
           >
-            {barcodeSearching ? 'Поиск...' : 'Найти'}
+            {barcodeSearching ? t('barcode.searching') : t('barcode.search')}
           </Button>
         </div>
+
+        {foundInOff && (
+          <Text variant="small" muted style={{ display: 'block', marginTop: theme.spacing.sm }}>
+            {t('barcode.foundInOff')}
+          </Text>
+        )}
 
         {barcodeNotFound && (
           <div style={{ marginTop: theme.spacing.sm }}>
             <Text variant="small" muted>
-              Продукт со штрихкодом {notFoundBarcode} не найден
+              {t('barcode.notFound', { code: notFoundBarcode })}
             </Text>
             <Button
               variant="ghost"
@@ -315,11 +357,22 @@ export function AddEntryPage() {
               onClick={() => setShowCreateForm(true)}
               style={{ marginTop: theme.spacing.xs }}
             >
-              Создать продукт
+              {t('barcode.createProduct')}
             </Button>
           </div>
         )}
       </Card>
+
+      {showScanner && (
+        <BarcodeScanner
+          onClose={() => setShowScanner(false)}
+          onDetected={(code) => {
+            setShowScanner(false);
+            setBarcodeInput(code);
+            handleBarcodeSearch(code);
+          }}
+        />
+      )}
 
       {/* Create Product from Barcode Form */}
       {showCreateForm && barcodeNotFound && (
