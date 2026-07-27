@@ -452,7 +452,7 @@ export function TodayPage() {
   );
 
   if (loading)
-    return <div style={{ minHeight: "100vh", background: theme.palette.bg }} />;
+    return <div style={{ minHeight: "100vh", background: "#07111d" }} />;
   if (error) {
     return (
       <div style={{ padding: theme.spacing.lg }}>
@@ -471,8 +471,11 @@ export function TodayPage() {
         maxWidth: "600px",
         margin: "0 auto",
         paddingBottom: "120px",
-        background:
-          "radial-gradient(circle at top, #173A52 0%, #0D2231 52%, #081826 100%)"
+        background: `
+          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+        `
       }}
     >
       <div
