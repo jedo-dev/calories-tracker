@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api/client";
 import DeleteIcon from "../assets/DeleteIcon";
 import EditIcon from "../assets/EditIcon";
-import logo from "../assets/logo.png";
 import DayChanger from "../features/TodayComponents/DayChanger";
 import FoodList, { MealGroup } from "../features/TodayComponents/FoodList";
 import { t } from "../i18n";
@@ -274,7 +273,7 @@ function DashboardSlider({
             scrollSnapAlign: "start",
             display: "flex",
             justifyContent: "center",
-            marginTop: theme.spacing.lg,
+            marginTop: theme.spacing.lg
           }}
         >
           <div
@@ -484,9 +483,7 @@ export function TodayPage() {
           justifyContent: "center",
           marginBottom: theme.spacing.md
         }}
-      >
-        
-      </div>
+      ></div>
 
       <DayChanger
         setDate={setDate}
