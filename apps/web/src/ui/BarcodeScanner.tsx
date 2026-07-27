@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
-import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 
@@ -8,14 +6,6 @@ interface BarcodeScannerProps {
   onDetected: (code: string) => void;
   onClose: () => void;
 }
-
-const PRODUCT_FORMATS = [
-  BarcodeFormat.EAN_13,
-  BarcodeFormat.EAN_8,
-  BarcodeFormat.UPC_A,
-  BarcodeFormat.UPC_E,
-  BarcodeFormat.CODE_128,
-];
 
 // Chrome on Android (and thus the Telegram webview) ships a native detector;
 // everything else falls back to ZXing. Camera needs HTTPS or localhost.
@@ -67,8 +57,20 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
           return;
         }
 
+        // ZXing is only needed where the native detector is missing (iOS/Safari,
+        // desktop Firefox) — load it on demand to keep it out of the main bundle
+        const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([
+          import('@zxing/browser'),
+          import('@zxing/library'),
+        ]);
         const hints = new Map();
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, PRODUCT_FORMATS);
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.UPC_A,
+          BarcodeFormat.UPC_E,
+          BarcodeFormat.CODE_128,
+        ]);
         const reader = new BrowserMultiFormatReader(hints);
         zxingControls = await reader.decodeFromVideoElement(videoRef.current, (result) => {
           if (result) finish(result.getText());
