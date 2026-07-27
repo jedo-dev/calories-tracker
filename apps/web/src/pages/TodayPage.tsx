@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api/client";
 import DeleteIcon from "../assets/DeleteIcon";
@@ -144,6 +144,224 @@ function MacroBar({
   );
 }
 
+function CalorieCircle({
+  consumed,
+  target,
+  pct
+}: {
+  consumed: number;
+  target: number;
+  pct: number;
+}) {
+  const theme = useTheme();
+
+  const size = 116;
+  const stroke = 10;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const filled = Math.max(0, Math.min(1, pct));
+
+  const color =
+    pct > 1.1 ? theme.palette.danger : pct > 0.9 ? "#FFA500" : "#58D45D";
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: size,
+        height: size,
+        flexShrink: 0
+      }}
+    >
+      <svg width={size} height={size}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="rgba(255,255,255,0.08)"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={`${c * filled} ${c}`}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <Text bold style={{ fontSize: "22px", lineHeight: 1.1 }}>
+          {Math.round(consumed)}
+        </Text>
+        <Text variant="small" muted style={{ fontSize: "12px" }}>
+          из {Math.round(target)}
+        </Text>
+        <Text variant="small" muted style={{ fontSize: "12px" }}>
+          ккал
+        </Text>
+      </div>
+    </div>
+  );
+}
+
+function DashboardSlider({
+  dashboard
+}: {
+  dashboard: DashboardData & {
+    targets: NonNullable<DashboardData["targets"]>;
+    progress: NonNullable<DashboardData["progress"]>;
+  };
+}) {
+  const theme = useTheme();
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const slidesCount = 2;
+
+  useEffect(() => {
+    const container = sliderRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const index = Math.round(container.scrollLeft / container.clientWidth);
+      setSlideIndex(Math.max(0, Math.min(slidesCount - 1, index)));
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSlide = (index: number) => {
+    const container = sliderRef.current;
+    if (!container) return;
+    container.scrollTo({
+      left: index * container.clientWidth,
+      behavior: "smooth"
+    });
+  };
+
+  return (
+    <div style={{ display: "grid", gap: theme.spacing.sm }}>
+      <div
+        ref={sliderRef}
+        className="onboarding-slider"
+        style={{
+          display: "flex",
+          overflowX: "auto",
+          overflowY: "hidden",
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none"
+        }}
+      >
+        <div
+          style={{
+            minWidth: "100%",
+            flexShrink: 0,
+            scrollSnapAlign: "start",
+            display: "flex",
+            justifyContent: "center",
+            marginTop: theme.spacing.lg,
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+              width: "320px",
+              height: "180px"
+            }}
+          >
+            <DashboardRing
+              consumed={dashboard.consumed}
+              targets={dashboard.targets}
+              progress={dashboard.progress}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            minWidth: "100%",
+            flexShrink: 0,
+            scrollSnapAlign: "start",
+            display: "flex",
+            alignItems: "center",
+            gap: theme.spacing.md
+          }}
+        >
+          <CalorieCircle
+            consumed={dashboard.consumed.kcal}
+            target={dashboard.targets.kcalTarget}
+            pct={dashboard.progress.kcalPct}
+          />
+          <div style={{ display: "grid", gap: theme.spacing.md, flex: 1 }}>
+            <MacroBar
+              label="Белки"
+              value={dashboard.consumed.protein}
+              target={dashboard.targets.proteinTargetG}
+              pct={dashboard.progress.proteinPct}
+            />
+            <MacroBar
+              label="Жиры"
+              value={dashboard.consumed.fat}
+              target={dashboard.targets.fatTargetG}
+              pct={dashboard.progress.fatPct}
+            />
+            <MacroBar
+              label="Углеводы"
+              value={dashboard.consumed.carb}
+              target={dashboard.targets.carbTargetG}
+              pct={dashboard.progress.carbPct}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: theme.spacing.sm
+        }}
+      >
+        {Array.from({ length: slidesCount }).map((_, index) => (
+          <button
+            key={index}
+            onClick={() => scrollToSlide(index)}
+            aria-label={`Слайд ${index + 1}`}
+            style={{
+              width: slideIndex === index ? "24px" : "8px",
+              height: "8px",
+              borderRadius: "4px",
+              backgroundColor:
+                slideIndex === index
+                  ? theme.palette.primary
+                  : theme.palette.border,
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.3s",
+              padding: 0
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function TodayPage() {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -234,7 +452,7 @@ export function TodayPage() {
   );
 
   if (loading)
-    return <div style={{ minHeight: "100vh", background: theme.palette.bg }} />;
+    return <div style={{ minHeight: "100vh", background: "#07111d" }} />;
   if (error) {
     return (
       <div style={{ padding: theme.spacing.lg }}>
@@ -253,8 +471,11 @@ export function TodayPage() {
         maxWidth: "600px",
         margin: "0 auto",
         paddingBottom: "120px",
-        background:
-          "radial-gradient(circle at top, #173A52 0%, #0D2231 52%, #081826 100%)"
+        background: `
+          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+        `
       }}
     >
       <div
@@ -264,31 +485,7 @@ export function TodayPage() {
           marginBottom: theme.spacing.md
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: theme.spacing.sm
-          }}
-        >
-          <img
-            src={logo}
-            alt="FlareonFit"
-            style={{ width: "46px", height: "46px", objectFit: "contain" }}
-          />
-          <Text
-            variant="h1"
-            bold
-            style={{
-              fontSize: "34px",
-              lineHeight: 1,
-              letterSpacing: "-0.03em"
-            }}
-          >
-            <span style={{ color: theme.palette.text }}>Flareon</span>
-            <span style={{ color: theme.palette.primary }}>Fit</span>
-          </Text>
-        </div>
+        
       </div>
 
       <DayChanger
@@ -308,42 +505,13 @@ export function TodayPage() {
             boxShadow: "0 18px 36px rgba(0, 0, 0, 0.28)"
           }}
         >
-          <div style={{ display: "grid", gap: theme.spacing.md }}>
-            <div
-              style={{
-                position: "relative",
-                width: "320px",
-                height: "160px",
-                margin: "0 auto"
-              }}
-            >
-              <DashboardRing
-                consumed={dashboard.consumed}
-                targets={dashboard.targets}
-                progress={dashboard.progress}
-              />
-            </div>
-            <div style={{ display: "grid", gap: theme.spacing.md }}>
-              <MacroBar
-                label="Белки"
-                value={dashboard.consumed.protein}
-                target={dashboard.targets.proteinTargetG}
-                pct={dashboard.progress.proteinPct}
-              />
-              <MacroBar
-                label="Жиры"
-                value={dashboard.consumed.fat}
-                target={dashboard.targets.fatTargetG}
-                pct={dashboard.progress.fatPct}
-              />
-              <MacroBar
-                label="Углеводы"
-                value={dashboard.consumed.carb}
-                target={dashboard.targets.carbTargetG}
-                pct={dashboard.progress.carbPct}
-              />
-            </div>
-          </div>
+          <DashboardSlider
+            dashboard={{
+              ...dashboard,
+              targets: dashboard.targets,
+              progress: dashboard.progress
+            }}
+          />
         </Card>
       )}
 
