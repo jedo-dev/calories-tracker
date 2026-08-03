@@ -11,6 +11,9 @@ export class MealTemplate {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ enum: ['breakfast', 'lunch', 'dinner', 'snack', 'other'], default: 'other' })
+  mealType: string;
+
   @Prop({
     type: [{
       productId: { type: Types.ObjectId, ref: 'Product' },

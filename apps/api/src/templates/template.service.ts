@@ -7,18 +7,24 @@ import { MealTemplate, MealTemplateDocument } from './schemas/meal-template.sche
 export class TemplateService {
   constructor(@InjectModel(MealTemplate.name) private templateModel: Model<MealTemplateDocument>) {}
 
-  async create(userId: string, name: string, items: any[]): Promise<MealTemplateDocument> {
+  async create(userId: string, name: string, items: any[], mealType?: string): Promise<MealTemplateDocument> {
     const totalKcal = items.reduce((s, i) => s + (i.kcal || 0), 0);
     const template = new this.templateModel({
       userId: new Types.ObjectId(userId),
       name,
+      mealType: mealType || 'other',
       items,
       totalKcal: Math.round(totalKcal),
     });
     return template.save();
   }
 
-  async createFromEntries(userId: string, name: string, entries: any[]): Promise<MealTemplateDocument> {
+  async createFromEntries(
+    userId: string,
+    name: string,
+    entries: any[],
+    mealType?: string,
+  ): Promise<MealTemplateDocument> {
     const items = entries.map(e => ({
       productId: e.productId ? new Types.ObjectId(e.productId) : undefined,
       productName: e.productName,
@@ -26,7 +32,8 @@ export class TemplateService {
       kcal: e.kcal,
       kcalPer100g: e.kcalPer100g,
     }));
-    return this.create(userId, name, items);
+    // when saving a logged meal as a template, inherit the meal type of its entries
+    return this.create(userId, name, items, mealType || entries[0]?.mealType);
   }
 
   async list(userId: string): Promise<MealTemplateDocument[]> {

@@ -2,82 +2,43 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import emptyTemplates from '../assets/03_empty_states/empty_templates.jpg';
-import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
-import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-
-interface Product { _id: string; name: string; kcalPer100g: number; }
-interface TemplateItem { productId?: string; productName: string; grams: number; kcal: number; }
-interface Template { _id: string; name: string; items: TemplateItem[]; totalKcal: number; }
+import { ConfirmSheet } from '../widgets/workout/ConfirmSheet';
+import { TemplateCard, Template } from '../widgets/templates/TemplateCard';
+import { TemplateCreateCard } from '../widgets/templates/TemplateCreateCard';
 
 export function TemplatesPage() {
   const theme = useTheme();
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Create form state
   const [showCreate, setShowCreate] = useState(false);
-  const [tplName, setTplName] = useState('');
-  const [search, setSearch] = useState('');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [items, setItems] = useState<TemplateItem[]>([]);
-  const [grams, setGrams] = useState('');
-
-  const debouncedSearch = useDebounce(search, 300);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
-    setLoading(true);
     try {
       const res = await apiClient.get('/templates');
       setTemplates(res.data);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error('Failed to load templates', err);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    if (debouncedSearch.trim().length >= 2) {
-      apiClient.get('/products', { params: { search: debouncedSearch, limit: 10 } })
-        .then(r => setProducts(r.data))
-        .catch(() => setProducts([]));
-    } else {
-      setProducts([]);
-    }
-  }, [debouncedSearch]);
-
-  const handleAddProduct = (p: Product) => {
-    const g = grams ? parseFloat(grams) : 100;
-    const kcal = Math.round((p.kcalPer100g * g) / 100);
-    setItems([...items, { productId: p._id, productName: p.name, grams: g, kcal }]);
-    setSearch('');
-    setGrams('');
-    setProducts([]);
-  };
-
-  const handleRemoveItem = (idx: number) => {
-    setItems(items.filter((_, i) => i !== idx));
-  };
-
-  const handleSave = async () => {
-    if (!tplName.trim() || items.length === 0) return;
-    try {
-      await apiClient.post('/templates', { name: tplName, items });
-      setTplName('');
-      setItems([]);
-      setShowCreate(false);
-      await load();
-    } catch (err) { console.error(err); }
-  };
+    load();
+  }, []);
 
   const handleApply = async (tpl: Template) => {
+    setApplyingId(tpl._id);
+    setError(null);
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     try {
@@ -85,138 +46,115 @@ export function TemplatesPage() {
         if (item.productId) {
           await apiClient.post('/entries', {
             date: today,
-            mealType: 'other',
+            mealType: tpl.mealType || 'other',
             productId: item.productId,
             grams: item.grams,
           });
         }
       }
       navigate('/today');
-    } catch (err) { console.error(err); }
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || t('common.error'));
+      setApplyingId(null);
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Удалить шаблон?')) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await apiClient.delete(`/templates/${id}`);
-      await load();
-    } catch (err) { console.error(err); }
+      await apiClient.delete(`/templates/${deleteTarget._id}`);
+      setTemplates((prev) => prev.filter((tpl) => tpl._id !== deleteTarget._id));
+    } catch (err) {
+      console.error('Failed to delete template', err);
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   if (loading) return <Loader />;
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', paddingBottom: '100px', backgroundColor: theme.palette.bg }}>
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}> {t('template.title')}</Text>
+    <div
+      style={{
+        minHeight: '100vh',
+        maxWidth: '520px',
+        margin: '0 auto',
+        padding: '12px',
+        paddingBottom: '100px',
+        background: `
+          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+        `,
+      }}
+    >
+      <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
+        {t('template.title')}
+      </Text>
 
-      <Button onClick={() => setShowCreate(!showCreate)} style={{ marginBottom: theme.spacing.lg }}>
-        {showCreate ? t('common.cancel') : `+ ${t('template.save')}`}
-      </Button>
-
-      {/* Create form */}
-      {showCreate && (
-        <Card style={{ marginBottom: theme.spacing.lg, border: `2px solid ${theme.palette.primary}` }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.md }}>{t('template.save')}</Text>
-
-          <Input
-            label={t('template.name')}
-            value={tplName}
-            onChange={(e) => setTplName(e.target.value)}
-            placeholder="Завтрак / Обед / Перекус..."
-            style={{ marginBottom: theme.spacing.md }}
-          />
-
-          <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
-            <Input
-              type="text"
-              placeholder={t('entry.productSearch')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ flex: 2 }}
-            />
-            <Input
-              type="number"
-              placeholder={t('entry.grams')}
-              value={grams}
-              onChange={(e) => setGrams(e.target.value)}
-              min="1"
-              style={{ flex: 1 }}
-            />
-          </div>
-
-          {/* Search results */}
-          {products.length > 0 && (
-            <Card style={{ padding: 0, marginBottom: theme.spacing.sm, maxHeight: '150px', overflowY: 'auto' }}>
-              {products.map(p => (
-                <div
-                  key={p._id}
-                  onClick={() => handleAddProduct(p)}
-                  style={{ padding: theme.spacing.sm, cursor: 'pointer', borderBottom: `1px solid ${theme.palette.border}` }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.palette.surface}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <Text variant="small">{p.name} — {p.kcalPer100g} ккал/100г</Text>
-                </div>
-              ))}
-            </Card>
-          )}
-
-          {/* Added items */}
-          {items.length > 0 && (
-            <div style={{ marginBottom: theme.spacing.md }}>
-              {items.map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${theme.spacing.xs} 0`, borderBottom: `1px solid ${theme.palette.border}` }}>
-                  <Text variant="small">{item.productName} — {item.grams}г</Text>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-                    <Text variant="small" muted>{item.kcal} ккал</Text>
-                    <button onClick={() => handleRemoveItem(i)} style={{ background: 'none', border: 'none', color: theme.palette.danger, cursor: 'pointer', fontSize: '16px' }}>✕</button>
-                  </div>
-                </div>
-              ))}
-              <div style={{ textAlign: 'right', marginTop: theme.spacing.sm }}>
-                <Text bold style={{ color: theme.palette.primary }}>Итого: {items.reduce((s, i) => s + i.kcal, 0)} ккал</Text>
-              </div>
-            </div>
-          )}
-
-          <Button onClick={handleSave} disabled={!tplName.trim() || items.length === 0}>
-            {t('common.save')}
-          </Button>
-        </Card>
+      {!showCreate && (
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          style={{
+            width: '100%',
+            height: '48px',
+            borderRadius: '16px',
+            border: 'none',
+            background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+            color: '#07210f',
+            fontSize: '14px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
+            marginBottom: '12px',
+            fontFamily: 'inherit',
+          }}
+        >
+          + {t('template.create')}
+        </button>
       )}
 
-      {/* Templates list */}
-      {templates.length === 0 ? (
-        <EmptyState
-          image={emptyTemplates}
-          title={t('template.noTemplates')}
+      {showCreate && (
+        <TemplateCreateCard
+          onSaved={() => {
+            setShowCreate(false);
+            setLoading(true);
+            load();
+          }}
+          onCancel={() => setShowCreate(false)}
         />
+      )}
+
+      {error && (
+        <Text variant="small" style={{ display: 'block', color: '#ff8a8a', marginBottom: '10px' }}>
+          {error}
+        </Text>
+      )}
+
+      {templates.length === 0 && !showCreate ? (
+        <EmptyState image={emptyTemplates} title={t('template.noTemplates')} description={t('template.noTemplatesDesc')} />
       ) : (
         templates.map((tpl) => (
-          <Card key={tpl._id} style={{ marginBottom: theme.spacing.md }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
-              <Text bold style={{ fontSize: '16px' }}>{tpl.name}</Text>
-              <Text bold style={{ color: theme.palette.primary }}>{tpl.totalKcal} ккал</Text>
-            </div>
-            <div style={{ marginBottom: theme.spacing.sm }}>
-              {tpl.items.map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: `${theme.spacing.xs} 0` }}>
-                  <Text variant="small">{item.productName}</Text>
-                    <Text variant="small" muted>{item.grams}г · {Math.round(item.kcal)} ккал</Text>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-              <Button size="sm" onClick={() => handleApply(tpl)} style={{ flex: 1 }}>
-                {t('template.apply')}
-              </Button>
-              <Button variant="danger" size="sm" onClick={() => handleDelete(tpl._id)} style={{ width: 'auto', minWidth: '40px' }}>
-                ✕
-              </Button>
-            </div>
-          </Card>
+          <TemplateCard
+            key={tpl._id}
+            template={tpl}
+            applying={applyingId === tpl._id}
+            onApply={() => handleApply(tpl)}
+            onDelete={() => setDeleteTarget(tpl)}
+          />
         ))
       )}
+
+      <ConfirmSheet
+        isOpen={deleteTarget !== null}
+        title={t('template.confirmDelete')}
+        description={deleteTarget ? `${deleteTarget.name}. ${t('template.confirmDeleteDesc')}` : undefined}
+        confirmLabel={t('common.delete')}
+        danger
+        onConfirm={handleDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

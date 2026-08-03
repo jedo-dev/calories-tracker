@@ -13,13 +13,19 @@ export class TemplateController {
   }
 
   @Post()
-  async create(@Body() body: { name: string; items: any[] }, @Request() req: any) {
-    return this.templateService.create(req.user.id, body.name, body.items);
+  async create(
+    @Body() body: { name: string; items: any[]; mealType?: string },
+    @Request() req: any,
+  ) {
+    return this.templateService.create(req.user.id, body.name, body.items, body.mealType);
   }
 
   @Post('from-entries')
-  async createFromEntries(@Body() body: { name: string; entries: any[] }, @Request() req: any) {
-    return this.templateService.createFromEntries(req.user.id, body.name, body.entries);
+  async createFromEntries(
+    @Body() body: { name: string; entries: any[]; mealType?: string },
+    @Request() req: any,
+  ) {
+    return this.templateService.createFromEntries(req.user.id, body.name, body.entries, body.mealType);
   }
 
   @Delete(':id')

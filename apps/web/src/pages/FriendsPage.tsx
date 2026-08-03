@@ -2,85 +2,47 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import emptyFriends from '../assets/03_empty_states/empty_friends.png';
-import rankBronze from '../assets/07_achievements/rank_bronze.jpg';
-import rankSilver from '../assets/07_achievements/rank_silver.jpg';
-import rankGold from '../assets/07_achievements/rank_gold.jpg';
-import rankDiamond from '../assets/07_achievements/rank_diamond.jpg';
 import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
-import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-
-const LEAGUE_IMAGES: Record<string, string> = {
-  Bronze: rankBronze,
-  Silver: rankSilver,
-  Gold: rankGold,
-  Diamond: rankDiamond,
-};
-
-interface User {
-  id: string;
-  username?: string;
-  displayName: string;
-  avatarEmoji: string;
-  isFollowing?: boolean;
-  xpWeek?: number;
-  currentStreak?: number;
-  league?: { name: string; color: string };
-}
+import { FriendsTabs } from '../widgets/friends/FriendsTabs';
+import { FriendsSearchBar } from '../widgets/friends/FriendsSearchBar';
+import { FriendUserCard } from '../widgets/friends/FriendUserCard';
+import type { FriendUser, FriendsTab } from '../widgets/friends/types';
 
 export function FriendsPage() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'search' | 'following' | 'followers'>('search');
+  const [tab, setTab] = useState<FriendsTab>('search');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [following, setFollowing] = useState<User[]>([]);
-  const [followers, setFollowers] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<FriendUser[]>([]);
+  const [following, setFollowing] = useState<FriendUser[] | null>(null);
+  const [followers, setFollowers] = useState<FriendUser[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  const loadFollowing = async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get('/friends/following');
-      setFollowing(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || t('common.error'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadFollowers = async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get('/friends/followers');
-      setFollowers(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || t('common.error'));
-    } finally {
-      setLoading(false);
-    }
+  // counts for the header pills — loaded once, kept in sync with follow actions
+  const loadLists = async () => {
+    const [followingRes, followersRes] = await Promise.all([
+      apiClient.get('/friends/following').catch(() => null),
+      apiClient.get('/friends/followers').catch(() => null),
+    ]);
+    if (followingRes) setFollowing(followingRes.data);
+    if (followersRes) setFollowers(followersRes.data);
   };
 
   useEffect(() => {
-    if (tab === 'following') {
-      loadFollowing();
-    } else if (tab === 'followers') {
-      loadFollowers();
-    }
-  }, [tab]);
+    loadLists();
+  }, []);
 
   useEffect(() => {
-    if (debouncedSearch.trim() && debouncedSearch.length >= 2) {
+    if (debouncedSearch.trim().length >= 2) {
       searchUsers();
     } else {
       setSearchResults([]);
@@ -89,6 +51,7 @@ export function FriendsPage() {
 
   const searchUsers = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await apiClient.get('/users/search', {
         params: { query: debouncedSearch, limit: 20 },
@@ -102,165 +65,141 @@ export function FriendsPage() {
   };
 
   const handleFollow = async (userId: string) => {
+    setBusyUserId(userId);
+    setError(null);
     try {
       await apiClient.post(`/friends/follow/${userId}`);
-      if (tab === 'search') {
-        searchUsers();
-      } else if (tab === 'following') {
-        loadFollowing();
-      }
+      setSearchResults((prev) => prev.map((u) => (u.id === userId ? { ...u, isFollowing: true } : u)));
+      await loadLists();
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || t('common.error'));
+      setError(err.response?.data?.message || err.message || t('common.error'));
+    } finally {
+      setBusyUserId(null);
     }
   };
 
   const handleUnfollow = async (userId: string) => {
+    setBusyUserId(userId);
+    setError(null);
     try {
       await apiClient.delete(`/friends/follow/${userId}`);
-      if (tab === 'search') {
-        searchUsers();
-      } else if (tab === 'following') {
-        loadFollowing();
-      }
+      setSearchResults((prev) => prev.map((u) => (u.id === userId ? { ...u, isFollowing: false } : u)));
+      await loadLists();
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || t('common.error'));
+      setError(err.response?.data?.message || err.message || t('common.error'));
+    } finally {
+      setBusyUserId(null);
     }
   };
 
-  const renderUserCard = (user: User) => {
-    const leagueImg = user.league ? LEAGUE_IMAGES[user.league.name] || rankBronze : null;
-    return (
-      <Card key={user.id} style={{ marginBottom: theme.spacing.sm, cursor: 'pointer' }} onClick={() => navigate(`/users/${user.id}`)}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
-          <div style={{ fontSize: '28px', flexShrink: 0 }}>{user.avatarEmoji}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs }}>
-              <Text bold style={{ color: theme.palette.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{user.displayName}</Text>
-              {leagueImg && (
-                <img src={leagueImg} alt={user.league!.name} style={{ width: '16px', height: '16px', objectFit: 'contain', flexShrink: 0 }} loading="lazy" />
-              )}
-            </div>
-            {user.username && (
-              <Text variant="small" muted style={{ fontSize: '12px' }}>@{user.username}</Text>
-            )}
-            <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: '2px', flexWrap: 'wrap' }}>
-              {user.xpWeek !== undefined && (
-                <Text variant="small" muted>{t('friends.xpWeek', { xp: user.xpWeek })}</Text>
-              )}
-              {user.currentStreak !== undefined && user.currentStreak > 0 && (
-                <Text variant="small" muted>{t('friends.streak', { count: user.currentStreak })} </Text>
-              )}
-            </div>
-          </div>
-          {tab === 'search' && (
-            <Button
-              variant={user.isFollowing ? 'secondary' : 'primary'}
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); user.isFollowing ? handleUnfollow(user.id) : handleFollow(user.id); }}
-              style={{ flexShrink: 0, width: 'auto' }}
-            >
-              {user.isFollowing ? t('friends.unfollow') : t('friends.follow')}
-            </Button>
-          )}
-          {(tab === 'following' || tab === 'followers') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); handleUnfollow(user.id); }}
-              style={{ flexShrink: 0, width: 'auto' }}
-            >
-              {t('friends.unfollow')}
-            </Button>
-          )}
-        </div>
-      </Card>
-    );
-  };
+  const renderCard = (user: FriendUser, action: 'toggle' | 'unfollow') => (
+    <FriendUserCard
+      key={user.id}
+      user={user}
+      action={action}
+      busy={busyUserId === user.id}
+      onOpen={() => navigate(`/users/${user.id}`)}
+      onFollow={() => handleFollow(user.id)}
+      onUnfollow={() => handleUnfollow(user.id)}
+    />
+  );
 
-  const renderUserList = (users: User[], emptyTitle: string, emptyDesc?: string, showCta?: boolean) => {
+  const renderList = (
+    users: FriendUser[] | null,
+    action: 'toggle' | 'unfollow',
+    emptyTitle: string,
+    emptyDesc?: string,
+    showCta?: boolean,
+  ) => {
+    if (users === null) return <Loader />;
     if (users.length === 0) {
       return (
         <EmptyState
           image={emptyFriends}
           title={emptyTitle}
           description={emptyDesc}
-          action={showCta ? (
-            <Button onClick={() => { setTab('search'); setSearchQuery(''); }}>{t('friends.findUsers')}</Button>
-          ) : undefined}
+          action={
+            showCta ? (
+              <button
+                type="button"
+                onClick={() => setTab('search')}
+                style={{
+                  height: '46px',
+                  padding: '0 20px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+                  color: '#07210f',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {t('friends.findUsers')}
+              </button>
+            ) : undefined
+          }
         />
       );
     }
-
-    return users.map(renderUserCard);
+    return users.map((u) => renderCard(u, action));
   };
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>{t('friends.title')}</Text>
+    <div
+      style={{
+        minHeight: '100vh',
+        maxWidth: '520px',
+        margin: '0 auto',
+        padding: '12px',
+        paddingBottom: '100px',
+        background: `
+          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+        `,
+      }}
+    >
+      <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
+        {t('friends.title')}
+      </Text>
 
-      <div style={{ display: 'flex', gap: theme.spacing.xs, marginBottom: theme.spacing.lg, overflowX: 'auto' }}>
-        {[
-          { key: 'search', label: t('friends.search') },
-          { key: 'following', label: t('friends.following') },
-          { key: 'followers', label: t('friends.followers') },
-        ].map(item => (
-          <Button
-            key={item.key}
-            variant={tab === item.key ? 'primary' : 'secondary'}
-            onClick={() => setTab(item.key as any)}
-            style={{ flex: '1 0 0', whiteSpace: 'nowrap', fontSize: '13px', padding: `${theme.spacing.sm} ${theme.spacing.xs}` }}
-          >
-            {item.label}
-          </Button>
-        ))}
-      </div>
-
-      {tab === 'search' && (
-        <div style={{ marginBottom: theme.spacing.lg }}>
-          <Input
-            type="text"
-            label={t('friends.searchUsers')}
-            placeholder={t('friends.searchPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      )}
-
-      {loading && <Loader />}
+      <FriendsTabs
+        tab={tab}
+        onChange={setTab}
+        followingCount={following?.length ?? null}
+        followersCount={followers?.length ?? null}
+      />
 
       {error && (
-        <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.danger + '20' }}>
-          <Text style={{ color: theme.palette.danger }}>{error}</Text>
-        </Card>
+        <Text variant="small" style={{ display: 'block', color: '#ff8a8a', marginBottom: '10px' }}>
+          {error}
+        </Text>
       )}
 
-      {!loading && (
+      {tab === 'search' && (
         <>
-          {tab === 'search' && (
-            searchQuery.length === 0 ? (
-              <EmptyState
-                image={emptyFriends}
-                title={t('friends.searchHint')}
-                description={t('friends.searchHintDesc')}
-              />
-            ) : searchQuery.length === 1 ? (
-              <EmptyState
-                title={t('friends.searchMinChars')}
-              />
-            ) : searchResults.length === 0 && debouncedSearch.trim().length >= 2 ? (
-              <EmptyState
-                title={t('friends.noResults')}
-                description={t('friends.noResultsDesc')}
-              />
-            ) : (
-              searchResults.map(renderUserCard)
-            )
+          <FriendsSearchBar value={searchQuery} onChange={setSearchQuery} />
+          {loading ? (
+            <Loader />
+          ) : searchQuery.trim().length === 0 ? (
+            <EmptyState image={emptyFriends} title={t('friends.searchHint')} description={t('friends.searchHintDesc')} />
+          ) : searchQuery.trim().length === 1 ? (
+            <EmptyState title={t('friends.searchMinChars')} />
+          ) : searchResults.length === 0 && debouncedSearch.trim().length >= 2 ? (
+            <EmptyState title={t('friends.noResults')} description={t('friends.noResultsDesc')} />
+          ) : (
+            searchResults.map((u) => renderCard(u, 'toggle'))
           )}
-          {tab === 'following' && renderUserList(following, t('friends.noFollowing'), t('friends.noFollowingDesc'), true)}
-          {tab === 'followers' && renderUserList(followers, t('friends.noFollowers'), t('friends.noFollowersDesc'))}
         </>
       )}
+
+      {tab === 'following' &&
+        renderList(following, 'unfollow', t('friends.noFollowing'), t('friends.noFollowingDesc'), true)}
+      {tab === 'followers' &&
+        renderList(followers, 'toggle', t('friends.noFollowers'), t('friends.noFollowersDesc'))}
     </div>
   );
 }
