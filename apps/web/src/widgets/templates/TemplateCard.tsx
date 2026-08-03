@@ -80,7 +80,7 @@ export function TemplateCard({ template, applying, onApply, onDelete }: Template
           </div>
         </div>
         <span style={{ fontSize: '17px', fontWeight: 800, color: theme.palette.primary, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          {template.totalKcal} <span style={{ fontSize: '10px', color: theme.palette.textMuted, fontWeight: 600 }}>ккал</span>
+          {Math.round(template.totalKcal)} <span style={{ fontSize: '10px', color: theme.palette.textMuted, fontWeight: 600 }}>ккал</span>
         </span>
       </div>
 

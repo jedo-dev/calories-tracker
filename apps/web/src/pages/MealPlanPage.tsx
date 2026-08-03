@@ -1,77 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
-import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
 import { useTheme } from '../theme/useTheme';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { Input } from '../ui/Input';
-import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
-
-interface PlanItem {
-  sourceType: 'recipe' | 'product';
-  sourceId: string;
-  name: string;
-  grams: number;
-  kcal: number;
-  protein: number;
-  fat: number;
-  carb: number;
-  photoUrl?: string;
-  authorName?: string;
-}
-
-interface PlanMeal {
-  mealType: string;
-  title: string;
-  items: PlanItem[];
-  totalKcal: number;
-  totalProtein: number;
-  totalFat: number;
-  totalCarb: number;
-}
-
-interface PlanDay {
-  date: string;
-  meals: PlanMeal[];
-  totalKcal: number;
-  totalProtein: number;
-  totalFat: number;
-  totalCarb: number;
-}
-
-interface MealPlan {
-  _id: string;
-  dateFrom: string;
-  dateTo: string;
-  mode: 'day' | 'week';
-  status: 'draft' | 'applied' | 'archived';
-  title?: string;
-  settings: {
-    kcalTarget: number;
-    proteinTargetG: number;
-    fatTargetG: number;
-    carbTargetG: number;
-    mealCount: number;
-    includePublicRecipes: boolean;
-    preferQuick: boolean;
-    excludedTags: string[];
-    excludedProductNames: string[];
-    goal: string;
-    considerEaten: boolean;
-  };
-  days: PlanDay[];
-  score: number;
-  explanation: string[];
-}
-
-const formatDateRu = (dateStr: string): string => {
-  const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-  const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-  const d = new Date(dateStr + 'T00:00:00Z');
-  return `${days[d.getUTCDay()]}, ${d.getUTCDate()} ${months[d.getUTCMonth()]}`;
-};
+import { PlanSettingsCard } from '../widgets/mealPlan/PlanSettingsCard';
+import { PlanDayCard } from '../widgets/mealPlan/PlanDayCard';
+import { PlanMealCard } from '../widgets/mealPlan/PlanMealCard';
+import { PlanHistoryList } from '../widgets/mealPlan/PlanHistoryList';
+import { planCardStyle, formatDateRu, MealPlan } from '../widgets/mealPlan/types';
 
 export function MealPlanPage() {
   const theme = useTheme();
@@ -91,26 +27,21 @@ export function MealPlanPage() {
   const [generating, setGenerating] = useState(false);
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [hasProfile, setHasProfile] = useState(true);
   const [selectedDay, setSelectedDay] = useState(0);
 
   useEffect(() => {
     const consider = searchParams.get('considerEaten');
     if (consider === 'true') setConsiderEaten(true);
-    checkProfile();
+    apiClient
+      .get('/profile')
+      .then((res) => {
+        if (!res.data.profile?.weightKg || !res.data.profile?.heightCm) setHasProfile(false);
+      })
+      .catch(() => setHasProfile(false));
     loadHistory();
   }, []);
-
-  const checkProfile = async () => {
-    try {
-      const res = await apiClient.get('/profile');
-      if (!res.data.profile?.weightKg || !res.data.profile?.heightCm) {
-        setHasProfile(false);
-      }
-    } catch {
-      setHasProfile(false);
-    }
-  };
 
   const loadHistory = async () => {
     try {
@@ -124,17 +55,12 @@ export function MealPlanPage() {
   const handleGenerate = async () => {
     setGenerating(true);
     setError(null);
+    setNotice(null);
     setPlan(null);
     try {
-      const payload: any = {
-        mode,
-        mealCount,
-        includePublicRecipes: includePublic,
-        considerEaten,
-        preferQuick,
-      };
+      const payload: any = { mode, mealCount, includePublicRecipes: includePublic, considerEaten, preferQuick };
       if (excludedTags.trim()) {
-        payload.excludedTags = excludedTags.split(',').map(s => s.trim()).filter(Boolean);
+        payload.excludedTags = excludedTags.split(',').map((s) => s.trim()).filter(Boolean);
       }
       const res = await apiClient.post('/meal-plans/generate', payload);
       setPlan(res.data);
@@ -150,6 +76,7 @@ export function MealPlanPage() {
   const handleApply = async () => {
     if (!plan) return;
     setApplying(true);
+    setError(null);
     try {
       await apiClient.post(`/meal-plans/${plan._id}/apply`);
       setPlan({ ...plan, status: 'applied' });
@@ -172,11 +99,12 @@ export function MealPlanPage() {
     }
   };
 
-  const handleReplaceItem = async (dayIdx: number, mealIdx: number, itemIdx: number) => {
+  const handleReplaceItem = async (mealIdx: number, itemIdx: number) => {
     if (!plan) return;
+    setError(null);
     try {
       const res = await apiClient.post(`/meal-plans/${plan._id}/replace-item`, {
-        dayIndex: dayIdx,
+        dayIndex: selectedDay,
         mealIndex: mealIdx,
         itemIndex: itemIdx,
       });
@@ -188,9 +116,12 @@ export function MealPlanPage() {
 
   const handleSaveTemplate = async () => {
     if (!plan) return;
+    setError(null);
     try {
-      await apiClient.post(`/meal-plans/${plan._id}/save-template`, { dayIndex: selectedDay });
-      alert('Шаблон сохранён');
+      const res = await apiClient.post(`/meal-plans/${plan._id}/save-template`, { dayIndex: selectedDay });
+      const count = Array.isArray(res.data) ? res.data.length : 1;
+      setNotice(`Сохранено шаблонов: ${count} (по одному на приём пищи) — они на странице «Шаблоны»`);
+      setTimeout(() => setNotice(null), 4000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка сохранения шаблона');
     }
@@ -207,22 +138,63 @@ export function MealPlanPage() {
     }
   };
 
+  const pageStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    maxWidth: '520px',
+    margin: '0 auto',
+    padding: '12px',
+    paddingBottom: '100px',
+    background: `
+      radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+      radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+      linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+    `,
+  };
+
+  const ghostBtn: React.CSSProperties = {
+    padding: '8px 12px',
+    borderRadius: '12px',
+    border: '1px solid rgba(160, 200, 220, 0.24)',
+    background: 'rgba(255,255,255,0.06)',
+    color: theme.palette.text,
+    fontSize: '12px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  };
+
+  const primaryBtn = (disabled: boolean): React.CSSProperties => ({
+    width: '100%',
+    height: '50px',
+    borderRadius: '16px',
+    border: 'none',
+    background: disabled
+      ? 'rgba(255,255,255,0.08)'
+      : 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+    color: disabled ? theme.palette.textMuted : '#07210f',
+    fontSize: '14px',
+    fontWeight: 700,
+    cursor: disabled ? 'default' : 'pointer',
+    boxShadow: disabled ? 'none' : '0 14px 26px rgba(83, 212, 107, 0.22)',
+    fontFamily: 'inherit',
+  });
+
   if (!hasProfile) {
     return (
-      <div style={{ padding: theme.spacing.lg, paddingBottom: '100px' }}>
-        <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}> План питания</Text>
-        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-          <div style={{ marginBottom: theme.spacing.md, display: 'flex', justifyContent: 'center' }}>
-            <SectionIcon src={badgeCalorieMaster} alt="" size={48} />
-          </div>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>Заполните профиль</Text>
-          <Text muted style={{ marginBottom: theme.spacing.lg, display: 'block' }}>
+      <div style={pageStyle}>
+        <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
+          План питания
+        </Text>
+        <div style={{ ...planCardStyle, textAlign: 'center', padding: '26px 16px' }}>
+          <div style={{ fontSize: '44px', marginBottom: '8px' }}>📋</div>
+          <Text variant="h2" bold style={{ display: 'block', marginBottom: '6px' }}>Заполните профиль</Text>
+          <Text variant="small" muted style={{ display: 'block', marginBottom: '16px', lineHeight: 1.5 }}>
             Для составления плана питания нужно указать вес, рост, возраст и цель
           </Text>
-          <Button onClick={() => navigate('/profile')}>
+          <button type="button" onClick={() => navigate('/profile')} style={{ ...primaryBtn(false), maxWidth: '260px' }}>
             Перейти в профиль
-          </Button>
-        </Card>
+          </button>
+        </div>
       </div>
     );
   }
@@ -230,319 +202,136 @@ export function MealPlanPage() {
   const currentDay = plan?.days[selectedDay];
 
   return (
-    <div style={{ padding: theme.spacing.lg, paddingBottom: '100px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg }}>
-        <Text variant="h1"> План питания</Text>
-        <Button variant="ghost" size="sm" onClick={() => setShowHistory(!showHistory)} style={{ width: 'auto' }}>
-          {showHistory ? '← Назад' : ' История'}
-        </Button>
+    <div style={pageStyle}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <Text variant="h2" bold style={{ fontSize: '20px' }}>План питания</Text>
+        <button type="button" onClick={() => setShowHistory((v) => !v)} style={ghostBtn}>
+          {showHistory ? '← Назад' : '🗂 История'}
+        </button>
       </div>
 
+      {error && (
+        <Text variant="small" style={{ display: 'block', color: '#ff8a8a', marginBottom: '10px' }}>
+          {error}
+        </Text>
+      )}
+      {notice && (
+        <Text variant="small" style={{ display: 'block', color: '#6fe08a', marginBottom: '10px' }}>
+          ✓ {notice}
+        </Text>
+      )}
+
       {showHistory ? (
-        /* History List */
-        <div>
-          {history.length === 0 ? (
-            <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-              <Text muted>Нет сохранённых планов</Text>
-            </Card>
-          ) : (
-            history.map((p) => (
-              <Card
-                key={p._id}
-                style={{ marginBottom: theme.spacing.sm, cursor: 'pointer' }}
-                onClick={() => handleLoadPlan(p._id)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <Text bold>{p.title || `План ${p.dateFrom}`}</Text>
-                    <Text variant="small" muted>
-                      {p.mode === 'day' ? 'На день' : 'На неделю'} · {p.settings.kcalTarget} ккал
-                    </Text>
-                  </div>
-                  <span style={{
-                    fontSize: '11px',
-                    padding: '2px 8px',
-                    borderRadius: '8px',
-                    backgroundColor: p.status === 'applied' ? theme.palette.success + '20' : p.status === 'draft' ? theme.palette.primary + '20' : theme.palette.surface,
-                    color: p.status === 'applied' ? theme.palette.success : p.status === 'draft' ? theme.palette.primary : theme.palette.textMuted,
-                    fontWeight: '600',
-                  }}>
-                    {p.status === 'applied' ? 'Применён' : p.status === 'draft' ? 'Черновик' : 'Архив'}
-                  </span>
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
+        <PlanHistoryList history={history} onOpen={handleLoadPlan} />
       ) : plan ? (
-        /* Generated Plan View */
-        <div>
-          {/* Explanation */}
+        <>
           {plan.explanation.length > 0 && (
-            <Card style={{ marginBottom: theme.spacing.md, borderLeft: `3px solid ${theme.palette.primary}` }}>
+            <div style={{ ...planCardStyle, borderLeft: `3px solid ${theme.palette.primary}` }}>
               {plan.explanation.map((exp, i) => (
-                <Text key={i} variant="small" style={{ display: 'block', marginBottom: i < plan.explanation.length - 1 ? theme.spacing.xs : 0 }}>
-                   {exp}
+                <Text
+                  key={i}
+                  variant="small"
+                  muted
+                  style={{ display: 'block', lineHeight: 1.4, marginBottom: i < plan.explanation.length - 1 ? '6px' : 0 }}
+                >
+                  💡 {exp}
                 </Text>
               ))}
-            </Card>
-          )}
-
-          {/* Day selector for week mode */}
-          {plan.mode === 'week' && (
-            <div style={{ display: 'flex', gap: theme.spacing.xs, marginBottom: theme.spacing.md, overflowX: 'auto', paddingBottom: theme.spacing.xs }}>
-              {plan.days.map((day, i) => (
-                <button
-                  key={day.date}
-                  onClick={() => setSelectedDay(i)}
-                  style={{
-                    padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-                    borderRadius: theme.radius.md,
-                    border: `2px solid ${selectedDay === i ? theme.palette.primary : theme.palette.border}`,
-                    backgroundColor: selectedDay === i ? theme.palette.primary + '20' : 'transparent',
-                    color: selectedDay === i ? theme.palette.primary : theme.palette.text,
-                    cursor: 'pointer',
-                    fontSize: theme.typography.small.fontSize,
-                    fontWeight: '600',
-                    whiteSpace: 'nowrap',
-                    minWidth: '60px',
-                    textAlign: 'center',
-                  }}
-                >
-                  {formatDateRu(day.date).split(', ')[0]}
-                </button>
-              ))}
             </div>
           )}
 
-          {/* Day totals */}
-          {currentDay && (
-            <Card style={{ marginBottom: theme.spacing.md }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
-                <Text bold>{formatDateRu(currentDay.date)}</Text>
-                <Text variant="small" muted>Скор: {plan.score}%</Text>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: theme.spacing.xs, textAlign: 'center' }}>
-                <div>
-                  <Text variant="small" muted>ккал</Text>
-                  <Text bold style={{ color: theme.palette.primary }}>{Math.round(currentDay.totalKcal)}</Text>
-                  <Text variant="small" muted>/ {plan.settings.kcalTarget}</Text>
-                </div>
-                <div>
-                  <Text variant="small" muted>белки</Text>
-                  <Text bold>{Math.round(currentDay.totalProtein)}г</Text>
-                </div>
-                <div>
-                  <Text variant="small" muted>жиры</Text>
-                  <Text bold>{Math.round(currentDay.totalFat)}г</Text>
-                </div>
-                <div>
-                  <Text variant="small" muted>углев.</Text>
-                  <Text bold>{Math.round(currentDay.totalCarb)}г</Text>
-                </div>
-              </div>
-              {/* Progress bar */}
-              <div style={{ marginTop: theme.spacing.sm, backgroundColor: theme.palette.bg, borderRadius: theme.radius.sm, height: '8px', overflow: 'hidden' }}>
-                <div style={{
-                  width: `${Math.min(100, (currentDay.totalKcal / plan.settings.kcalTarget) * 100)}%`,
-                  height: '100%',
-                  backgroundColor: currentDay.totalKcal > plan.settings.kcalTarget * 1.1 ? theme.palette.danger : theme.palette.primary,
-                  borderRadius: theme.radius.sm,
-                  transition: 'width 0.3s',
-                }} />
-              </div>
-            </Card>
-          )}
-
-          {/* Meals */}
-          {currentDay?.meals.map((meal, mealIdx) => (
-            <Card key={mealIdx} style={{ marginBottom: theme.spacing.sm }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
-                <Text bold>{meal.title}</Text>
-                <Text variant="small" muted>{Math.round(meal.totalKcal)} ккал</Text>
-              </div>
-              {meal.items.length === 0 ? (
-                <Text variant="small" muted>Не удалось подобрать блюдо</Text>
-              ) : (
-                meal.items.map((item, itemIdx) => (
-                  <div
-                    key={itemIdx}
+          {plan.mode === 'week' && (
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+              {plan.days.map((day, i) => {
+                const active = selectedDay === i;
+                return (
+                  <button
+                    key={day.date}
+                    type="button"
+                    onClick={() => setSelectedDay(i)}
                     style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: `${theme.spacing.sm} 0`,
-                      borderTop: itemIdx > 0 ? `1px solid ${theme.palette.border}` : 'none',
+                      padding: '9px 13px',
+                      borderRadius: '12px',
+                      border: `1px solid ${active ? theme.palette.primary : 'rgba(255,255,255,0.12)'}`,
+                      background: active
+                        ? `linear-gradient(180deg, ${theme.palette.primary}33, ${theme.palette.primary}1f)`
+                        : 'rgba(255,255,255,0.06)',
+                      color: active ? theme.palette.primary : theme.palette.textMuted,
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      minWidth: '54px',
+                      fontFamily: 'inherit',
                     }}
                   >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                        {item.name}
-                      </Text>
-                      <Text variant="small" muted>
-                        {item.grams}г · {Math.round(item.kcal)} ккал · Б{Math.round(item.protein)} Ж{Math.round(item.fat)} У{Math.round(item.carb)}
-                      </Text>
-                      {item.authorName && (
-                        <Text variant="small" muted style={{ fontSize: '10px' }}>
-                          от {item.authorName}
-                        </Text>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleReplaceItem(selectedDay, mealIdx, itemIdx)}
-                      style={{
-                        background: 'none',
-                        border: `1px solid ${theme.palette.border}`,
-                        borderRadius: theme.radius.sm,
-                        padding: '4px 8px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        color: theme.palette.textMuted,
-                        marginLeft: theme.spacing.sm,
-                        flexShrink: 0,
-                      }}
-                      title="Заменить"
-                    >
-                      🔄
-                    </button>
-                  </div>
-                ))
-              )}
-            </Card>
+                    {formatDateRu(day.date).split(', ')[0]}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {currentDay && <PlanDayCard plan={plan} day={currentDay} />}
+
+          {currentDay?.meals.map((meal, mealIdx) => (
+            <PlanMealCard key={mealIdx} meal={meal} onReplaceItem={(itemIdx) => handleReplaceItem(mealIdx, itemIdx)} />
           ))}
 
-          {/* Actions */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, marginTop: theme.spacing.md }}>
-            <Button
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+            <button
+              type="button"
               onClick={handleApply}
               disabled={plan.status === 'applied' || applying}
+              style={primaryBtn(plan.status === 'applied' || applying)}
             >
-              {plan.status === 'applied' ? ' Применён' : applying ? 'Применение...' : ' Применить в дневник'}
-            </Button>
-            <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-              <Button variant="secondary" onClick={handleSaveTemplate} style={{ flex: 1 }}>
-                 Как шаблон
-              </Button>
-              <Button variant="secondary" onClick={handleGenerate} style={{ flex: 1 }}>
+              {plan.status === 'applied' ? '✓ Применён' : applying ? 'Применение...' : '📥 Применить в дневник'}
+            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="button" onClick={handleSaveTemplate} style={{ ...ghostBtn, flex: 1, height: '44px' }}>
+                💾 Как шаблон
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={generating}
+                style={{ ...ghostBtn, flex: 1, height: '44px', opacity: generating ? 0.6 : 1 }}
+              >
                 🔄 Другой план
-              </Button>
+              </button>
             </div>
-            <Button variant="ghost" onClick={handleArchive}>
+            <button
+              type="button"
+              onClick={handleArchive}
+              style={{ ...ghostBtn, height: '40px', color: theme.palette.textMuted }}
+            >
               В архив
-            </Button>
+            </button>
           </div>
-        </div>
+        </>
       ) : (
-        /* Settings & Generate */
-        <div>
-          {error && (
-            <Card style={{ marginBottom: theme.spacing.md, backgroundColor: theme.palette.danger + '20' }}>
-              <Text style={{ color: theme.palette.danger }}>{error}</Text>
-            </Card>
-          )}
-
-          {/* Mode */}
-          <Card style={{ marginBottom: theme.spacing.md }}>
-            <Text bold style={{ marginBottom: theme.spacing.sm }}>Режим</Text>
-            <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-              <Button
-                variant={mode === 'day' ? 'primary' : 'ghost'}
-                onClick={() => setMode('day')}
-                style={{ flex: 1 }}
-              >
-                Сегодня
-              </Button>
-              <Button
-                variant={mode === 'week' ? 'primary' : 'ghost'}
-                onClick={() => setMode('week')}
-                style={{ flex: 1 }}
-              >
-                Неделя
-              </Button>
-            </div>
-          </Card>
-
-          {/* Settings */}
-          <Card style={{ marginBottom: theme.spacing.md }}>
-            <Text bold style={{ marginBottom: theme.spacing.sm }}>Настройки</Text>
-
-            {/* Meal count */}
-            <div style={{ marginBottom: theme.spacing.md }}>
-              <Text variant="small" muted style={{ marginBottom: theme.spacing.xs, display: 'block' }}>
-                Приёмов пищи
-              </Text>
-              <div style={{ display: 'flex', gap: theme.spacing.xs }}>
-                {[3, 4, 5].map(n => (
-                  <button
-                    key={n}
-                    onClick={() => setMealCount(n)}
-                    style={{
-                      flex: 1,
-                      padding: theme.spacing.sm,
-                      borderRadius: theme.radius.sm,
-                      border: `2px solid ${mealCount === n ? theme.palette.primary : theme.palette.border}`,
-                      backgroundColor: mealCount === n ? theme.palette.primary + '20' : 'transparent',
-                      color: mealCount === n ? theme.palette.primary : theme.palette.text,
-                      cursor: 'pointer',
-                      fontWeight: '600',
-                    }}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Toggles */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
-              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                <Text variant="small">Публичные рецепты</Text>
-                <input
-                  type="checkbox"
-                  checked={includePublic}
-                  onChange={(e) => setIncludePublic(e.target.checked)}
-                  style={{ width: '20px', height: '20px' }}
-                />
-              </label>
-              {mode === 'day' && (
-                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                  <Text variant="small">Учитывать съеденное</Text>
-                  <input
-                    type="checkbox"
-                    checked={considerEaten}
-                    onChange={(e) => setConsiderEaten(e.target.checked)}
-                    style={{ width: '20px', height: '20px' }}
-                  />
-                </label>
-              )}
-              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                <Text variant="small">Быстрые блюда</Text>
-                <input
-                  type="checkbox"
-                  checked={preferQuick}
-                  onChange={(e) => setPreferQuick(e.target.checked)}
-                  style={{ width: '20px', height: '20px' }}
-                />
-              </label>
-            </div>
-
-            {/* Excluded tags */}
-            <div style={{ marginTop: theme.spacing.md }}>
-              <Input
-                label="Исключить теги (через запятую)"
-                placeholder="сладкое, фастфуд"
-                value={excludedTags}
-                onChange={(e) => setExcludedTags(e.target.value)}
-              />
-            </div>
-          </Card>
-
-          {/* Generate button */}
-          <Button onClick={handleGenerate} disabled={generating} size="lg">
-            {generating ? '⏳ Генерация...' : ' Составить план'}
-          </Button>
-        </div>
+        <>
+          <PlanSettingsCard
+            mode={mode}
+            mealCount={mealCount}
+            includePublic={includePublic}
+            considerEaten={considerEaten}
+            preferQuick={preferQuick}
+            excludedTags={excludedTags}
+            onChange={(patch) => {
+              if (patch.mode !== undefined) setMode(patch.mode);
+              if (patch.mealCount !== undefined) setMealCount(patch.mealCount);
+              if (patch.includePublic !== undefined) setIncludePublic(patch.includePublic);
+              if (patch.considerEaten !== undefined) setConsiderEaten(patch.considerEaten);
+              if (patch.preferQuick !== undefined) setPreferQuick(patch.preferQuick);
+              if (patch.excludedTags !== undefined) setExcludedTags(patch.excludedTags);
+            }}
+          />
+          <button type="button" onClick={handleGenerate} disabled={generating} style={primaryBtn(generating)}>
+            {generating ? '⏳ Генерация...' : '✨ Составить план'}
+          </button>
+        </>
       )}
     </div>
   );

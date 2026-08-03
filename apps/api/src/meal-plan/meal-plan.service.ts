@@ -597,27 +597,36 @@ export class MealPlanService {
     return plan.save();
   }
 
-  async saveAsTemplate(id: string, userId: string, dayIndex: number = 0): Promise<MealTemplateDocument> {
+  // One template per meal so each keeps its meal type (breakfast/lunch/...)
+  async saveAsTemplate(id: string, userId: string, dayIndex: number = 0): Promise<MealTemplateDocument[]> {
     const plan = await this.findById(id, userId);
 
     const day = plan.days[dayIndex];
     if (!day) throw new BadRequestException('День не найден');
 
-    const items = day.meals.flatMap(m => m.items.map(item => ({
-      productId: item.sourceType === 'product' ? item.sourceId : undefined,
-      productName: item.name,
-      grams: item.grams,
-      kcal: item.kcal,
-      kcalPer100g: this.round(item.kcal / (item.grams / 100)),
-    })));
+    const templates: MealTemplateDocument[] = [];
+    for (const meal of day.meals) {
+      if (!meal.items.length) continue;
 
-    const template = new this.templateModel({
-      userId: new Types.ObjectId(userId),
-      name: plan.title || `План ${day.date}`,
-      items,
-      totalKcal: day.totalKcal,
-    });
+      const items = meal.items.map(item => ({
+        productId: item.sourceType === 'product' ? item.sourceId : undefined,
+        productName: item.name,
+        grams: item.grams,
+        kcal: item.kcal,
+        kcalPer100g: this.round(item.kcal / (item.grams / 100)),
+      }));
 
-    return template.save();
+      const template = await new this.templateModel({
+        userId: new Types.ObjectId(userId),
+        name: `${meal.title} · план ${day.date}`,
+        mealType: meal.mealType || 'other',
+        items,
+        totalKcal: this.round(meal.totalKcal),
+      }).save();
+      templates.push(template);
+    }
+
+    if (!templates.length) throw new BadRequestException('В этом дне нет блюд для сохранения');
+    return templates;
   }
 }
