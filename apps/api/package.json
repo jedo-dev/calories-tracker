@@ -9,6 +9,7 @@
     "start": "node dist/main.js",
     "seed:products": "ts-node -r tsconfig-paths/register scripts/seed-products.ts",
     "seed:workouts": "ts-node -r tsconfig-paths/register scripts/seed-workouts.ts",
+    "set-role": "ts-node -r tsconfig-paths/register scripts/set-role.ts",
     "seed:products-ru": "ts-node -r tsconfig-paths/register scripts/seed-products-ru.ts",
     "seed:recipes": "ts-node -r tsconfig-paths/register scripts/seed-recipes.ts",
     "seed:exercise-anims": "ts-node -r tsconfig-paths/register scripts/upload-exercise-anims.ts",

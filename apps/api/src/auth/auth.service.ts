@@ -162,6 +162,7 @@ export class AuthService {
       username: user.username,
       firstName: user.firstName,
       lastName: user.lastName,
+      role: user.role || 'user',
     };
   }
 }

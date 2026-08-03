@@ -130,6 +130,103 @@ export class WorkoutService {
     };
   }
 
+  // Admin: program CRUD
+  async createProgram(dto: {
+    name: string;
+    description?: string;
+    categoryId?: string;
+    level?: string;
+    sortOrder?: number;
+    items: { exerciseId: string; sets: number; reps?: number; durationSec?: number; restSec?: number }[];
+  }): Promise<WorkoutProgramDocument> {
+    const items = await this.buildProgramItems(dto.items);
+    return new this.programModel({
+      name: dto.name,
+      description: dto.description,
+      categoryId: dto.categoryId ? new Types.ObjectId(dto.categoryId) : undefined,
+      level: dto.level || 'beginner',
+      sortOrder: dto.sortOrder ?? 100,
+      items,
+    }).save();
+  }
+
+  async updateProgram(
+    programId: string,
+    dto: {
+      name?: string;
+      description?: string;
+      categoryId?: string;
+      level?: string;
+      sortOrder?: number;
+      items?: { exerciseId: string; sets: number; reps?: number; durationSec?: number; restSec?: number }[];
+    },
+  ): Promise<WorkoutProgramDocument> {
+    const program = await this.programModel.findById(programId).exec();
+    if (!program) throw new NotFoundException('Program not found');
+
+    if (dto.name !== undefined) program.name = dto.name;
+    if (dto.description !== undefined) program.description = dto.description;
+    if (dto.categoryId !== undefined) {
+      program.categoryId = dto.categoryId ? new Types.ObjectId(dto.categoryId) : undefined;
+    }
+    if (dto.level !== undefined) program.level = dto.level;
+    if (dto.sortOrder !== undefined) program.sortOrder = dto.sortOrder;
+    if (dto.items !== undefined) program.items = await this.buildProgramItems(dto.items);
+
+    return program.save();
+  }
+
+  async deleteProgram(programId: string): Promise<void> {
+    const program = await this.programModel.findById(programId).exec();
+    if (!program) throw new NotFoundException('Program not found');
+    await program.deleteOne();
+  }
+
+  private async buildProgramItems(
+    items: { exerciseId: string; sets: number; reps?: number; durationSec?: number; restSec?: number }[],
+  ): Promise<WorkoutProgramItem[]> {
+    const ids = items.map((i) => i.exerciseId);
+    const found = await this.exerciseModel.find({ _id: { $in: ids } }).exec();
+    const foundIds = new Set(found.map((e) => String(e._id)));
+    const missing = ids.filter((id) => !foundIds.has(id));
+    if (missing.length) throw new NotFoundException(`Exercises not found: ${missing.join(', ')}`);
+
+    return items.map((item, index) => ({
+      exerciseId: new Types.ObjectId(item.exerciseId),
+      order: index,
+      sets: item.sets,
+      reps: item.reps,
+      durationSec: item.durationSec,
+      restSec: item.restSec ?? 60,
+    })) as WorkoutProgramItem[];
+  }
+
+  // Admin: exercise editing
+  async updateExercise(
+    exerciseId: string,
+    dto: Partial<Pick<Exercise, 'name' | 'description' | 'equipment' | 'difficulty' | 'defaultSets' | 'defaultReps' | 'defaultDurationSec'>>,
+  ): Promise<ExerciseDocument> {
+    const exercise = await this.exerciseModel.findById(exerciseId).exec();
+    if (!exercise) throw new NotFoundException('Exercise not found');
+    Object.assign(exercise, dto);
+    const saved = await exercise.save();
+    if (dto.name) {
+      // logs denormalize the exercise name
+      await this.logModel.updateMany({ exerciseId: exercise._id }, { $set: { exerciseName: dto.name } }).exec();
+    }
+    return saved;
+  }
+
+  async updateExerciseImage(exerciseId: string, gifUrl: string): Promise<ExerciseDocument> {
+    const exercise = await this.exerciseModel.findById(exerciseId).exec();
+    if (!exercise) throw new NotFoundException('Exercise not found');
+    exercise.gifUrl = gifUrl;
+    const saved = await exercise.save();
+    // logs denormalize gifUrl — keep history thumbnails in sync
+    await this.logModel.updateMany({ exerciseId: exercise._id }, { $set: { gifUrl } }).exec();
+    return saved;
+  }
+
   async updateProgramImage(programId: string, imageUrl: string): Promise<WorkoutProgramDocument> {
     const program = await this.programModel.findById(programId).exec();
     if (!program) throw new NotFoundException('Program not found');

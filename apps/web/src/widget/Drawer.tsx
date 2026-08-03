@@ -18,7 +18,7 @@ interface DashboardData {
 
 export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean) => void, isOpen: boolean }) {
   const theme = useTheme();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [waterMl, setWaterMl] = useState(0);
   const navigate = useNavigate();
@@ -229,6 +229,9 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           <MenuTile path="/templates">{t('template.title')}</MenuTile>
           <MenuTile path="/recipes">{t('recipes.title')}</MenuTile>
           <MenuTile path="/meal-plan">{t('mealPlan.title')}</MenuTile>
+          {(user?.role === 'admin' || user?.role === 'trainer') && (
+            <MenuTile path="/admin/workouts">⚙️ {t('workout.adminTitle')}</MenuTile>
+          )}
         </div>
 
         {/* Logout */}

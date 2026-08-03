@@ -18,6 +18,7 @@ import { WorkoutsPage } from './pages/WorkoutsPage';
 import { ExercisesPage } from './pages/ExercisesPage';
 import { ActiveWorkoutPage } from './pages/ActiveWorkoutPage';
 import { WorkoutProgramPage } from './pages/WorkoutProgramPage';
+import { AdminWorkoutsPage } from './pages/AdminWorkoutsPage';
 import { WorkoutSummaryPage } from './pages/WorkoutSummaryPage';
 import { WeightHistoryPage } from './pages/WeightHistoryPage';
 import { TemplatesPage } from './pages/TemplatesPage';
@@ -72,6 +73,7 @@ function App() {
             <Route path="/friends" element={<FriendsPage />} />
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/workouts" element={<WorkoutsPage />} />
+            <Route path="/admin/workouts" element={<AdminWorkoutsPage />} />
             <Route path="/workout/program/:programId" element={<WorkoutProgramPage />} />
             <Route path="/workout/category/:categoryId" element={<ExercisesPage />} />
             <Route path="/workout/:sessionId/summary" element={<WorkoutSummaryPage />} />

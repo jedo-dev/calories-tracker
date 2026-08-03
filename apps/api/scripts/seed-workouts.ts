@@ -5,9 +5,12 @@ import { StorageService } from '../src/storage/storage.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Covers live in the web app's assets; the seed mirrors them into MinIO
-// so that categories/programs carry a backend-served imageUrl.
-const CATEGORY_IMAGES_DIR = path.resolve(__dirname, '../../web/src/assets/04_workout_categories');
+// Covers ship with the api (apps/api/assets) so the seed works in the prod
+// container too; candidates cover ts-node (scripts/) and compiled (dist/scripts/) runs.
+const CATEGORY_IMAGES_DIR = [
+  path.resolve(__dirname, '../assets/workout-categories'),
+  path.resolve(__dirname, '../../assets/workout-categories'),
+].find((dir) => fs.existsSync(dir));
 const categoryImageFiles: Record<string, string> = {
   'Грудь': 'cat_chest.jpg',
   'Спина': 'cat_back.jpg',
@@ -886,7 +889,7 @@ async function seed() {
       continue;
     }
     const fileName = categoryImageFiles[cat.name];
-    const filePath = fileName ? path.join(CATEGORY_IMAGES_DIR, fileName) : null;
+    const filePath = fileName && CATEGORY_IMAGES_DIR ? path.join(CATEGORY_IMAGES_DIR, fileName) : null;
     if (!filePath || !fs.existsSync(filePath)) {
       console.warn(`  [!] ${cat.name}: файл обложки не найден (${fileName}), пропуск`);
       continue;

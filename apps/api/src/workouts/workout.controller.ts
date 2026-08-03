@@ -20,8 +20,14 @@ import { CreateWorkoutSessionDto } from './dto/create-workout-session.dto';
 import { AddExerciseToSessionDto } from './dto/add-exercise.dto';
 import { StartProgramDto } from './dto/start-program.dto';
 import { UpdateLogDto } from './dto/update-log.dto';
+import { CreateProgramDto, UpdateProgramDto } from './dto/save-program.dto';
+import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { StorageService } from '../storage/storage.service';
+
+const CONTENT_EDITORS = ['admin', 'trainer'];
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -39,7 +45,7 @@ const imageFileInterceptor = (field: string) =>
   });
 
 @Controller('workouts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class WorkoutController {
   constructor(
     private workoutService: WorkoutService,
@@ -53,6 +59,7 @@ export class WorkoutController {
   }
 
   @Post('categories/:id/photo')
+  @Roles(...CONTENT_EDITORS)
   @UseInterceptors(imageFileInterceptor('photo'))
   async uploadCategoryPhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
@@ -83,7 +90,27 @@ export class WorkoutController {
     return this.workoutService.startProgram(id, dto, req.user.id);
   }
 
+  @Post('programs')
+  @Roles(...CONTENT_EDITORS)
+  async createProgram(@Body(ValidationPipe) dto: CreateProgramDto) {
+    return this.workoutService.createProgram(dto);
+  }
+
+  @Patch('programs/:id')
+  @Roles(...CONTENT_EDITORS)
+  async updateProgram(@Param('id') id: string, @Body(ValidationPipe) dto: UpdateProgramDto) {
+    return this.workoutService.updateProgram(id, dto);
+  }
+
+  @Delete('programs/:id')
+  @Roles(...CONTENT_EDITORS)
+  async deleteProgram(@Param('id') id: string) {
+    await this.workoutService.deleteProgram(id);
+    return { ok: true };
+  }
+
   @Post('programs/:id/photo')
+  @Roles(...CONTENT_EDITORS)
   @UseInterceptors(imageFileInterceptor('photo'))
   async uploadProgramPhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
@@ -114,6 +141,24 @@ export class WorkoutController {
   @Get('exercises/:id')
   async getExercise(@Param('id') id: string) {
     return this.workoutService.getExerciseById(id);
+  }
+
+  @Patch('exercises/:id')
+  @Roles(...CONTENT_EDITORS)
+  async updateExercise(@Param('id') id: string, @Body(ValidationPipe) dto: UpdateExerciseDto) {
+    return this.workoutService.updateExercise(id, dto);
+  }
+
+  @Post('exercises/:id/photo')
+  @Roles(...CONTENT_EDITORS)
+  @UseInterceptors(imageFileInterceptor('photo'))
+  async uploadExercisePhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const ext = file.mimetype.split('/')[1];
+    const key = `exercises/uploads/${id}_${Date.now()}.${ext}`;
+    const gifUrl = await this.storage.uploadObject(key, file.buffer, file.mimetype);
+    const exercise = await this.workoutService.updateExerciseImage(id, gifUrl);
+    return { gifUrl: exercise.gifUrl };
   }
 
   // Sessions

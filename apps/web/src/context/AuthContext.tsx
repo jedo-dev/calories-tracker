@@ -6,6 +6,7 @@ interface User {
   email?: string;
   username?: string;
   tgUserId?: number;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -39,11 +40,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  const refreshMe = async (fallback: User) => {
+    // /auth/me carries fields the login response lacks (e.g. role)
+    try {
+      const res = await apiClient.get('/auth/me');
+      setUser(res.data);
+    } catch {
+      setUser(fallback);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     const res = await apiClient.post('/auth/login', { email, password });
     const { token, user: userData } = res.data;
     localStorage.setItem('token', token);
     setUser(userData);
+    await refreshMe(userData);
   };
 
   const register = async (email: string, password: string, username?: string) => {
@@ -51,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { token, user: userData } = res.data;
     localStorage.setItem('token', token);
     setUser(userData);
+    await refreshMe(userData);
   };
 
   const logout = () => {

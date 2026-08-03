@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { AdminModule } from './admin/admin.module';
 import { EntriesModule } from './entries/entries.module';
 import { HealthModule } from './health/health.module';
 import { ProductsModule } from './products/products.module';
@@ -51,6 +52,7 @@ import { StorageModule } from './storage/storage.module';
     RecipesModule,
     MealPlanModule,
     StorageModule,
+    AdminModule,
   ],
   providers: [
     {

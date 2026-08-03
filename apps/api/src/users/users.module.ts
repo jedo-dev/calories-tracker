@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User, UserSchema } from './schemas/user.schema';
+import { Role, RoleSchema } from './schemas/role.schema';
 import { UserStats, UserStatsSchema } from '../social/schemas/user-stats.schema';
 import { ActivityEvent, ActivityEventSchema } from '../social/schemas/activity-event.schema';
 import { Follow, FollowSchema } from '../social/schemas/follow.schema';
@@ -13,6 +14,7 @@ import { RecipesModule } from '../recipes/recipes.module';
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
+      { name: Role.name, schema: RoleSchema },
       { name: UserStats.name, schema: UserStatsSchema },
       { name: ActivityEvent.name, schema: ActivityEventSchema },
       { name: Follow.name, schema: FollowSchema },

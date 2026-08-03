@@ -19,6 +19,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     if (
       path === '/health' ||
+      path === '/admin' || // static admin page shell; its API calls are guarded
+      path === '/admin/' ||
       path.startsWith('/auth/telegram') ||
       path.startsWith('/auth/register') ||
       path.startsWith('/auth/login') ||

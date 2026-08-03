@@ -32,6 +32,9 @@ export class User {
   @Prop({ default: true })
   isPublicProfile: boolean;
 
+  @Prop({ default: 'user', index: true })
+  role: string;
+
   @Prop({ default: '🦊' })
   avatarEmoji: string;
 
