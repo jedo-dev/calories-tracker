@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/01_brand/logo_main.jpg';
-import badgeFirstWorkout from '../assets/07_achievements/badge_first_workout.jpg';
-import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
-import activityMedium from '../assets/12_activity/activity_medium.jpg';
 import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 //@ts-ignore
@@ -11,7 +8,6 @@ import { apiClient } from '../api/client';
 import { useTheme } from '../theme/useTheme';
 import { DailyTips } from '../features/TodayComponents/DailyTips';
 import { BottomSheet } from '../ui/BottomSheet';
-import { SectionIcon } from '../ui/SectionIcon';
 import { hapticImpact } from '../utils/hapticFeedback';
 
 interface DashboardData {
@@ -68,16 +64,16 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
     handleNavigate('/entry/new');
   };
 
-  const MenuTile = ({ path, icon, children }: { path: string; icon?: React.ReactNode; children: React.ReactNode }) => (
+  const MenuTile = ({ path, children }: { path: string; children: React.ReactNode }) => (
     <button
       type="button"
       onClick={() => handleNavigate(path)}
       style={{
         minHeight: '48px',
         padding: '10px 12px',
-        borderRadius: '14px',
+        borderRadius: '16px',
         border: '1px solid rgba(160, 200, 220, 0.18)',
-        background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.9), rgba(10, 32, 46, 0.9))',
+        background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.94), rgba(10, 32, 46, 0.94))',
         color: theme.palette.text,
         fontSize: '14px',
         fontWeight: 700,
@@ -85,7 +81,6 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: theme.spacing.xs,
         outline: 'none',
         WebkitTapHighlightColor: 'transparent',
         transition: 'transform 0.15s ease, border-color 0.15s ease',
@@ -94,7 +89,6 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
       onPointerUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
       onPointerLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
     >
-      {icon}
       {children}
     </button>
   );
@@ -104,6 +98,11 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
     <BottomSheet
       isOpen={isOpen}
       onClose={handleClose}
+      background={`
+        radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
+        radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
+        linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
+      `}
       handle={
         <div
           style={{
@@ -223,15 +222,9 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
             + {t('commandCenter.addEntry')}
           </button>
           <MenuTile path="/today">{t('commandCenter.selectDate')}</MenuTile>
-          <MenuTile path="/workouts" icon={<SectionIcon src={badgeFirstWorkout} alt="" size={18} />}>
-            {t('workout.title')}
-          </MenuTile>
-          <MenuTile path="/weight" icon={<SectionIcon src={activityMedium} alt="" size={18} />}>
-            {t('weight.title')}
-          </MenuTile>
-          <MenuTile path="/reports" icon={<SectionIcon src={badgeCalorieMaster} alt="" size={18} />}>
-            {t('report.title')}
-          </MenuTile>
+          <MenuTile path="/workouts">{t('workout.title')}</MenuTile>
+          <MenuTile path="/weight">{t('weight.title')}</MenuTile>
+          <MenuTile path="/reports">{t('report.title')}</MenuTile>
           <MenuTile path="/measurements">{t('measurement.title')}</MenuTile>
           <MenuTile path="/templates">{t('template.title')}</MenuTile>
           <MenuTile path="/recipes">{t('recipes.title')}</MenuTile>

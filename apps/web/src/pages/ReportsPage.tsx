@@ -6,7 +6,7 @@ import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
 import { ReportsCaloriesChart, ReportsKpiGrid, ReportsPeriodNavigator, ReportsPeriodSwitcher, ReportsWeightChart } from '../widgets/reports';
 import type { ReportDay, ReportPeriod } from '../widgets/reports';
-import { getPeriodBounds, getPeriodLabel, round1 } from '../widgets/reports';
+import { formatDateInput, getPeriodBounds, getPeriodLabel, round1 } from '../widgets/reports';
 
 function sumKcal(day: ReportDay): number {
   return day.entries.reduce((sum, entry) => sum + (entry.kcal || 0), 0);
@@ -21,8 +21,26 @@ export function ReportsPage() {
   const [period, setPeriod] = useState<ReportPeriod>('week');
   const [offset, setOffset] = useState(0);
   const [data, setData] = useState<ReportDay[]>([]);
+  const [kcalGoal, setKcalGoal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    apiClient
+      .get(`/dashboard/day?date=${formatDateInput(new Date())}`)
+      .then((res) => {
+        if (!cancelled && res.data?.targets?.kcalTarget != null) {
+          setKcalGoal(res.data.targets.kcalTarget);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const bounds = useMemo(() => getPeriodBounds(period, offset), [period, offset]);
   const periodLabel = useMemo(() => getPeriodLabel(period, bounds.from, bounds.to), [period, bounds.from, bounds.to]);
@@ -159,7 +177,7 @@ export function ReportsPage() {
           </div>
 
           <div style={{ marginBottom: '8px' }}>
-            <ReportsCaloriesChart days={data} goal={550} />
+            <ReportsCaloriesChart days={data} goal={kcalGoal} />
           </div>
         </>
       )}

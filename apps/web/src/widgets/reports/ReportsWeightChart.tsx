@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Text } from '../../ui/Text';
 import type { ReportDay } from './types';
-import { extractWeights, getWeekdayLabel, round1 } from './utils';
+import { extractWeights, getDayNumberLabel, getWeekdayLabel, round1 } from './utils';
 
 interface ReportsWeightChartProps {
   days: ReportDay[];
@@ -25,8 +25,9 @@ export function ReportsWeightChart({ days }: ReportsWeightChartProps) {
     const minValue = Math.min(...values);
     const roundedTop = Math.round(maxValue);
     const roundedBottom = maxValue - minValue > 3 ? Math.floor(minValue) : roundedTop - 3;
-    const domainTop = Math.max(roundedTop, roundedBottom + 3);
+    const lineStep = Math.max(1, Math.ceil((Math.max(roundedTop, roundedBottom + 3) - roundedBottom) / 3));
     const domainBottom = roundedBottom;
+    const domainTop = domainBottom + lineStep * 3;
     const height = 190;
     const width = 320;
     const leftPad = 40;
@@ -47,7 +48,7 @@ export function ReportsWeightChart({ days }: ReportsWeightChartProps) {
       })
       .filter((item): item is { x: number; y: number; value: number; date: string } => item !== null);
 
-    const lines = Array.from({ length: 4 }, (_, index) => domainTop - index);
+    const lines = Array.from({ length: 4 }, (_, index) => domainTop - index * lineStep);
     const areaPath = linePoints.length > 1
       ? `${createLinePath(linePoints)} L ${linePoints[linePoints.length - 1].x} ${height - 20} L ${linePoints[0].x} ${height - 20} Z`
       : '';
@@ -153,7 +154,11 @@ export function ReportsWeightChart({ days }: ReportsWeightChartProps) {
             ))}
 
             {days.map((day, index) => {
-              const showLabel = days.length <= 8 || index % 2 === 0 || index === days.length - 1;
+              const isLong = days.length > 8;
+              const labelStep = isLong ? Math.ceil(days.length / 6) : 1;
+              const isLast = index === days.length - 1;
+              const showLabel = isLast || (index % labelStep === 0 && days.length - 1 - index >= labelStep / 2);
+              if (!showLabel) return null;
               const x = chart.leftPad + (days.length === 1 ? chart.plotWidth / 2 : (index / (days.length - 1)) * chart.plotWidth);
               return (
                 <text
@@ -163,9 +168,8 @@ export function ReportsWeightChart({ days }: ReportsWeightChartProps) {
                   fill="rgba(255, 255, 255, 0.84)"
                   fontSize="13"
                   textAnchor="middle"
-                  opacity={showLabel ? 1 : 0.35}
                 >
-                  {showLabel ? getWeekdayLabel(day.date) : ''}
+                  {isLong ? getDayNumberLabel(day.date) : getWeekdayLabel(day.date)}
                 </text>
               );
             })}

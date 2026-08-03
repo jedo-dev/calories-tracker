@@ -8,9 +8,10 @@ interface BottomSheetProps {
   children: ReactNode;
   header?: ReactNode;
   handle?: ReactNode;
+  background?: string;
 }
 
-export function BottomSheet({ isOpen, onClose, children, header, handle }: BottomSheetProps) {
+export function BottomSheet({ isOpen, onClose, children, header, handle, background }: BottomSheetProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const theme = useTheme();
@@ -296,7 +297,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle }: Botto
           width: '100%',
           maxHeight: '80%',
           bottom: 0,
-          background: theme.palette.surface,
+          background: background ?? theme.palette.surface,
           borderTopLeftRadius: theme.radius.lg,
           borderTopRightRadius: theme.radius.lg,
           transform: sheetTransform,

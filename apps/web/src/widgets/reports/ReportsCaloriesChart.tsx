@@ -1,18 +1,19 @@
 import { useMemo } from 'react';
 import { Text } from '../../ui/Text';
 import type { ReportDay } from './types';
-import { getWeekdayLabel } from './utils';
+import { getDayNumberLabel, getWeekdayLabel } from './utils';
 
 interface ReportsCaloriesChartProps {
   days: ReportDay[];
-  goal: number;
+  goal: number | null;
 }
 
 export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) {
   const chart = useMemo(() => {
     const values = days.map((day) => day.entries.reduce((sum, entry) => sum + (entry.kcal || 0), 0));
-    const maxValue = Math.max(goal, ...values, 0);
-    const step = maxValue > 500 ? 200 : maxValue > 250 ? 100 : 50;
+    const maxValue = Math.max(goal ?? 0, ...values, 0);
+    const stepCandidates = [50, 100, 200, 250, 500, 1000, 2000];
+    const step = stepCandidates.find((candidate) => Math.ceil(maxValue / candidate) <= 5) ?? 2000;
     const top = Math.max(step, Math.ceil(maxValue / step) * step);
     const width = 320;
     const height = 208;
@@ -33,7 +34,7 @@ export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) 
         centerX,
       };
     });
-    const targetY = yToPx(goal);
+    const targetY = goal != null ? yToPx(goal) : null;
 
     return {
       width,
@@ -42,6 +43,7 @@ export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) 
       rightPad,
       plotWidth,
       top,
+      step,
       bars,
       targetY,
       yToPx,
@@ -62,9 +64,11 @@ export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) 
         <Text bold style={{ fontSize: '24px', letterSpacing: '-0.03em' }}>
           Калории по дням
         </Text>
-        <Text muted style={{ fontSize: '18px', lineHeight: '1.2', textAlign: 'right' }}>
-          цель: {goal} ккал
-        </Text>
+        {goal != null && (
+          <Text muted style={{ fontSize: '18px', lineHeight: '1.2', textAlign: 'right' }}>
+            цель: {Math.round(goal)} ккал
+          </Text>
+        )}
       </div>
 
       <div style={{ width: '100%' }}>
@@ -82,9 +86,8 @@ export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) 
             </linearGradient>
           </defs>
 
-          {Array.from({ length: chart.top / (chart.top > 500 ? 200 : chart.top > 250 ? 100 : 50) + 1 }, (_, index) => {
-            const step = chart.top > 500 ? 200 : chart.top > 250 ? 100 : 50;
-            const value = chart.top - index * step;
+          {Array.from({ length: chart.top / chart.step + 1 }, (_, index) => {
+            const value = chart.top - index * chart.step;
             const y = chart.yToPx(value);
 
             return (
@@ -94,8 +97,7 @@ export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) 
                   x2={chart.width - chart.rightPad}
                   y1={y}
                   y2={y}
-                  stroke={index === 2 ? 'rgba(255, 255, 255, 0.36)' : 'rgba(255, 255, 255, 0.10)'}
-                  strokeDasharray={index === 2 ? '6 8' : undefined}
+                  stroke="rgba(255, 255, 255, 0.10)"
                 />
                 <text x="0" y={y + 5} fill="rgba(255, 255, 255, 0.82)" fontSize="13">
                   {Math.round(value)}
@@ -104,16 +106,18 @@ export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) 
             );
           })}
 
-          <line
-            x1={chart.leftPad}
-            x2={chart.width - chart.rightPad}
-            y1={chart.targetY}
-            y2={chart.targetY}
-            stroke="#ffffff"
-            strokeDasharray="6 8"
-            strokeWidth="1.5"
-            opacity="0.85"
-          />
+          {chart.targetY != null && (
+            <line
+              x1={chart.leftPad}
+              x2={chart.width - chart.rightPad}
+              y1={chart.targetY}
+              y2={chart.targetY}
+              stroke="#ffffff"
+              strokeDasharray="6 8"
+              strokeWidth="1.5"
+              opacity="0.85"
+            />
+          )}
 
           {chart.bars.map((bar, index) => {
             const x = bar.centerX - 12;
@@ -133,7 +137,11 @@ export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) 
           })}
 
           {days.map((day, index) => {
-            const showLabel = days.length <= 8 || index % 2 === 0 || index === days.length - 1;
+            const isLong = days.length > 8;
+            const labelStep = isLong ? Math.ceil(days.length / 6) : 1;
+            const isLast = index === days.length - 1;
+            const showLabel = isLast || (index % labelStep === 0 && days.length - 1 - index >= labelStep / 2);
+            if (!showLabel) return null;
             const x = chart.leftPad + (days.length === 1 ? chart.plotWidth / 2 : index * (chart.plotWidth / (days.length - 1)));
             return (
               <text
@@ -143,9 +151,8 @@ export function ReportsCaloriesChart({ days, goal }: ReportsCaloriesChartProps) 
                 fill="rgba(255, 255, 255, 0.84)"
                 fontSize="13"
                 textAnchor="middle"
-                opacity={showLabel ? 1 : 0.35}
               >
-                {showLabel ? getWeekdayLabel(day.date) : ''}
+                {isLong ? getDayNumberLabel(day.date) : getWeekdayLabel(day.date)}
               </text>
             );
           })}
