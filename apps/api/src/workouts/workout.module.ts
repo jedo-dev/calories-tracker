@@ -6,6 +6,7 @@ import { WorkoutCategory, WorkoutCategorySchema } from './schemas/workout-catego
 import { Exercise, ExerciseSchema } from './schemas/exercise.schema';
 import { WorkoutSession, WorkoutSessionSchema } from './schemas/workout-session.schema';
 import { WorkoutLog, WorkoutLogSchema } from './schemas/workout-log.schema';
+import { WorkoutProgram, WorkoutProgramSchema } from './schemas/workout-program.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { ActivityEvent, ActivityEventSchema } from '../social/schemas/activity-event.schema';
 
@@ -16,6 +17,7 @@ import { ActivityEvent, ActivityEventSchema } from '../social/schemas/activity-e
       { name: Exercise.name, schema: ExerciseSchema },
       { name: WorkoutSession.name, schema: WorkoutSessionSchema },
       { name: WorkoutLog.name, schema: WorkoutLogSchema },
+      { name: WorkoutProgram.name, schema: WorkoutProgramSchema },
       { name: User.name, schema: UserSchema },
       { name: ActivityEvent.name, schema: ActivityEventSchema },
     ]),

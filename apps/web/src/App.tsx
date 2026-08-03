@@ -17,6 +17,8 @@ import { TodayPage } from './pages/TodayPage';
 import { WorkoutsPage } from './pages/WorkoutsPage';
 import { ExercisesPage } from './pages/ExercisesPage';
 import { ActiveWorkoutPage } from './pages/ActiveWorkoutPage';
+import { WorkoutProgramPage } from './pages/WorkoutProgramPage';
+import { WorkoutSummaryPage } from './pages/WorkoutSummaryPage';
 import { WeightHistoryPage } from './pages/WeightHistoryPage';
 import { TemplatesPage } from './pages/TemplatesPage';
 import { ReportsPage } from './pages/ReportsPage';
@@ -70,7 +72,9 @@ function App() {
             <Route path="/friends" element={<FriendsPage />} />
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/workouts" element={<WorkoutsPage />} />
+            <Route path="/workout/program/:programId" element={<WorkoutProgramPage />} />
             <Route path="/workout/category/:categoryId" element={<ExercisesPage />} />
+            <Route path="/workout/:sessionId/summary" element={<WorkoutSummaryPage />} />
             <Route path="/workout/:sessionId" element={<ActiveWorkoutPage />} />
             <Route path="/weight" element={<WeightHistoryPage />} />
             <Route path="/templates" element={<TemplatesPage />} />

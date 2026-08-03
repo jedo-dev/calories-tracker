@@ -14,6 +14,9 @@ export class WorkoutCategory {
   @Prop({ required: true })
   emoji: string;
 
+  @Prop()
+  imageUrl?: string;
+
   @Prop({ required: true })
   sortOrder: number;
 }

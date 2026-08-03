@@ -23,4 +23,9 @@ export class AddExerciseToSessionDto {
   @Min(0)
   @IsOptional()
   durationSec?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  restSec?: number;
 }

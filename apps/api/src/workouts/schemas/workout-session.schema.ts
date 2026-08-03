@@ -20,6 +20,12 @@ export class WorkoutSession {
   @Prop()
   name?: string;
 
+  @Prop({ type: Types.ObjectId, ref: 'WorkoutProgram' })
+  programId?: Types.ObjectId;
+
+  @Prop()
+  programName?: string;
+
   @Prop({ default: 0 })
   totalCaloriesBurned: number;
 

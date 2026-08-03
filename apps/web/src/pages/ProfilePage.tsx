@@ -22,12 +22,11 @@ export function ProfilePage() {
   const [editingBody, setEditingBody] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
-  const [prediction, setPrediction] = useState<any>(null);
+  const [, setPrediction] = useState<any>(null);
   const [league, setLeague] = useState<LeagueState | null>(null);
   const [streakDays, setStreakDays] = useState(0);
   const [achievements, setAchievements] = useState<AchievementState[]>([]);
   const [formData, setFormData] = useState<ProfileData>({ goal: "maintain" });
-  console.log(`prediction`, prediction);
   useEffect(() => {
     loadProfile();
   }, []);

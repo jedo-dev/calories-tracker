@@ -1,6 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { getModelToken } from '@nestjs/mongoose';
+import { StorageService } from '../src/storage/storage.service';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Covers live in the web app's assets; the seed mirrors them into MinIO
+// so that categories/programs carry a backend-served imageUrl.
+const CATEGORY_IMAGES_DIR = path.resolve(__dirname, '../../web/src/assets/04_workout_categories');
+const categoryImageFiles: Record<string, string> = {
+  'Грудь': 'cat_chest.jpg',
+  'Спина': 'cat_back.jpg',
+  'Ноги': 'cat_legs.jpg',
+  'Плечи': 'cat_shoulders.jpg',
+  'Руки': 'cat_arms.jpg',
+  'Пресс': 'cat_abs.jpg',
+  'Кардио': 'cat_cardio.jpg',
+};
 
 const categories = [
   { name: 'Грудь', emoji: '💪', description: 'Верхняя часть тела — грудные мышцы', sortOrder: 1 },
@@ -645,11 +661,175 @@ const exercisesByCategory: Record<string, any[]> = {
   ],
 };
 
+interface ProgramSeedItem {
+  exerciseName: string;
+  sets: number;
+  reps?: number;
+  durationSec?: number;
+  restSec: number;
+}
+
+interface ProgramSeed {
+  name: string;
+  description: string;
+  categoryName: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  sortOrder: number;
+  items: ProgramSeedItem[];
+}
+
+const programs: ProgramSeed[] = [
+  {
+    name: 'Грудь — базовая',
+    description: 'Классическая тренировка груди: базовые жимы плюс изоляция. Подходит для зала.',
+    categoryName: 'Грудь',
+    level: 'intermediate',
+    sortOrder: 10,
+    items: [
+      { exerciseName: 'Жим штанги лёжа', sets: 4, reps: 10, restSec: 90 },
+      { exerciseName: 'Жим гантелей лёжа', sets: 3, reps: 12, restSec: 90 },
+      { exerciseName: 'Разведение гантелей лёжа', sets: 3, reps: 12, restSec: 60 },
+      { exerciseName: 'Отжимания', sets: 3, reps: 15, restSec: 60 },
+    ],
+  },
+  {
+    name: 'Спина — базовая',
+    description: 'Ширина и толщина спины: вертикальные и горизонтальные тяги.',
+    categoryName: 'Спина',
+    level: 'intermediate',
+    sortOrder: 20,
+    items: [
+      { exerciseName: 'Подтягивания широким хватом', sets: 4, reps: 8, restSec: 90 },
+      { exerciseName: 'Тяга штанги в наклоне', sets: 4, reps: 10, restSec: 90 },
+      { exerciseName: 'Тяга верхнего блока', sets: 3, reps: 12, restSec: 60 },
+      { exerciseName: 'Тяга горизонтального блока', sets: 3, reps: 12, restSec: 60 },
+    ],
+  },
+  {
+    name: 'Ноги — базовая',
+    description: 'Полная тренировка ног: квадрицепсы, бицепс бедра, ягодицы и икры.',
+    categoryName: 'Ноги',
+    level: 'intermediate',
+    sortOrder: 30,
+    items: [
+      { exerciseName: 'Приседания со штангой', sets: 4, reps: 10, restSec: 120 },
+      { exerciseName: 'Жим ногами', sets: 3, reps: 12, restSec: 90 },
+      { exerciseName: 'Румынская тяга', sets: 3, reps: 12, restSec: 90 },
+      { exerciseName: 'Выпады с гантелями', sets: 3, reps: 12, restSec: 60 },
+      { exerciseName: 'Подъёмы на носки', sets: 4, reps: 15, restSec: 45 },
+    ],
+  },
+  {
+    name: 'Плечи — базовая',
+    description: 'Все три пучка дельт: жимы и махи.',
+    categoryName: 'Плечи',
+    level: 'beginner',
+    sortOrder: 40,
+    items: [
+      { exerciseName: 'Жим гантелей стоя', sets: 4, reps: 10, restSec: 90 },
+      { exerciseName: 'Разведение гантелей в стороны', sets: 3, reps: 15, restSec: 60 },
+      { exerciseName: 'Махи гантелей в наклоне', sets: 3, reps: 15, restSec: 60 },
+      { exerciseName: 'Жим Арнольда', sets: 3, reps: 12, restSec: 90 },
+    ],
+  },
+  {
+    name: 'Руки — базовая',
+    description: 'Суперпары на бицепс и трицепс для объёма рук.',
+    categoryName: 'Руки',
+    level: 'beginner',
+    sortOrder: 50,
+    items: [
+      { exerciseName: 'Сгибания рук со штангой стоя', sets: 4, reps: 10, restSec: 60 },
+      { exerciseName: 'Французский жим', sets: 3, reps: 12, restSec: 60 },
+      { exerciseName: 'Молотковые сгибания', sets: 3, reps: 12, restSec: 60 },
+      { exerciseName: 'Разгибания на трицепс на блоке', sets: 3, reps: 15, restSec: 45 },
+    ],
+  },
+  {
+    name: 'Пресс — базовая',
+    description: 'Кор и пресс без инвентаря: скручивания, подъёмы ног и планка.',
+    categoryName: 'Пресс',
+    level: 'beginner',
+    sortOrder: 60,
+    items: [
+      { exerciseName: 'Скручивания на полу', sets: 3, reps: 15, restSec: 45 },
+      { exerciseName: 'Подъём ног лёжа', sets: 3, reps: 12, restSec: 45 },
+      { exerciseName: 'Русские скручивания', sets: 3, reps: 20, restSec: 45 },
+      { exerciseName: 'Планка', sets: 3, durationSec: 45, restSec: 60 },
+      { exerciseName: 'Велосипед', sets: 3, reps: 20, restSec: 45 },
+    ],
+  },
+  {
+    name: 'Кардио — жиросжигание',
+    description: 'Интервальная кардио-сессия для расхода калорий. Без инвентаря, кроме скакалки.',
+    categoryName: 'Кардио',
+    level: 'beginner',
+    sortOrder: 70,
+    items: [
+      { exerciseName: 'Jumping Jacks', sets: 3, durationSec: 60, restSec: 30 },
+      { exerciseName: 'Бёрпи', sets: 3, reps: 8, restSec: 60 },
+      { exerciseName: 'Высокие колени', sets: 3, durationSec: 60, restSec: 30 },
+      { exerciseName: 'Прыжки на скакалке', sets: 3, durationSec: 120, restSec: 60 },
+      { exerciseName: 'Бег на месте', sets: 1, durationSec: 300, restSec: 0 },
+    ],
+  },
+  // Домашняя программа «Плоский живот» (перенесена с фронтенда, apps/web workoutPrograms.ts)
+  {
+    name: 'Плоский живот — день A (пресс и кор)',
+    description: '~35 мин, без инвентаря. Разминка, основная работа на пресс, кор.',
+    categoryName: 'Пресс',
+    level: 'beginner',
+    sortOrder: 80,
+    items: [
+      { exerciseName: 'Jumping Jacks', sets: 3, durationSec: 60, restSec: 30 },
+      { exerciseName: 'Скручивания на полу', sets: 3, reps: 15, restSec: 45 },
+      { exerciseName: 'Подъём ног лёжа', sets: 3, reps: 12, restSec: 45 },
+      { exerciseName: 'Русские скручивания', sets: 3, reps: 20, restSec: 45 },
+      { exerciseName: 'Планка', sets: 3, durationSec: 45, restSec: 60 },
+      { exerciseName: 'Велосипед', sets: 3, reps: 20, restSec: 45 },
+      { exerciseName: 'Горные альпинисты', sets: 3, durationSec: 30, restSec: 45 },
+    ],
+  },
+  {
+    name: 'Плоский живот — день B (ягодицы и ноги)',
+    description: '~35 мин, без инвентаря. Низ тела плюс кор.',
+    categoryName: 'Пресс',
+    level: 'beginner',
+    sortOrder: 81,
+    items: [
+      { exerciseName: 'Высокие колени', sets: 3, durationSec: 60, restSec: 30 },
+      { exerciseName: 'Приседания без веса', sets: 4, reps: 15, restSec: 45 },
+      { exerciseName: 'Выпады с гантелями', sets: 3, reps: 12, restSec: 60 },
+      { exerciseName: 'Ягодичный мостик', sets: 4, reps: 15, restSec: 45 },
+      { exerciseName: 'Планка', sets: 3, durationSec: 40, restSec: 60 },
+      { exerciseName: 'Бёрпи', sets: 3, reps: 8, restSec: 60 },
+    ],
+  },
+  {
+    name: 'Плоский живот — день C (всё тело)',
+    description: '~40 мин, без инвентаря. Полное тело в круговом стиле.',
+    categoryName: 'Пресс',
+    level: 'beginner',
+    sortOrder: 82,
+    items: [
+      { exerciseName: 'Jumping Jacks', sets: 3, durationSec: 60, restSec: 30 },
+      { exerciseName: 'Отжимания', sets: 4, reps: 10, restSec: 60 },
+      { exerciseName: 'Приседания без веса', sets: 3, reps: 15, restSec: 45 },
+      { exerciseName: 'Скалолаз', sets: 3, durationSec: 30, restSec: 45 },
+      { exerciseName: 'Русские скручивания', sets: 3, reps: 15, restSec: 45 },
+      { exerciseName: 'Ягодичный мостик', sets: 3, reps: 15, restSec: 45 },
+      { exerciseName: 'Бег на месте', sets: 1, durationSec: 300, restSec: 0 },
+    ],
+  },
+];
+
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
   const categoryModel = app.get(getModelToken('WorkoutCategory'));
   const exerciseModel = app.get(getModelToken('Exercise'));
+  const programModel = app.get(getModelToken('WorkoutProgram'));
+  const storage = app.get(StorageService);
 
   console.log('=== Seeding workout categories ===\n');
 
@@ -698,7 +878,91 @@ async function seed() {
     }
   }
 
+  console.log('\n=== Seeding category images (MinIO) ===\n');
+
+  for (const cat of Object.values(categoryMap) as any[]) {
+    if (cat.imageUrl) {
+      console.log(`  [=] ${cat.name} (imageUrl уже задан)`);
+      continue;
+    }
+    const fileName = categoryImageFiles[cat.name];
+    const filePath = fileName ? path.join(CATEGORY_IMAGES_DIR, fileName) : null;
+    if (!filePath || !fs.existsSync(filePath)) {
+      console.warn(`  [!] ${cat.name}: файл обложки не найден (${fileName}), пропуск`);
+      continue;
+    }
+    try {
+      const buffer = fs.readFileSync(filePath);
+      const slug = fileName.replace(/^cat_/, '').replace(/\.jpg$/, '');
+      const url = await storage.uploadObject(`workout-categories/${slug}.jpg`, buffer, 'image/jpeg');
+      cat.imageUrl = url;
+      await cat.save();
+      console.log(`  [+] ${cat.name} -> ${url}`);
+    } catch (err: any) {
+      console.warn(`  [!] ${cat.name}: не удалось залить обложку (${err?.message})`);
+    }
+  }
+
+  console.log('\n=== Seeding workout programs ===\n');
+
+  let programsCreated = 0;
+  let programsUpdated = 0;
+
+  for (const prog of programs) {
+    const category = categoryMap[prog.categoryName];
+    if (!category) {
+      console.warn(`  [!] ${prog.name}: категория "${prog.categoryName}" не найдена, пропуск`);
+      continue;
+    }
+
+    const items: any[] = [];
+    for (let i = 0; i < prog.items.length; i++) {
+      const item = prog.items[i];
+      const exercise = await exerciseModel.findOne({ name: item.exerciseName });
+      if (!exercise) {
+        console.warn(`  [!] ${prog.name}: упражнение "${item.exerciseName}" не найдено, пропуск позиции`);
+        continue;
+      }
+      items.push({
+        exerciseId: exercise._id,
+        order: i,
+        sets: item.sets,
+        reps: item.reps,
+        durationSec: item.durationSec,
+        restSec: item.restSec,
+      });
+    }
+    if (!items.length) {
+      console.warn(`  [!] ${prog.name}: ни одного упражнения не найдено, пропуск программы`);
+      continue;
+    }
+
+    const payload = {
+      name: prog.name,
+      description: prog.description,
+      categoryId: category._id,
+      level: prog.level,
+      sortOrder: prog.sortOrder,
+      items,
+      imageUrl: category.imageUrl || undefined,
+    };
+
+    const existing = await programModel.findOne({ name: prog.name });
+    if (!existing) {
+      await programModel.create(payload);
+      programsCreated++;
+      console.log(`  [+] ${prog.name} (${items.length} упражнений)`);
+    } else {
+      // the seed file is the source of truth for program contents
+      existing.set({ ...payload, imageUrl: existing.imageUrl || payload.imageUrl });
+      await existing.save();
+      programsUpdated++;
+      console.log(`  [~] ${prog.name} (обновлена, ${items.length} упражнений)`);
+    }
+  }
+
   console.log(`\n=== Готово! ===`);
+  console.log(`Программ создано: ${programsCreated}, обновлено: ${programsUpdated}`);
   console.log(`Создано упражнений: ${createdCount}`);
   console.log(`Пропущено (уже есть): ${skippedCount}`);
   console.log(`Всего категорий: ${Object.keys(categoryMap).length}`);

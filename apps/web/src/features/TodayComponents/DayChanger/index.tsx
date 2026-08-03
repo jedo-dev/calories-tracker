@@ -57,7 +57,7 @@ const DayChanger = ({
   };
 
   const disablePrev = registrationDate ? parseDate(date) <= new Date(registrationDate) : false;
-  const disableNext = parseDate(date) >= new Date();
+  const disableNext = parseDate(date) >= parseDate(formatDate(new Date()));
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 48px', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
