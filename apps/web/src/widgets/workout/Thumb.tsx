@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function Thumb({ src, alt, size, radius = 12 }: { src?: string; alt: string; size: number; radius?: number }) {
   const [failed, setFailed] = useState(false);
+
+  // a new src (e.g. freshly uploaded photo) must clear the previous load failure
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
   if (!src || failed) {
     return (
       <div

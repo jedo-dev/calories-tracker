@@ -21,7 +21,7 @@ import { AddExerciseToSessionDto } from './dto/add-exercise.dto';
 import { StartProgramDto } from './dto/start-program.dto';
 import { UpdateLogDto } from './dto/update-log.dto';
 import { CreateProgramDto, UpdateProgramDto } from './dto/save-program.dto';
-import { UpdateExerciseDto } from './dto/update-exercise.dto';
+import { CreateExerciseDto, UpdateExerciseDto } from './dto/update-exercise.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -121,10 +121,18 @@ export class WorkoutController {
     return { imageUrl: program.imageUrl };
   }
 
-  // Exercises (all when categoryId is omitted — used by the custom workout builder)
+  // Exercises. Without limit returns the full catalog (legacy builder callers);
+  // admin/editor callers pass search+limit+offset for server-side paging.
   @Get('exercises')
-  async getExercisesByCategory(@Query('categoryId') categoryId?: string) {
-    return this.workoutService.getExercisesByCategory(categoryId);
+  async getExercisesByCategory(
+    @Query('categoryId') categoryId?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    const limitNum = limit ? Math.min(Math.max(parseInt(limit, 10) || 0, 0), 100) : undefined;
+    const offsetNum = offset ? Math.max(parseInt(offset, 10) || 0, 0) : undefined;
+    return this.workoutService.getExercisesByCategory(categoryId, search, limitNum, offsetNum);
   }
 
   // Last performance per exercise — must be declared before 'exercises/:id'
@@ -143,10 +151,23 @@ export class WorkoutController {
     return this.workoutService.getExerciseById(id);
   }
 
+  @Post('exercises')
+  @Roles(...CONTENT_EDITORS)
+  async createExercise(@Body(ValidationPipe) dto: CreateExerciseDto) {
+    return this.workoutService.createExercise(dto);
+  }
+
   @Patch('exercises/:id')
   @Roles(...CONTENT_EDITORS)
   async updateExercise(@Param('id') id: string, @Body(ValidationPipe) dto: UpdateExerciseDto) {
     return this.workoutService.updateExercise(id, dto);
+  }
+
+  @Delete('exercises/:id')
+  @Roles(...CONTENT_EDITORS)
+  async deleteExercise(@Param('id') id: string) {
+    await this.workoutService.deleteExercise(id);
+    return { ok: true };
   }
 
   @Post('exercises/:id/photo')

@@ -16,7 +16,8 @@ export class Exercise {
   @Prop({ type: Types.ObjectId, ref: 'WorkoutCategory', required: true, index: true })
   categoryId: Types.ObjectId;
 
-  @Prop({ required: true })
+  // may be empty for freshly created exercises until a photo is uploaded
+  @Prop({ default: '' })
   gifUrl: string;
 
   @Prop({

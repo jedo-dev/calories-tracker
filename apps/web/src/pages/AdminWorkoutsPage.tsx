@@ -10,7 +10,7 @@ import { IconButton } from '../ui/IconButton';
 import { BackIcon } from '../ui/icons';
 import { workoutPageBackground } from './workoutShared';
 import { AdminCategoriesTab } from '../widgets/workout/admin/AdminCategoriesTab';
-import { AdminExercisesTab, AdminExercise } from '../widgets/workout/admin/AdminExercisesTab';
+import { AdminExercisesTab } from '../widgets/workout/admin/AdminExercisesTab';
 import { AdminProgramsTab, AdminProgram } from '../widgets/workout/admin/AdminProgramsTab';
 import type { WorkoutCategory } from '../widgets/workout/types';
 
@@ -24,7 +24,6 @@ export function AdminWorkoutsPage() {
   const [tab, setTab] = useState<Tab>('programs');
   const [programs, setPrograms] = useState<AdminProgram[]>([]);
   const [categories, setCategories] = useState<WorkoutCategory[]>([]);
-  const [exercises, setExercises] = useState<AdminExercise[]>([]);
   const [loading, setLoading] = useState(true);
 
   const canEdit = !!user?.role && EDITOR_ROLES.includes(user.role);
@@ -33,11 +32,9 @@ export function AdminWorkoutsPage() {
     return Promise.all([
       apiClient.get('/workouts/programs').catch(() => null),
       apiClient.get('/workouts/categories').catch(() => null),
-      apiClient.get('/workouts/exercises').catch(() => null),
-    ]).then(([programsRes, catRes, exRes]) => {
+    ]).then(([programsRes, catRes]) => {
       if (programsRes) setPrograms(programsRes.data);
       if (catRes) setCategories(catRes.data);
-      if (exRes) setExercises(exRes.data);
     });
   }, []);
 
@@ -106,21 +103,9 @@ export function AdminWorkoutsPage() {
           </div>
 
           {tab === 'programs' && (
-            <AdminProgramsTab
-              programs={programs}
-              categories={categories}
-              exercises={exercises}
-              onChanged={loadData}
-            />
+            <AdminProgramsTab programs={programs} categories={categories} onChanged={loadData} />
           )}
-          {tab === 'exercises' && (
-            <AdminExercisesTab
-              exercises={exercises}
-              onExerciseChanged={(next) =>
-                setExercises((prev) => prev.map((ex) => (ex._id === next._id ? { ...ex, ...next } : ex)))
-              }
-            />
-          )}
+          {tab === 'exercises' && <AdminExercisesTab categories={categories} />}
           {tab === 'categories' && (
             <AdminCategoriesTab
               categories={categories}

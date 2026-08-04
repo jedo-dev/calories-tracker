@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { WorkoutCategory, WorkoutCategoryDocument } from './schemas/workout-category.schema';
@@ -202,19 +202,81 @@ export class WorkoutService {
   }
 
   // Admin: exercise editing
+  async createExercise(dto: {
+    name: string;
+    categoryId: string;
+    type: string;
+    metValue: number;
+    description?: string;
+    muscleGroups?: string[];
+    equipment?: string;
+    difficulty?: string;
+    defaultSets?: number;
+    defaultReps?: number;
+    defaultDurationSec?: number;
+  }): Promise<ExerciseDocument> {
+    const category = await this.categoryModel.findById(dto.categoryId).exec();
+    if (!category) throw new NotFoundException('Category not found');
+    return new this.exerciseModel({
+      ...dto,
+      categoryId: category._id,
+      muscleGroups: dto.muscleGroups || [],
+      difficulty: dto.difficulty || 'beginner',
+      defaultSets: dto.defaultSets ?? 3,
+      defaultReps: dto.defaultReps ?? 12,
+    }).save();
+  }
+
   async updateExercise(
     exerciseId: string,
-    dto: Partial<Pick<Exercise, 'name' | 'description' | 'equipment' | 'difficulty' | 'defaultSets' | 'defaultReps' | 'defaultDurationSec'>>,
+    dto: {
+      name?: string;
+      description?: string;
+      categoryId?: string;
+      type?: string;
+      metValue?: number;
+      muscleGroups?: string[];
+      equipment?: string;
+      difficulty?: string;
+      defaultSets?: number;
+      defaultReps?: number;
+      defaultDurationSec?: number;
+    },
   ): Promise<ExerciseDocument> {
     const exercise = await this.exerciseModel.findById(exerciseId).exec();
     if (!exercise) throw new NotFoundException('Exercise not found');
-    Object.assign(exercise, dto);
+
+    const { categoryId, ...rest } = dto;
+    if (categoryId) {
+      const category = await this.categoryModel.findById(categoryId).exec();
+      if (!category) throw new NotFoundException('Category not found');
+      exercise.categoryId = category._id as Types.ObjectId;
+    }
+    Object.assign(exercise, rest);
     const saved = await exercise.save();
     if (dto.name) {
       // logs denormalize the exercise name
       await this.logModel.updateMany({ exerciseId: exercise._id }, { $set: { exerciseName: dto.name } }).exec();
     }
     return saved;
+  }
+
+  async deleteExercise(exerciseId: string): Promise<void> {
+    const exercise = await this.exerciseModel.findById(exerciseId).exec();
+    if (!exercise) throw new NotFoundException('Exercise not found');
+
+    const usedIn = await this.programModel
+      .find({ 'items.exerciseId': exercise._id })
+      .select('name')
+      .exec();
+    if (usedIn.length) {
+      throw new BadRequestException(
+        `Упражнение используется в программах: ${usedIn.map((p) => p.name).join(', ')}. Сначала уберите его оттуда.`,
+      );
+    }
+
+    // past workout logs keep their denormalized name/gifUrl and stay intact
+    await exercise.deleteOne();
   }
 
   async updateExerciseImage(exerciseId: string, gifUrl: string): Promise<ExerciseDocument> {
@@ -303,9 +365,24 @@ export class WorkoutService {
   }
 
   // Exercises
-  async getExercisesByCategory(categoryId?: string): Promise<ExerciseDocument[]> {
-    const filter = categoryId ? { categoryId: new Types.ObjectId(categoryId) } : {};
-    return this.exerciseModel.find(filter).sort({ name: 1 }).exec();
+  async getExercisesByCategory(
+    categoryId?: string,
+    search?: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<ExerciseDocument[]> {
+    const filter: Record<string, any> = {};
+    if (categoryId) filter.categoryId = new Types.ObjectId(categoryId);
+    if (search?.trim()) {
+      const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.name = { $regex: escaped, $options: 'i' };
+    }
+
+    let query = this.exerciseModel.find(filter).sort({ name: 1 });
+    if (offset && offset > 0) query = query.skip(offset);
+    // limit is opt-in to keep legacy full-catalog callers working
+    if (limit && limit > 0) query = query.limit(Math.min(limit, 100));
+    return query.exec();
   }
 
   async getExerciseById(id: string): Promise<ExerciseDocument> {

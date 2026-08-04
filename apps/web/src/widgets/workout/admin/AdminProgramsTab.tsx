@@ -1,17 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiClient } from '../../../api/client';
+import { useDebounce } from '../../../hooks/useDebounce';
 import { t } from '../../../i18n';
 import { useTheme } from '../../../theme/useTheme';
 import { Text } from '../../../ui/Text';
+import { Button } from '../../../ui/Button';
+import { EditIcon } from '../../../ui/icons';
+import DeleteIcon from '../../../assets/DeleteIcon';
 import { workoutCardStyle } from '../../../pages/workoutShared';
 import { Thumb } from '../Thumb';
 import { ConfirmSheet } from '../ConfirmSheet';
-import { PhotoUploadButton } from './PhotoUploadButton';
+import { PhotoDropzone } from './PhotoDropzone';
 import type { WorkoutCategory } from '../types';
 import type { AdminExercise } from './AdminExercisesTab';
 
 export interface AdminProgramItem {
   exerciseId: string;
+  // denormalized for display so the editor doesn't need the full catalog
+  name?: string;
+  gifUrl?: string;
   sets: number;
   reps?: number | null;
   durationSec?: number | null;
@@ -32,7 +39,6 @@ export interface AdminProgram {
 interface AdminProgramsTabProps {
   programs: AdminProgram[];
   categories: WorkoutCategory[];
-  exercises: AdminExercise[];
   onChanged: () => void;
 }
 
@@ -56,8 +62,18 @@ const numInputStyle = (theme: any): React.CSSProperties => ({
   padding: '0 8px',
 });
 
+async function uploadProgramPhoto(programId: string, file: File): Promise<string> {
+  const form = new FormData();
+  form.append('photo', file);
+  const res = await apiClient.post(`/workouts/programs/${programId}/photo`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data.imageUrl as string;
+}
+
 interface EditorState {
   _id: string | null;
+  imageUrl: string;
   name: string;
   description: string;
   categoryId: string;
@@ -65,32 +81,59 @@ interface EditorState {
   items: AdminProgramItem[];
 }
 
-export function AdminProgramsTab({ programs, categories, exercises, onChanged }: AdminProgramsTabProps) {
+export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgramsTabProps) {
   const theme = useTheme();
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminProgram | null>(null);
   const [pickerSearch, setPickerSearch] = useState('');
   const [showPicker, setShowPicker] = useState(false);
 
-  const exerciseById = useMemo(() => new Map(exercises.map((e) => [e._id, e])), [exercises]);
+  const [pickerResults, setPickerResults] = useState<AdminExercise[]>([]);
+  const [pickerLoading, setPickerLoading] = useState(false);
+  const debouncedPickerSearch = useDebounce(pickerSearch, 300);
 
-  const openNew = () =>
-    setEditor({ _id: null, name: '', description: '', categoryId: categories[0]?._id || '', level: 'beginner', items: [] });
+  // server-side exercise search for the picker (no full-catalog preload)
+  useEffect(() => {
+    if (!showPicker) return;
+    let cancelled = false;
+    setPickerLoading(true);
+    apiClient
+      .get('/workouts/exercises', {
+        params: { search: debouncedPickerSearch.trim() || undefined, limit: 20 },
+      })
+      .then((res) => !cancelled && setPickerResults(res.data))
+      .catch(() => !cancelled && setPickerResults([]))
+      .finally(() => !cancelled && setPickerLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [showPicker, debouncedPickerSearch]);
+
+  const openNew = () => {
+    setPendingPhoto(null);
+    setEditor({ _id: null, imageUrl: '', name: '', description: '', categoryId: categories[0]?._id || '', level: 'beginner', items: [] });
+  };
 
   const openEdit = async (p: AdminProgram) => {
+    setPendingPhoto(null);
     // the list endpoint omits items — fetch the full program
     try {
       const res = await apiClient.get(`/workouts/programs/${p._id}`);
       setEditor({
         _id: p._id,
+        imageUrl: res.data.imageUrl || '',
         name: res.data.name,
         description: res.data.description || '',
         categoryId: res.data.categoryId || '',
         level: res.data.level,
         items: res.data.items.map((i: any) => ({
           exerciseId: typeof i.exerciseId === 'string' ? i.exerciseId : i.exercise?._id,
+          name: i.exercise?.name,
+          gifUrl: i.exercise?.gifUrl,
           sets: i.sets,
           reps: i.reps,
           durationSec: i.durationSec,
@@ -146,9 +189,17 @@ export function AdminProgramsTab({ programs, categories, exercises, onChanged }:
       if (editor._id) {
         await apiClient.patch(`/workouts/programs/${editor._id}`, payload);
       } else {
-        await apiClient.post('/workouts/programs', payload);
+        const created = await apiClient.post('/workouts/programs', payload);
+        if (pendingPhoto) {
+          try {
+            await uploadProgramPhoto(created.data._id, pendingPhoto);
+          } catch {
+            // program is saved; the cover can be re-uploaded from the editor later
+          }
+        }
       }
       setEditor(null);
+      setPendingPhoto(null);
       onChanged();
     } catch (err: any) {
       setError(err.response?.data?.message || err.message);
@@ -169,11 +220,6 @@ export function AdminProgramsTab({ programs, categories, exercises, onChanged }:
     }
   };
 
-  const filteredPicker = useMemo(() => {
-    const q = pickerSearch.trim().toLowerCase();
-    if (!q) return exercises;
-    return exercises.filter((e) => e.name.toLowerCase().includes(q));
-  }, [exercises, pickerSearch]);
 
   // --- editor form ---
   if (editor) {
@@ -182,6 +228,38 @@ export function AdminProgramsTab({ programs, categories, exercises, onChanged }:
         <Text variant="h2" bold style={{ display: 'block', fontSize: '17px', marginBottom: '10px' }}>
           {editor._id ? t('workout.editProgram') : t('workout.newProgram')}
         </Text>
+
+        <PhotoDropzone
+          photoUrl={editor.imageUrl}
+          alt={editor.name || 'Обложка программы'}
+          busy={uploadingPhoto}
+          onSelect={async (file) => {
+            if (file.size > 5 * 1024 * 1024) {
+              setError('Фото больше 5 МБ');
+              return;
+            }
+            if (editor._id) {
+              setUploadingPhoto(true);
+              setError(null);
+              try {
+                const url = await uploadProgramPhoto(editor._id, file);
+                setEditor((prev) => (prev ? { ...prev, imageUrl: url } : prev));
+                onChanged();
+              } catch (err: any) {
+                setError(err.response?.data?.message || 'Не удалось загрузить фото');
+              } finally {
+                setUploadingPhoto(false);
+              }
+            } else {
+              const reader = new FileReader();
+              reader.onload = () => {
+                setEditor((prev) => (prev ? { ...prev, imageUrl: reader.result as string } : prev));
+                setPendingPhoto(file);
+              };
+              reader.readAsDataURL(file);
+            }
+          }}
+        />
 
         <label style={{ display: 'block', marginBottom: '8px' }}>
           <Text variant="small" muted style={{ display: 'block', marginBottom: '4px' }}>{t('workout.programName')}</Text>
@@ -227,7 +305,6 @@ export function AdminProgramsTab({ programs, categories, exercises, onChanged }:
 
         <Text variant="small" muted style={{ display: 'block', marginBottom: '6px' }}>{t('workout.exercises')}</Text>
         {editor.items.map((item, i) => {
-          const ex = exerciseById.get(item.exerciseId);
           const durationBased = item.durationSec != null && item.reps == null;
           return (
             <div
@@ -241,9 +318,9 @@ export function AdminProgramsTab({ programs, categories, exercises, onChanged }:
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <Thumb src={ex?.gifUrl} alt={ex?.name || ''} size={32} />
+                <Thumb src={item.gifUrl} alt={item.name || ''} size={32} />
                 <Text bold style={{ flex: 1, minWidth: 0, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {ex?.name || item.exerciseId}
+                  {item.name || item.exerciseId}
                 </Text>
                 <button type="button" aria-label="Вверх" onClick={() => moveItem(i, -1)} style={{ ...numInputStyle(theme), width: '32px', cursor: 'pointer' }}>↑</button>
                 <button type="button" aria-label="Вниз" onClick={() => moveItem(i, 1)} style={{ ...numInputStyle(theme), width: '32px', cursor: 'pointer' }}>↓</button>
@@ -304,7 +381,17 @@ export function AdminProgramsTab({ programs, categories, exercises, onChanged }:
               style={{ ...inputStyle(theme), marginBottom: '6px' }}
             />
             <div style={{ maxHeight: '220px', overflowY: 'auto', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              {filteredPicker.map((ex) => (
+              {pickerLoading && (
+                <Text variant="small" muted style={{ display: 'block', padding: '10px 12px' }}>
+                  {t('common.search')}…
+                </Text>
+              )}
+              {!pickerLoading && pickerResults.length === 0 && (
+                <Text variant="small" muted style={{ display: 'block', padding: '10px 12px' }}>
+                  Ничего не найдено
+                </Text>
+              )}
+              {!pickerLoading && pickerResults.map((ex) => (
                 <button
                   key={ex._id}
                   type="button"
@@ -315,6 +402,8 @@ export function AdminProgramsTab({ programs, categories, exercises, onChanged }:
                         ...editor.items,
                         {
                           exerciseId: ex._id,
+                          name: ex.name,
+                          gifUrl: ex.gifUrl,
                           sets: ex.defaultSets,
                           reps: ex.defaultDurationSec ? null : ex.defaultReps,
                           durationSec: ex.defaultDurationSec || null,
@@ -441,55 +530,38 @@ export function AdminProgramsTab({ programs, categories, exercises, onChanged }:
       </button>
 
       {programs.map((p) => (
-        <div key={p._id} style={{ ...workoutCardStyle, marginBottom: '10px', padding: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Thumb src={p.imageUrl} alt={p.name} size={46} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text bold style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {p.name}
-              </Text>
-              <Text variant="small" muted>
-                {p.exerciseCount} {t('workout.exerciseCount').toLowerCase()} · {t(`workout.${p.level}`)}
-              </Text>
-            </div>
+        <div
+          key={p._id}
+          style={{ ...workoutCardStyle, marginBottom: '10px', padding: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}
+        >
+          <Thumb src={p.imageUrl} alt={p.name} size={46} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text bold style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {p.name}
+            </Text>
+            <Text variant="small" muted>
+              {p.exerciseCount} {t('workout.exerciseCount').toLowerCase()} · {t(`workout.${p.level}`)}
+            </Text>
           </div>
-          <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
-            <button
-              type="button"
+          <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => openEdit(p)}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '12px',
-                border: '1px solid rgba(160, 200, 220, 0.24)',
-                background: 'rgba(255,255,255,0.07)',
-                color: theme.palette.text,
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
+              style={{ padding: '8px', minWidth: '36px', minHeight: '36px', width: 'auto' }}
+              aria-label="Редактировать"
             >
-              ✎ {t('workout.editProgram')}
-            </button>
-            <PhotoUploadButton compact uploadUrl={`/workouts/programs/${p._id}/photo`} onUploaded={() => onChanged()} />
-            <button
-              type="button"
+              <EditIcon />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setDeleteTarget(p)}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '12px',
-                border: '1px solid rgba(255,110,110,0.35)',
-                background: 'rgba(255,110,110,0.08)',
-                color: '#ff8a8a',
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                marginLeft: 'auto',
-              }}
+              style={{ padding: '8px', minWidth: '36px', minHeight: '36px', width: 'auto' }}
+              aria-label="Удалить"
             >
-              ✕ {t('common.delete')}
-            </button>
+              <DeleteIcon />
+            </Button>
           </div>
         </div>
       ))}
