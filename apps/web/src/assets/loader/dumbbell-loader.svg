@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Загрузка">
+  <title>FlareonFit loader — гантель</title>
+
+  <!-- след движения -->
+  <g opacity="0.35">
+    <circle cx="100" cy="100" r="74" fill="none" stroke="#F58A3C" stroke-width="6"
+            stroke-linecap="round" stroke-dasharray="46 419" transform="rotate(-90 100 100)">
+      <animateTransform attributeName="transform" type="rotate"
+                        values="-90 100 100;270 100 100" dur="1.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="100" cy="100" r="74" fill="none" stroke="#4CB558" stroke-width="6"
+            stroke-linecap="round" stroke-dasharray="46 419" transform="rotate(90 100 100)">
+      <animateTransform attributeName="transform" type="rotate"
+                        values="90 100 100;450 100 100" dur="1.6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- гантель -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+                      values="0 100 100;180 100 100;360 100 100" dur="1.6s" repeatCount="indefinite"
+                      calcMode="spline" keySplines="0.5 0 0.5 1;0.5 0 0.5 1"/>
+    <rect x="66" y="93" width="68" height="14" rx="7" fill="#3A9646"/>
+    <rect x="70" y="95" width="60" height="5" rx="2.5" fill="#FFFFFF" opacity="0.25"/>
+    <rect x="40" y="76" width="22" height="48" rx="10" fill="#4CB558"/>
+    <rect x="138" y="76" width="22" height="48" rx="10" fill="#4CB558"/>
+    <rect x="30" y="84" width="14" height="32" rx="7" fill="#F58A3C"/>
+    <rect x="156" y="84" width="14" height="32" rx="7" fill="#F58A3C"/>
+  </g>
+</svg>

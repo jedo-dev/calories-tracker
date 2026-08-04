@@ -6,7 +6,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
-import Loader from '../ui/Loader';
+import Loader, { InlineLoader } from '../ui/Loader';
 import { Text } from '../ui/Text';
 import { FriendsTabs } from '../widgets/friends/FriendsTabs';
 import { FriendsSearchBar } from '../widgets/friends/FriendsSearchBar';
@@ -183,7 +183,7 @@ export function FriendsPage() {
         <>
           <FriendsSearchBar value={searchQuery} onChange={setSearchQuery} />
           {loading ? (
-            <Loader />
+            <InlineLoader />
           ) : searchQuery.trim().length === 0 ? (
             <EmptyState image={emptyFriends} title={t('friends.searchHint')} description={t('friends.searchHintDesc')} />
           ) : searchQuery.trim().length === 1 ? (

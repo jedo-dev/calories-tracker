@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../../../api/client';
 import { useDebounce } from '../../../hooks/useDebounce';
+import { InlineLoader } from '../../../ui/Loader';
 import { t } from '../../../i18n';
 import { useTheme } from '../../../theme/useTheme';
 import { Text } from '../../../ui/Text';
@@ -381,11 +382,7 @@ export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgr
               style={{ ...inputStyle(theme), marginBottom: '6px' }}
             />
             <div style={{ maxHeight: '220px', overflowY: 'auto', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              {pickerLoading && (
-                <Text variant="small" muted style={{ display: 'block', padding: '10px 12px' }}>
-                  {t('common.search')}…
-                </Text>
-              )}
+              {pickerLoading && <InlineLoader size={44} />}
               {!pickerLoading && pickerResults.length === 0 && (
                 <Text variant="small" muted style={{ display: 'block', padding: '10px 12px' }}>
                   Ничего не найдено

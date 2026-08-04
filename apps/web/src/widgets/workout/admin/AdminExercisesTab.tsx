@@ -5,7 +5,7 @@ import { t } from '../../../i18n';
 import { useTheme } from '../../../theme/useTheme';
 import { Text } from '../../../ui/Text';
 import { Button } from '../../../ui/Button';
-import Loader from '../../../ui/Loader';
+import { InlineLoader } from '../../../ui/Loader';
 import { EditIcon } from '../../../ui/icons';
 import DeleteIcon from '../../../assets/DeleteIcon';
 import { workoutCardStyle } from '../../../pages/workoutShared';
@@ -481,7 +481,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
         </Text>
       )}
 
-      {listLoading && <Loader />}
+      {listLoading && <InlineLoader />}
 
       {/* infinite scroll sentinel */}
       <div ref={sentinelRef} style={{ height: '1px' }} />

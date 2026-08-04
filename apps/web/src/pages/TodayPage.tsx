@@ -6,6 +6,7 @@ import EditIcon from "../assets/EditIcon";
 import DayChanger from "../features/TodayComponents/DayChanger";
 import FoodList, { MealGroup } from "../features/TodayComponents/FoodList";
 import { t } from "../i18n";
+import Loader from "../ui/Loader";
 import { useTheme } from "../theme/useTheme";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -450,8 +451,7 @@ export function TodayPage() {
     Math.min(waterDrops, Math.round((water.totalMl / waterGoal) * waterDrops))
   );
 
-  if (loading)
-    return <div style={{ minHeight: "100vh", background: "#07111d" }} />;
+  if (loading) return <Loader />;
   if (error) {
     return (
       <div style={{ padding: theme.spacing.lg }}>
