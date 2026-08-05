@@ -10,6 +10,7 @@ import { EmptyState } from '../ui/EmptyState';
 import { Text } from '../ui/Text';
 import { RecipeCardSkeleton } from '../ui/RecipeCardSkeleton';
 import { IconButton } from '../ui/IconButton';
+import { Avatar } from '../ui/Avatar';
 import {
   ArchiveIcon,
   DiaryPlusIcon,
@@ -408,9 +409,12 @@ export function RecipesPage() {
                     </div>
 
                     {isBoard && author && !recipe.isMine && (
-                      <Text variant="small" muted style={{ display: 'block', marginBottom: '2px' }}>
-                        {author.avatarEmoji} {author.displayName || author.username}
-                      </Text>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '2px' }}>
+                        <Avatar emoji={author.avatarEmoji} size={16} />
+                        <Text variant="small" muted style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {author.displayName || author.username}
+                        </Text>
+                      </div>
                     )}
 
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>

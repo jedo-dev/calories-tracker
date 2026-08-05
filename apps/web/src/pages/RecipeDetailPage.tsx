@@ -9,6 +9,7 @@ import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
 import Loader from '../ui/Loader';
+import { Avatar } from '../ui/Avatar';
 import { RichTextViewer } from '../ui/RichTextViewer';
 import { IconButton } from '../ui/IconButton';
 import { MACRO_COLORS } from './RecipesPage';
@@ -327,7 +328,12 @@ export function RecipeDetailPage() {
           onClick={() => navigate(`/users/${author.userId}`)}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
-            <div style={{ fontSize: '32px' }}>{author.avatarEmoji || '🦊'}</div>
+            <Avatar
+              emoji={author.avatarEmoji}
+              size={44}
+              borderWidth={2.5}
+              borderColor={theme.palette.primary}
+            />
             <div>
               <Text bold>{author.displayName || author.username}</Text>
               {author.username && (

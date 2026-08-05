@@ -2,6 +2,10 @@ import { IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
+  @IsEnum(['🦊', '😉', '💪', '😊', '🧢', '😜'])
+  avatarEmoji?: string;
+
+  @IsOptional()
   @IsNumber()
   @Min(30)
   @Max(300)

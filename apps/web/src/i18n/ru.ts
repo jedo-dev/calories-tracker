@@ -433,6 +433,7 @@ export const ru = {
   },
   profile: {
     title: "Профиль",
+    avatarTitle: "Аватар",
     weight: "Вес (кг)",
     height: "Рост (см)",
     age: "Возраст (лет)",

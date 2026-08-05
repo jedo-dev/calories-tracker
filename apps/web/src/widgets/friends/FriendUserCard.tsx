@@ -1,6 +1,7 @@
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Avatar } from '../../ui/Avatar';
 import rankBronze from '../../assets/07_achievements/rank_bronze.jpg';
 import rankSilver from '../../assets/07_achievements/rank_silver.jpg';
 import rankGold from '../../assets/07_achievements/rank_gold.jpg';
@@ -45,22 +46,12 @@ export function FriendUserCard({ user, action, busy, onOpen, onFollow, onUnfollo
         gap: '12px',
       }}
     >
-      <div
-        style={{
-          width: '52px',
-          height: '52px',
-          borderRadius: '50%',
-          border: `3px solid ${user.league?.color || theme.palette.primary}`,
-          background: 'linear-gradient(180deg, rgba(83,212,107,0.12), rgba(83,212,107,0.04))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '26px',
-          flexShrink: 0,
-        }}
-      >
-        {user.avatarEmoji || '🦊'}
-      </div>
+      <Avatar
+        emoji={user.avatarEmoji}
+        size={52}
+        borderWidth={3}
+        borderColor={user.league?.color || theme.palette.primary}
+      />
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

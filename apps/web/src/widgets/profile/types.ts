@@ -1,4 +1,5 @@
 export interface ProfileData {
+  avatarEmoji?: string;
   weightKg?: number;
   heightCm?: number;
   age?: number;

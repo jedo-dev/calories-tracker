@@ -1,6 +1,7 @@
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Avatar } from '../../ui/Avatar';
 
 export interface FeedItem {
   id: string;
@@ -111,21 +112,19 @@ export function FeedEventCard({
           onClick={onOpenUser}
           aria-label={item.user.displayName}
           style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '50%',
-            border: `2.5px solid ${theme.palette.primary}`,
-            background: 'linear-gradient(180deg, rgba(83,212,107,0.12), rgba(83,212,107,0.04))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '21px',
+            background: 'none',
+            border: 'none',
             cursor: 'pointer',
             flexShrink: 0,
             padding: 0,
           }}
         >
-          {item.user.avatarEmoji || '🦊'}
+          <Avatar
+            emoji={item.user.avatarEmoji}
+            size={44}
+            borderWidth={2.5}
+            borderColor={theme.palette.primary}
+          />
         </button>
         <button
           type="button"

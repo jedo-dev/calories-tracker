@@ -47,10 +47,18 @@ export class ProfileService {
     };
   }
 
-  async updateProfile(userId: string, profileData: ProfileData): Promise<{ user: any; profile: ProfileData; targets: Targets | null }> {
+  async updateProfile(
+    userId: string,
+    updateData: ProfileData & { avatarEmoji?: string },
+  ): Promise<{ user: any; profile: ProfileData; targets: Targets | null }> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new Error('User not found');
+    }
+
+    const { avatarEmoji, ...profileData } = updateData;
+    if (avatarEmoji !== undefined) {
+      user.avatarEmoji = avatarEmoji;
     }
 
     user.profile = {

@@ -48,8 +48,10 @@ export function ProfilePage() {
           apiClient.get("/achievements").catch(() => null)
         ]);
 
+      const loadedAvatar = profileRes.data.user?.avatarEmoji || "🦊";
       if (profileRes.data.profile) {
         setFormData({
+          avatarEmoji: loadedAvatar,
           weightKg: profileRes.data.profile.weightKg,
           heightCm: profileRes.data.profile.heightCm,
           age: profileRes.data.profile.age,
@@ -60,6 +62,8 @@ export function ProfilePage() {
           targetWeightKg: profileRes.data.profile.targetWeightKg,
           targetDate: profileRes.data.profile.targetDate
         });
+      } else {
+        setFormData((prev) => ({ ...prev, avatarEmoji: loadedAvatar }));
       }
 
       setUser(profileRes.data.user);
@@ -141,10 +145,12 @@ export function ProfilePage() {
       <ProfileHeader
         displayName={displayName}
         username={username}
+        avatarEmoji={formData.avatarEmoji || user?.avatarEmoji || "🦊"}
         league={league}
         streakDays={streakDays}
         editingBody={editingBody}
         onToggleEdit={() => setEditingBody((prev) => !prev)}
+        onAvatarChange={(emoji) => handleChange("avatarEmoji", emoji)}
       />
 
       {error && (

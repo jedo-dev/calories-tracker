@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512">
+<defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#0D2231"/><stop offset="1" stop-color="#081722"/></linearGradient></defs>
+        <rect width="200" height="200" fill="url(#g2)"/><circle cx="100" cy="100" r="86" fill="none" stroke="#4CB558" stroke-width="7" opacity="0.9"/>
+<g transform="translate(10,12) scale(0.9)">
+  <!-- ears -->
+  <g>
+    <path d="M52,92 L47,20 Q47,12 55,17 L100,50 Z" fill="#F58A3C"/>
+    <path d="M62,82 L58,34 Q58,29 63,32 L92,54 Z" fill="#FFD6B8"/>
+    <path d="M148,92 L153,20 Q153,12 145,17 L100,50 Z" fill="#F58A3C"/>
+    <path d="M138,82 L142,34 Q142,29 137,32 L108,54 Z" fill="#FFD6B8"/>
+  </g>
+  <!-- head -->
+  <path d="M100,44 C138,44 162,72 162,104 C162,113 168,125 176,135 C179,138 177,141 173,140
+           C160,137 150,139 144,143 C133,153 118,161 100,161 C82,161 67,153 56,143
+           C50,139 40,137 27,140 C23,141 21,138 24,135 C32,125 38,113 38,104 C38,72 62,44 100,44 Z"
+        fill="#F58A3C"/>
+  <!-- cheek fluff tips -->
+  <path d="M52,124 C42,127 33,133 27,139 C39,136 49,138 56,142 Z" fill="#FDECDC"/>
+  <path d="M148,124 C158,127 167,133 173,139 C161,136 151,138 144,142 Z" fill="#FDECDC"/>
+  <!-- muzzle -->
+  <path d="M100,102 C123,99 143,111 143,128 C143,147 124,160 100,160 C76,160 57,147 57,128
+           C57,111 77,99 100,102 Z" fill="#FDECDC"/>
+
+    <path d="M69,78 C75,73 84,73 89,77" stroke="#C25E1C" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M131,78 C125,73 116,73 111,77" stroke="#C25E1C" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M71,98 C75,91 83,91 87,98" stroke="#43281A" stroke-width="4.6" fill="none" stroke-linecap="round"/>
+    <ellipse cx="121" cy="97" rx="7.6" ry="9.2" fill="#43281A"/>
+    <circle cx="123.8" cy="93.4" r="2.7" fill="#FFFFFF"/>
+    <path d="M100,116 C105,116 110,119 110,124 C110,130 105,134 100,134 C95,134 90,130 90,124 C90,119 95,116 100,116 Z" fill="#43281A"/>
+    <path d="M100,134 C100,142 109,146 117,139" stroke="#43281A" stroke-width="3.6" fill="none" stroke-linecap="round"/></g>
+</svg>

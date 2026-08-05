@@ -1,6 +1,7 @@
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Avatar } from '../../ui/Avatar';
 import { leagueCardStyle, LeaderboardItem } from './types';
 
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -47,22 +48,12 @@ export function LeaderboardList({ items, myUserId, onOpenUser }: LeaderboardList
             >
               {medal || `#${item.rank}`}
             </div>
-            <div
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '50%',
-                border: `2.5px solid ${isMe ? theme.palette.primary : 'rgba(160, 200, 220, 0.35)'}`,
-                background: 'linear-gradient(180deg, rgba(83,212,107,0.1), rgba(83,212,107,0.03))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px',
-                flexShrink: 0,
-              }}
-            >
-              {item.user.avatarEmoji || '🦊'}
-            </div>
+            <Avatar
+              emoji={item.user.avatarEmoji}
+              size={42}
+              borderWidth={2.5}
+              borderColor={isMe ? theme.palette.primary : 'rgba(160, 200, 220, 0.35)'}
+            />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Text bold style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

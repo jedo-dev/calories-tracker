@@ -1,6 +1,7 @@
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Avatar } from '../../ui/Avatar';
 import rankBronze from '../../assets/07_achievements/rank_bronze.jpg';
 import rankSilver from '../../assets/07_achievements/rank_silver.jpg';
 import rankGold from '../../assets/07_achievements/rank_gold.jpg';
@@ -36,22 +37,7 @@ export function PublicProfileHeader({
   return (
     <div style={{ ...publicCardStyle, overflow: 'hidden' }}>
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <div
-          style={{
-            width: '92px',
-            height: '92px',
-            borderRadius: '50%',
-            border: `5px solid ${leagueColor}`,
-            flexShrink: 0,
-            background: 'linear-gradient(180deg, rgba(83,212,107,0.12), rgba(83,212,107,0.04))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '44px',
-          }}
-        >
-          {profile.avatarEmoji || '🦊'}
-        </div>
+        <Avatar emoji={profile.avatarEmoji} size={92} borderWidth={5} borderColor={leagueColor} />
 
         <div style={{ minWidth: 0, flex: 1 }}>
           <Text variant="h1" bold style={{ display: 'block', fontSize: '19px', lineHeight: 1.1, letterSpacing: '-0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

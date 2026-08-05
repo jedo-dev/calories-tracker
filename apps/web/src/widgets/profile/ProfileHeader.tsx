@@ -1,16 +1,19 @@
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
-import mascotFoxMain from '../../assets/08_mascot/mascot_fox_main.jpg';
+import { Avatar } from '../../ui/Avatar';
 import { t } from '../../i18n';
+import { AvatarPicker } from './AvatarPicker';
 import type { LeagueState } from './types';
 
 interface ProfileHeaderProps {
   displayName: string;
   username: string | null;
+  avatarEmoji: string;
   league: LeagueState | null;
   streakDays: number;
   editingBody: boolean;
   onToggleEdit: () => void;
+  onAvatarChange: (emoji: string) => void;
 }
 
 function formatDays(n: number) {
@@ -24,10 +27,12 @@ function formatDays(n: number) {
 export function ProfileHeader({
   displayName,
   username,
+  avatarEmoji,
   league,
   streakDays,
   editingBody,
   onToggleEdit,
+  onAvatarChange,
 }: ProfileHeaderProps) {
   const theme = useTheme();
   const leagueName = league?.league?.name || 'Bronze';
@@ -83,7 +88,7 @@ export function ProfileHeader({
             background: 'linear-gradient(180deg, rgba(83,212,107,0.12), rgba(83,212,107,0.04))',
           }}
         >
-          <img src={mascotFoxMain} alt="FlareonFit" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+          <Avatar emoji={avatarEmoji} size={74} />
         </div>
 
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -128,6 +133,8 @@ export function ProfileHeader({
           </div>
         </div>
       </div>
+
+      {editingBody && <AvatarPicker value={avatarEmoji} onChange={onAvatarChange} />}
     </div>
   );
 }
