@@ -30,6 +30,7 @@ import { RecipeDetailPage } from './pages/RecipeDetailPage';
 import { MealPlanPage } from './pages/MealPlanPage';
 import { useTheme } from './theme/useTheme';
 import { Footer } from './widget/Footer/Footer';
+import { LoaderOverlayHost } from './ui/Loader';
 
 function AppLayout() {
   return (
@@ -91,6 +92,7 @@ function App() {
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Route>
         </Routes>
+        <LoaderOverlayHost />
       </AuthProvider>
     </BrowserRouter>
   );

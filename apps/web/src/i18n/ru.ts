@@ -314,6 +314,8 @@ export const ru = {
     exitNoSave: "Выйти без сохранения",
     startProgram: "Начать",
     removeExercise: "Убрать упражнение",
+    timerStart: "Запустить таймер подхода",
+    timerStop: "Остановить таймер",
     adminTitle: "Редактор тренировок",
     adminPrograms: "Программы",
     adminExercises: "Упражнения",

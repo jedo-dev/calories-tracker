@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import type { SetDetail } from './types';
@@ -85,21 +86,85 @@ function Stepper({
 
 export function SetRow({ set, isDurationBased, onChange, onToggleDone }: SetRowProps) {
   const theme = useTheme();
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [remainingSec, setRemainingSec] = useState<number | null>(null);
+  const endsAtRef = useRef(0);
+  const doneRef = useRef(onToggleDone);
+  doneRef.current = onToggleDone;
+
+  const durationSec = set.durationSec ?? 0;
+
+  useEffect(() => {
+    if (!timerRunning) return;
+    endsAtRef.current = Date.now() + durationSec * 1000;
+    setRemainingSec(durationSec);
+
+    const interval = setInterval(() => {
+      const left = Math.max(0, endsAtRef.current - Date.now());
+      setRemainingSec(Math.ceil(left / 1000));
+      if (left <= 0) {
+        clearInterval(interval);
+        setTimerRunning(false);
+        setRemainingSec(null);
+        // finished — mark the set done as if ✓ was pressed
+        doneRef.current();
+      }
+    }, 200);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerRunning]);
+
+  // external done toggle (or undo) cancels a running timer
+  useEffect(() => {
+    if (set.done && timerRunning) {
+      setTimerRunning(false);
+      setRemainingSec(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [set.done]);
+
+  const showTimerButton = isDurationBased;
+  const timerDisabled = set.done || durationSec <= 0;
+  const progress = timerRunning && remainingSec != null && durationSec > 0
+    ? 1 - remainingSec / durationSec
+    : 0;
 
   return (
     <div
       style={{
+        position: 'relative',
+        overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
         padding: '8px 10px',
         borderRadius: '14px',
         background: set.done ? 'rgba(83, 212, 107, 0.1)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${set.done ? 'rgba(83, 212, 107, 0.35)' : 'rgba(255,255,255,0.08)'}`,
+        border: `1px solid ${
+          set.done
+            ? 'rgba(83, 212, 107, 0.35)'
+            : timerRunning
+              ? 'rgba(83, 212, 107, 0.45)'
+              : 'rgba(255,255,255,0.08)'
+        }`,
         marginBottom: '6px',
         transition: 'background 0.2s, border 0.2s',
       }}
     >
+      {/* timer progress fill */}
+      {timerRunning && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: `${progress * 100}%`,
+            background: 'linear-gradient(90deg, rgba(83, 212, 107, 0.16), rgba(83, 212, 107, 0.28))',
+            transition: 'width 0.25s linear',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
       <span
         style={{
           width: '18px',
@@ -108,20 +173,35 @@ export function SetRow({ set, isDurationBased, onChange, onToggleDone }: SetRowP
           color: theme.palette.textMuted,
           flexShrink: 0,
           textAlign: 'center',
+          position: 'relative',
         }}
       >
         {set.setNumber}
       </span>
 
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'center', gap: '6px', flexWrap: 'wrap', position: 'relative' }}>
         {isDurationBased ? (
-          <Stepper
-            value={set.durationSec}
-            unit={t('workout.sec')}
-            step={15}
-            onChange={(v) => onChange({ ...set, durationSec: v })}
-            disabled={set.done}
-          />
+          timerRunning ? (
+            <span
+              style={{
+                fontSize: '17px',
+                fontWeight: 800,
+                color: theme.palette.primary,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {remainingSec}
+              <span style={{ fontSize: '11px', fontWeight: 600, color: theme.palette.textMuted }}> {t('workout.sec')}</span>
+            </span>
+          ) : (
+            <Stepper
+              value={set.durationSec}
+              unit={t('workout.sec')}
+              step={15}
+              onChange={(v) => onChange({ ...set, durationSec: v })}
+              disabled={set.done}
+            />
+          )
         ) : (
           <>
             <Stepper
@@ -142,6 +222,45 @@ export function SetRow({ set, isDurationBased, onChange, onToggleDone }: SetRowP
           </>
         )}
       </div>
+
+      {showTimerButton && (
+        <button
+          type="button"
+          disabled={timerDisabled}
+          onClick={() => {
+            if (timerRunning) {
+              setTimerRunning(false);
+              setRemainingSec(null);
+            } else {
+              setTimerRunning(true);
+            }
+          }}
+          aria-label={timerRunning ? t('workout.timerStop') : t('workout.timerStart')}
+          style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '11px',
+            border: timerRunning ? 'none' : `1px solid ${theme.palette.primary}66`,
+            background: timerRunning
+              ? 'linear-gradient(180deg, rgba(255, 168, 87, 1), rgba(230, 126, 45, 1))'
+              : `${theme.palette.primary}1f`,
+            color: timerRunning ? '#2a1503' : theme.palette.primary,
+            fontSize: '13px',
+            fontWeight: 800,
+            cursor: timerDisabled ? 'default' : 'pointer',
+            opacity: timerDisabled ? 0.35 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
+            flexShrink: 0,
+            fontFamily: 'inherit',
+            position: 'relative',
+          }}
+        >
+          {timerRunning ? '■' : '▶'}
+        </button>
+      )}
 
       <button
         type="button"
@@ -166,6 +285,7 @@ export function SetRow({ set, isDurationBased, onChange, onToggleDone }: SetRowP
           padding: 0,
           flexShrink: 0,
           fontFamily: 'inherit',
+          position: 'relative',
         }}
       >
         ✓
