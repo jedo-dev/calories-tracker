@@ -14,8 +14,8 @@ export function Card({ children, style, onClick }: CardProps) {
     <div
       onClick={onClick}
       style={{
-        backgroundColor: theme.palette.surface,
-        border: `1px solid ${theme.palette.border}`,
+        // backgroundColor: theme.palette.surface,
+        // border: `1px solid ${theme.palette.border}`,
         borderRadius: theme.radius.md,
         padding: theme.spacing.md,
         boxShadow: theme.shadow.sm,

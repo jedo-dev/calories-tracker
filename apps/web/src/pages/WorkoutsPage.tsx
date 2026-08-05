@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
-import emptyWorkouts from '../assets/03_empty_states/empty_workouts.jpg';
+import emptyWorkouts from '../assets/03_empty_states/empty_workouts.png';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';

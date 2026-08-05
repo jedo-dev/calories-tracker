@@ -17,6 +17,8 @@ import { ConfirmSheet } from '../widgets/workout/ConfirmSheet';
 import { Thumb } from '../widgets/workout/Thumb';
 import type { LastPerformance, SessionLog, SetDetail, WorkoutSessionInfo } from '../widgets/workout/types';
 
+import emptyWorkouts from '../assets/03_empty_states/empty_workout_exercises.png';
+import { EmptyState } from '../ui/EmptyState';
 interface CatalogExercise {
   _id: string;
   name: string;
@@ -382,7 +384,8 @@ export function ActiveWorkoutPage() {
         </>
       ) : (
         <div style={{ textAlign: 'center', padding: '30px 0' }}>
-          <Text muted style={{ display: 'block', marginBottom: '14px' }}>{t('workout.noExercises')}</Text>
+               <EmptyState image={emptyWorkouts} title={t('workout.noExercises')} />
+
           <button
             type="button"
             onClick={() => { setPickerSearch(''); setShowPicker(true); }}
@@ -495,9 +498,11 @@ export function ActiveWorkoutPage() {
               </button>
             ))}
             {filteredCatalog.length === 0 && (
-              <Text variant="small" muted style={{ display: 'block', padding: '10px 0' }}>
+       
+               <Text variant="small" muted style={{ display: 'block', padding: '10px 0' }}>
                 {t('workout.noExercises')}
               </Text>
+         
             )}
           </div>
         </div>

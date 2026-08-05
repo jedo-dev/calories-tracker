@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
-import emptyTemplates from '../assets/03_empty_states/empty_templates.jpg';
+import emptyTemplates from '../assets/03_empty_states/empty_templates.png';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import mascotFoxDumbbell from '../../assets/08_mascot/mascot_fox_dumbbell.png';
 
 export function Thumb({ src, alt, size, radius = 12 }: { src?: string; alt: string; size: number; radius?: number }) {
   const [failed, setFailed] = useState(false);
@@ -18,11 +19,14 @@ export function Thumb({ src, alt, size, radius = 12 }: { src?: string; alt: stri
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: size / 2.5,
           flexShrink: 0,
         }}
       >
-        💪
+        <img
+          src={mascotFoxDumbbell}
+          alt={alt}
+          style={{ width: '82%', height: '82%', objectFit: 'contain' }}
+        />
       </div>
     );
   }

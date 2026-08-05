@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
-import emptyReports from '../assets/03_empty_states/empty_reports.jpg';
+import emptyReports from '../assets/03_empty_states/empty_reports.png';
 import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';

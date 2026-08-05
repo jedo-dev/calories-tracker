@@ -3,6 +3,7 @@ import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { workoutCardStyle } from '../../pages/workoutShared';
+import mascotFoxDumbbell from '../../assets/08_mascot/mascot_fox_dumbbell.png';
 import { PrevPerformanceHint } from './PrevPerformanceHint';
 import { SetRow } from './SetRow';
 import type { LastPerformance, SessionLog, SetDetail } from './types';
@@ -50,11 +51,14 @@ export function ExerciseSlide({ log, last, description, onSetChange, onToggleDon
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '46px',
             marginBottom: '10px',
           }}
         >
-          💪
+          <img
+            src={mascotFoxDumbbell}
+            alt={log.exerciseName}
+            style={{ height: '86%', objectFit: 'contain' }}
+          />
         </div>
       )}
 

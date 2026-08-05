@@ -6,6 +6,7 @@ import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 import { IconButton } from '../ui/IconButton';
+import mascotFoxDumbbell from '../assets/08_mascot/mascot_fox_dumbbell.png';
 import { BackIcon } from '../ui/icons';
 import {
   workoutCardStyle,
@@ -50,11 +51,14 @@ function ExerciseThumb({ src, alt, size }: { src: string; alt: string; size: num
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: size / 2.5,
           flexShrink: 0,
         }}
       >
-        💪
+        <img
+          src={mascotFoxDumbbell}
+          alt={alt}
+          style={{ width: '82%', height: '82%', objectFit: 'contain' }}
+        />
       </div>
     );
   }

@@ -3,6 +3,7 @@ import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { workoutCardStyle, formatDuration } from '../../pages/workoutShared';
 import type { FinishSummary } from './types';
+import finishSummaryImage from '../../assets/08_mascot/mascot_fox_celebrate.png';
 
 export function FinishSummaryCard({ summary }: { summary: FinishSummary }) {
   const theme = useTheme();
@@ -26,7 +27,11 @@ export function FinishSummaryCard({ summary }: { summary: FinishSummary }) {
   return (
     <div style={{ ...workoutCardStyle, marginBottom: '12px', padding: '18px 14px' }}>
       <div style={{ textAlign: 'center', marginBottom: '14px' }}>
-        <div style={{ fontSize: '44px', marginBottom: '6px' }}>🎉</div>
+            <img
+            src={finishSummaryImage}
+            alt=""
+            style={{ width: '240px', height: '240px', objectFit: 'contain', marginBottom: '12px', opacity: 0.8, borderRadius: '20px' }}
+          />
         <Text variant="h2" bold style={{ fontSize: '20px' }}>{t('workout.finishTitle')}</Text>
       </div>
 
