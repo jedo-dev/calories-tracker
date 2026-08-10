@@ -1,5 +1,6 @@
 import { t } from '../../i18n';
 import { Text } from '../../ui/Text';
+import { EmojiIcon } from '../../ui/Icon';
 import { publicCardStyle, PublicProfileEvent } from './types';
 
 const EVENT_ICONS: Record<string, string> = {
@@ -84,7 +85,7 @@ export function PublicActivityCard({ events }: { events: PublicProfileEvent[] })
                   flexShrink: 0,
                 }}
               >
-                {EVENT_ICONS[event.type] || '✨'}
+                <EmojiIcon emoji={EVENT_ICONS[event.type] || '✨'} size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Text variant="small" style={{ display: 'block', lineHeight: 1.3 }}>{text}</Text>

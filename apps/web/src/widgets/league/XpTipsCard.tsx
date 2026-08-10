@@ -1,5 +1,6 @@
 import { t } from '../../i18n';
 import { Text } from '../../ui/Text';
+import { Icon, EmojiIcon } from '../../ui/Icon';
 import { leagueCardStyle } from './types';
 
 const TIPS: { icon: string; key: string }[] = [
@@ -13,7 +14,7 @@ export function XpTipsCard() {
   return (
     <div style={leagueCardStyle}>
       <Text variant="h2" bold style={{ display: 'block', fontSize: '16px', marginBottom: '10px' }}>
-        ⚡ {t('league.howToGetXp')}
+        <Icon name="xp-bolt" size={18} style={{ marginRight: 4 }} /> {t('league.howToGetXp')}
       </Text>
       {TIPS.map((tip, i) => (
         <div
@@ -40,7 +41,7 @@ export function XpTipsCard() {
               flexShrink: 0,
             }}
           >
-            {tip.icon}
+            <EmojiIcon emoji={tip.icon} size={19} />
           </div>
           <Text variant="small" style={{ lineHeight: 1.3 }}>{t(tip.key)}</Text>
         </div>

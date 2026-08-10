@@ -2,6 +2,7 @@ import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { Avatar } from '../../ui/Avatar';
+import { Icon } from '../../ui/Icon';
 import rankBronze from '../../assets/07_achievements/rank_bronze.jpg';
 import rankSilver from '../../assets/07_achievements/rank_silver.jpg';
 import rankGold from '../../assets/07_achievements/rank_gold.jpg';
@@ -81,7 +82,7 @@ export function PublicProfileHeader({
                   whiteSpace: 'nowrap',
                 }}
               >
-                🔥 {t('friends.streak', { count: profile.currentStreak })}
+                <Icon name="fire" size={13} style={{ marginRight: 3 }} /> {t('friends.streak', { count: profile.currentStreak })}
               </div>
             )}
           </div>

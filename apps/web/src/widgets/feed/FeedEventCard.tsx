@@ -2,6 +2,7 @@ import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { Avatar } from '../../ui/Avatar';
+import { Icon, EmojiIcon } from '../../ui/Icon';
 
 export interface FeedItem {
   id: string;
@@ -166,7 +167,7 @@ export function FeedEventCard({
             flexShrink: 0,
           }}
         >
-          {EVENT_ICONS[item.type] || '✨'}
+          <EmojiIcon emoji={EVENT_ICONS[item.type] || '✨'} size={20} />
         </div>
         <Text variant="small" style={{ flex: 1, minWidth: 0, lineHeight: 1.35 }}>
           {getEventText(item)}
@@ -207,7 +208,7 @@ export function FeedEventCard({
                 flexShrink: 0,
               }}
             >
-              🍽️
+              <Icon name="meal" size={24} />
             </div>
           )}
           <div style={{ display: 'flex', gap: '6px', flex: 1, minWidth: 0 }}>
@@ -280,7 +281,7 @@ export function FeedEventCard({
                 fontFamily: 'inherit',
               }}
             >
-              <span>{emoji}</span>
+              <EmojiIcon emoji={emoji} size={18} />
               {count > 0 && <span style={{ fontSize: '11px' }}>{count}</span>}
             </button>
           );

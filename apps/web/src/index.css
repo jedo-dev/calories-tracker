@@ -5,6 +5,22 @@
   box-sizing: border-box;
 }
 
+/* Кастомные иконки (ui/Icon.tsx): инлайн-SVG заполняет квадратный слот.
+   Размер задаётся на .app-icon, внутренний svg тянется до 100%. */
+.app-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+  line-height: 0;
+}
+.app-icon > svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* No blue tap ring on pointer clicks; keep the ring for keyboard focus */
 button {
   -webkit-tap-highlight-color: transparent;

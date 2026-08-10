@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Icon } from '../../ui/Icon';
 import { workoutCardStyle } from '../../pages/workoutShared';
 import type { ProgramDetail } from './types';
 
@@ -21,8 +22,8 @@ export function ProgramHero({ program }: { program: ProgramDetail }) {
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '52px' }}>
-            🏋️
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="workout" size={64} />
           </div>
         )}
         <div
