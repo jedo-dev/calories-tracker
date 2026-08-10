@@ -14,6 +14,11 @@ import type {
   ProfileData
 } from "../widgets/profile/types";
 
+function localToday(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
 export function ProfilePage() {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -26,6 +31,7 @@ export function ProfilePage() {
   const [league, setLeague] = useState<LeagueState | null>(null);
   const [streakDays, setStreakDays] = useState(0);
   const [achievements, setAchievements] = useState<AchievementState[]>([]);
+  const [hasWeightLog, setHasWeightLog] = useState(true);
   const [formData, setFormData] = useState<ProfileData>({ goal: "maintain" });
   useEffect(() => {
     loadProfile();
@@ -37,22 +43,34 @@ export function ProfilePage() {
     setError(null);
 
     try {
-      const [profileRes, predictionRes, socialRes, leagueRes, achievementsRes] =
-        await Promise.all([
-          apiClient.get("/profile"),
-          apiClient
-            .get("/weight/prediction")
-            .catch(() => ({ data: { available: false } })),
-          apiClient.get("/social/me").catch(() => null),
-          apiClient.get("/leaderboard/week/friends").catch(() => null),
-          apiClient.get("/achievements").catch(() => null)
-        ]);
+      const [
+        profileRes,
+        predictionRes,
+        socialRes,
+        leagueRes,
+        achievementsRes,
+        weightRes
+      ] = await Promise.all([
+        apiClient.get("/profile"),
+        apiClient
+          .get("/weight/prediction")
+          .catch(() => ({ data: { available: false } })),
+        apiClient.get("/social/me").catch(() => null),
+        apiClient.get("/leaderboard/week/friends").catch(() => null),
+        apiClient.get("/achievements").catch(() => null),
+        apiClient.get("/weight/latest").catch(() => ({ data: null }))
+      ]);
+
+      // Текущий вес берём из журнала веса (/weight), а не из поля профиля.
+      // Пустой журнал приходит как 200 с пустым телом → data == "".
+      const latestWeight = weightRes?.data?.weightKg ?? null;
+      setHasWeightLog(latestWeight != null);
 
       const loadedAvatar = profileRes.data.user?.avatarEmoji || "🦊";
       if (profileRes.data.profile) {
         setFormData({
           avatarEmoji: loadedAvatar,
-          weightKg: profileRes.data.profile.weightKg,
+          weightKg: latestWeight ?? profileRes.data.profile.weightKg,
           heightCm: profileRes.data.profile.heightCm,
           age: profileRes.data.profile.age,
           gender: profileRes.data.profile.gender,
@@ -93,7 +111,19 @@ export function ProfilePage() {
     setError(null);
 
     try {
-      await apiClient.patch("/profile", formData);
+      const payload: ProfileData = { ...formData };
+
+      // Первичная инициализация веса: записи в журнале ещё нет, но пользователь
+      // ввёл вес → заводим стартовый вес и создаём запись в /weight на сегодня.
+      if (!hasWeightLog && payload.weightKg != null) {
+        if (payload.startWeightKg == null) payload.startWeightKg = payload.weightKg;
+        await apiClient
+          .post("/weight", { date: localToday(), weightKg: payload.weightKg })
+          .catch(() => null);
+        setHasWeightLog(true);
+      }
+
+      await apiClient.patch("/profile", payload);
       setEditingBody(false);
       navigate("/today");
     } catch (err: any) {
@@ -114,17 +144,6 @@ export function ProfilePage() {
 
   const displayName = user?.displayName || user?.username || "User";
   const username = user?.username ? `@${user.username}` : null;
-  const goalProgress = (() => {
-    const start = formData.startWeightKg;
-    const current = formData.weightKg;
-    const target = formData.targetWeightKg;
-
-    if (start == null || current == null || target == null) return null;
-
-    if (Math.abs(start - target) === 0) return { remaining: 0 };
-
-    return { remaining: Math.max(0, Math.abs(current - target)) };
-  })();
 
   if (loading) return <Loader />;
 
@@ -134,7 +153,8 @@ export function ProfilePage() {
         minHeight: "100vh",
         maxWidth: "520px",
         margin: "0 auto",
-        padding: "12px 12px 12px",
+        padding: "12px",
+        paddingBottom: "100px",
         background: `
           radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
           radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
@@ -175,7 +195,6 @@ export function ProfilePage() {
           currentWeight={formData.weightKg}
           startWeight={formData.startWeightKg}
           targetWeight={formData.targetWeightKg}
-          remainingWeight={goalProgress?.remaining ?? null}
         />
       )}
 
@@ -183,6 +202,7 @@ export function ProfilePage() {
         formData={formData}
         editing={editingBody}
         saving={saving}
+        showWeightField={!hasWeightLog}
         onSubmit={handleSubmit}
         onChange={handleChange}
       />

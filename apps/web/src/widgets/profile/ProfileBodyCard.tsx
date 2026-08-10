@@ -11,15 +11,28 @@ interface ProfileBodyCardProps {
   formData: ProfileData;
   editing: boolean;
   saving: boolean;
+  /** Показать поле веса (только для первичной инициализации, когда записи в журнале ещё нет). */
+  showWeightField?: boolean;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
   onChange: (field: keyof ProfileData, value: any) => void;
 }
 
-const bodyFields = [
-  { labelKey: 'profile.weight', field: 'weightKg' as const, type: 'number' as const, min: 30, max: 300, step: 0.1 },
-  { labelKey: 'profile.height', field: 'heightCm' as const, type: 'number' as const, min: 120, max: 230, step: 1 },
-  { labelKey: 'profile.age', field: 'age' as const, type: 'number' as const, min: 10, max: 100, step: 1 },
-] as const;
+type BodyField = {
+  labelKey: string;
+  field: keyof ProfileData;
+  type: 'number';
+  min: number;
+  max: number;
+  step: number;
+};
+
+// Текущий вес редактируется во вкладке «Вес» (/weight) и в обычном режиме здесь
+// не дублируется. Поле веса добавляется только при первичной инициализации.
+const weightField: BodyField = { labelKey: 'profile.weight', field: 'weightKg', type: 'number', min: 30, max: 300, step: 0.1 };
+const baseFields: BodyField[] = [
+  { labelKey: 'profile.height', field: 'heightCm', type: 'number', min: 120, max: 230, step: 1 },
+  { labelKey: 'profile.age', field: 'age', type: 'number', min: 10, max: 100, step: 1 },
+];
 
 function formatGoal(goal?: ProfileData['goal']) {
   if (goal === 'lose') return t('profile.goal_lose');
@@ -65,8 +78,9 @@ function fieldLabel(editing: boolean) {
   } as CSSProperties;
 }
 
-export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange }: ProfileBodyCardProps) {
+export function ProfileBodyCard({ formData, editing, saving, showWeightField, onSubmit, onChange }: ProfileBodyCardProps) {
   const theme = useTheme();
+  const bodyFields = showWeightField ? [weightField, ...baseFields] : baseFields;
 
   return (
     <Card
@@ -158,7 +172,10 @@ export function ProfileBodyCard({ formData, editing, saving, onSubmit, onChange 
             {[
               { labelKey: 'profile.goal', value: formatGoal(formData.goal), field: 'goal' as const },
               { labelKey: 'profile.activityLevel', value: formatActivity(formData.activityLevel), field: 'activityLevel' as const },
-              { labelKey: 'profile.startWeightKg', value: formData.startWeightKg, field: 'startWeightKg' as const },
+              // На инициализации стартовый вес = введённому весу, отдельное поле не дублируем.
+              ...(showWeightField
+                ? []
+                : [{ labelKey: 'profile.startWeightKg', value: formData.startWeightKg, field: 'startWeightKg' as const }]),
               { labelKey: 'profile.targetWeightKg', value: formData.targetWeightKg, field: 'targetWeightKg' as const },
               { labelKey: 'profile.targetDate', value: formData.targetDate, field: 'targetDate' as const },
             ].map((item) => {

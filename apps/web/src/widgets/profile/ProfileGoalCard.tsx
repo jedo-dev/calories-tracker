@@ -7,7 +7,6 @@ interface ProfileGoalCardProps {
   currentWeight?: number;
   startWeight?: number;
   targetWeight?: number;
-  remainingWeight?: number | null;
 }
 
 export function ProfileGoalCard({
@@ -16,26 +15,36 @@ export function ProfileGoalCard({
   targetWeight
 }: ProfileGoalCardProps) {
   const theme = useTheme();
-  const points = [
-    {
-      title: t("profile.start"),
-      value: startWeight,
-      align: "flex-start" as const,
-      active: false
-    },
-    {
-      title: t("profile.current"),
-      value: currentWeight,
-      align: "center" as const,
-      active: true
-    },
-    {
-      title: t("profile.target"),
-      value: targetWeight,
-      align: "flex-end" as const,
-      active: false
-    }
-  ];
+
+  const hasAll =
+    startWeight != null && currentWeight != null && targetWeight != null;
+
+  // Доля пройденного пути старт → цель (одинаково работает и для похудения,
+  // и для набора: знак в числителе и знаменателе сокращается).
+  const fraction = (() => {
+    if (!hasAll) return 0;
+    const total = startWeight! - targetWeight!;
+    if (total === 0) return 1;
+    return Math.max(0, Math.min(1, (startWeight! - currentWeight!) / total));
+  })();
+
+  // Отступ под радиус кружка, чтобы крайние точки не вылезали за трек.
+  const EDGE = 11;
+  const currentLeft = `calc(${EDGE}px + ${fraction} * (100% - ${EDGE * 2}px))`;
+
+  const Dot = ({ active }: { active?: boolean }) => (
+    <div
+      style={{
+        width: "22px",
+        height: "22px",
+        borderRadius: "50%",
+        border: `3px solid ${active ? theme.palette.primary : "rgba(196, 205, 216, 0.85)"}`,
+        background: active ? theme.palette.primary : "#0e1c27",
+        boxShadow: active ? "0 0 0 5px rgba(83, 212, 107, 0.18)" : "none",
+        boxSizing: "border-box"
+      }}
+    />
+  );
 
   return (
     <Card
@@ -55,86 +64,104 @@ export function ProfileGoalCard({
         {t("profile.goalTitle")}
       </Text>
 
-      <div style={{ position: "relative", marginTop: "8px" }}>
+      {/* Плавающий бейдж «Сейчас» — движется вместе с точкой */}
+      <div style={{ position: "relative", height: "44px" }}>
+        <div
+          style={{
+            position: "absolute",
+            left: currentLeft,
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            transition: "left 600ms cubic-bezier(0.22, 0.9, 0.24, 1)",
+            whiteSpace: "nowrap"
+          }}
+        >
+          <Text variant="small" muted style={{ fontSize: "12px" }}>
+            {t("profile.current")}
+          </Text>
+          <Text bold style={{ fontSize: "20px", color: theme.palette.primary }}>
+            {currentWeight ?? "—"}
+          </Text>
+        </div>
+      </div>
+
+      {/* Трек с заполнением и точками */}
+      <div style={{ position: "relative", height: "22px" }}>
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
-            left: "26px",
-            right: "26px",
-            top: "11px",
+            left: `${EDGE}px`,
+            right: `${EDGE}px`,
+            top: "8px",
             height: "6px",
             borderRadius: "999px",
             background: "rgba(196, 205, 216, 0.26)"
           }}
         />
+        {/* пройденная часть старт → сейчас */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: `${EDGE}px`,
+            width: `calc(${fraction} * (100% - ${EDGE * 2}px))`,
+            top: "8px",
+            height: "6px",
+            borderRadius: "999px",
+            background:
+              "linear-gradient(90deg, rgba(83,212,107,0.5) 0%, #58D45D 100%)",
+            transition: "width 600ms cubic-bezier(0.22, 0.9, 0.24, 1)"
+          }}
+        />
 
+        {/* старт */}
+        <div style={{ position: "absolute", left: 0, top: 0 }}>
+          <Dot />
+        </div>
+        {/* цель */}
+        <div style={{ position: "absolute", right: 0, top: 0 }}>
+          <Dot />
+        </div>
+        {/* сейчас (движется) */}
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: "10px",
-            position: "relative"
+            position: "absolute",
+            left: currentLeft,
+            top: 0,
+            transform: "translateX(-50%)",
+            transition: "left 600ms cubic-bezier(0.22, 0.9, 0.24, 1)"
           }}
         >
-          {points.map((item, index) => (
-            <div
-              key={item.title}
-              style={{
-                flex: "1 1 0",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: item.align
-              }}
-            >
-              <div
-                style={{
-                  width: "22px",
-                  height: "22px",
-                  borderRadius: "50%",
-                  marginBottom: "14px",
-                  border: `3px solid ${item.active ? theme.palette.primary : "rgba(196, 205, 216, 0.85)"}`,
-                  background: item.active ? theme.palette.primary : "#0e1c27",
-                  boxShadow: item.active
-                    ? "0 0 0 5px rgba(83, 212, 107, 0.18)"
-                    : "none",
-                  marginLeft: index === 0 ? "4px" : undefined,
-                  marginRight: index === 2 ? "4px" : undefined
-                }}
-              />
-              <Text
-                variant="small"
-                muted
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  textAlign:
-                    item.align === "center"
-                      ? "center"
-                      : item.align === "flex-end"
-                        ? "right"
-                        : "left"
-                }}
-              >
-                {item.title}
-              </Text>
-              <Text
-                bold
-                style={{
-                  display: "block",
-                  fontSize: "20px",
-                  textAlign:
-                    item.align === "center"
-                      ? "center"
-                      : item.align === "flex-end"
-                        ? "right"
-                        : "left"
-                }}
-              >
-                {item.value ?? "—"}
-              </Text>
-            </div>
-          ))}
+          <Dot active />
+        </div>
+      </div>
+
+      {/* Подписи краёв */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: "10px"
+        }}
+      >
+        <div style={{ textAlign: "left" }}>
+          <Text variant="small" muted style={{ display: "block", fontSize: "13px" }}>
+            {t("profile.start")}
+          </Text>
+          <Text bold style={{ fontSize: "20px" }}>
+            {startWeight ?? "—"}
+          </Text>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <Text variant="small" muted style={{ display: "block", fontSize: "13px" }}>
+            {t("profile.target")}
+          </Text>
+          <Text bold style={{ fontSize: "20px" }}>
+            {targetWeight ?? "—"}
+          </Text>
         </div>
       </div>
     </Card>
