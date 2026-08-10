@@ -1,6 +1,7 @@
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Icon } from '../../ui/Icon';
 import { workoutCardStyle, formatDuration } from '../../pages/workoutShared';
 import type { FinishSummary } from './types';
 import finishSummaryImage from '../../assets/08_mascot/mascot_fox_celebrate.png';
@@ -48,7 +49,7 @@ export function FinishSummaryCard({ summary }: { summary: FinishSummary }) {
       {summary.prs.length > 0 && (
         <div>
           <Text bold style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-            🏆 {t('workout.prs')}
+            <Icon name="trophy" size={16} style={{ marginRight: 4 }} /> {t('workout.prs')}
           </Text>
           {summary.prs.map((pr) => (
             <div

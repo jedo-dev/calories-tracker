@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <path d="M32,4 C32,4 12,26 12,39 a20,20 0 0 0 40,0 C52,26 32,4 32,4 Z" fill="#56B7E6"/>
+  <path d="M32,4 C32,4 12,26 12,39 a20,20 0 0 0 10,17 C17,50 16,42 20,33 24,24 32,14 32,4 Z" fill="#FDECDC" opacity="0.35"/>
+  <ellipse cx="41" cy="44" rx="5" ry="7" fill="#FDECDC" opacity="0.4" transform="rotate(20 41 44)"/>
+</svg>

@@ -1,6 +1,7 @@
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Icon } from '../../ui/Icon';
 import { publicCardStyle } from './types';
 
 interface RecipeItem {
@@ -68,7 +69,7 @@ export function PublicRecipesCard({ recipes, onOpen }: PublicRecipesCardProps) {
                 flexShrink: 0,
               }}
             >
-              🍽️
+              <Icon name="meal" size={24} />
             </div>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>

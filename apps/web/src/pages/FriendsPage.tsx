@@ -16,7 +16,7 @@ import type { FriendUser, FriendsTab } from '../widgets/friends/types';
 export function FriendsPage() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<FriendsTab>('search');
+  const [tab, setTab] = useState<FriendsTab>('following');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<FriendUser[]>([]);
   const [following, setFollowing] = useState<FriendUser[] | null>(null);
@@ -109,42 +109,21 @@ export function FriendsPage() {
     action: 'toggle' | 'unfollow',
     emptyTitle: string,
     emptyDesc?: string,
-    showCta?: boolean,
   ) => {
     if (users === null) return <Loader />;
     if (users.length === 0) {
-      return (
-        <EmptyState
-          image={emptyFriends}
-          title={emptyTitle}
-          description={emptyDesc}
-          action={
-            showCta ? (
-              <button
-                type="button"
-                onClick={() => setTab('search')}
-                style={{
-                  height: '46px',
-                  padding: '0 20px',
-                  borderRadius: '16px',
-                  border: 'none',
-                  background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
-                  color: '#07210f',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
-                  fontFamily: 'inherit',
-                }}
-              >
-                {t('friends.findUsers')}
-              </button>
-            ) : undefined
-          }
-        />
-      );
+      return <EmptyState image={emptyFriends} title={emptyTitle} description={emptyDesc} />;
     }
     return users.map((u) => renderCard(u, action));
+  };
+
+  const renderSearch = () => {
+    if (loading) return <InlineLoader />;
+    if (searchQuery.trim().length === 1) return <EmptyState title={t('friends.searchMinChars')} />;
+    if (searchResults.length === 0 && debouncedSearch.trim().length >= 2) {
+      return <EmptyState title={t('friends.noResults')} description={t('friends.noResultsDesc')} />;
+    }
+    return searchResults.map((u) => renderCard(u, 'toggle'));
   };
 
   return (
@@ -179,25 +158,15 @@ export function FriendsPage() {
         </Text>
       )}
 
-      {tab === 'search' && (
+      {tab === 'following' && (
         <>
           <FriendsSearchBar value={searchQuery} onChange={setSearchQuery} />
-          {loading ? (
-            <InlineLoader />
-          ) : searchQuery.trim().length === 0 ? (
-            <EmptyState image={emptyFriends} title={t('friends.searchHint')} description={t('friends.searchHintDesc')} />
-          ) : searchQuery.trim().length === 1 ? (
-            <EmptyState title={t('friends.searchMinChars')} />
-          ) : searchResults.length === 0 && debouncedSearch.trim().length >= 2 ? (
-            <EmptyState title={t('friends.noResults')} description={t('friends.noResultsDesc')} />
-          ) : (
-            searchResults.map((u) => renderCard(u, 'toggle'))
-          )}
+          {searchQuery.trim().length >= 1
+            ? renderSearch()
+            : renderList(following, 'unfollow', t('friends.noFollowing'), t('friends.noFollowingDesc'))}
         </>
       )}
 
-      {tab === 'following' &&
-        renderList(following, 'unfollow', t('friends.noFollowing'), t('friends.noFollowingDesc'), true)}
       {tab === 'followers' &&
         renderList(followers, 'toggle', t('friends.noFollowers'), t('friends.noFollowersDesc'))}
     </div>

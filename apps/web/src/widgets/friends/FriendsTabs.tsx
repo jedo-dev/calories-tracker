@@ -13,7 +13,6 @@ export function FriendsTabs({ tab, onChange, followingCount, followersCount }: F
   const theme = useTheme();
 
   const items: { key: FriendsTab; label: string }[] = [
-    { key: 'search', label: t('friends.search') },
     { key: 'following', label: followingCount != null ? `${t('friends.following')} · ${followingCount}` : t('friends.following') },
     { key: 'followers', label: followersCount != null ? `${t('friends.followers')} · ${followersCount}` : t('friends.followers') },
   ];

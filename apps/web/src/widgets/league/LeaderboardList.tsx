@@ -2,9 +2,10 @@ import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { Avatar } from '../../ui/Avatar';
+import { Icon, IconName } from '../../ui/Icon';
 import { leagueCardStyle, LeaderboardItem } from './types';
 
-const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+const MEDAL_ICONS: Record<number, IconName> = { 1: 'medal-gold', 2: 'medal-silver', 3: 'medal-bronze' };
 
 interface LeaderboardListProps {
   items: LeaderboardItem[];
@@ -19,7 +20,7 @@ export function LeaderboardList({ items, myUserId, onOpenUser }: LeaderboardList
     <>
       {items.map((item) => {
         const isMe = !!myUserId && item.user.id === myUserId;
-        const medal = MEDALS[item.rank];
+        const medalIcon = MEDAL_ICONS[item.rank];
         return (
           <div
             key={item.user.id}
@@ -39,14 +40,16 @@ export function LeaderboardList({ items, myUserId, onOpenUser }: LeaderboardList
             <div
               style={{
                 width: '34px',
-                textAlign: 'center',
-                fontSize: medal ? '20px' : '13px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '13px',
                 fontWeight: 800,
                 color: theme.palette.textMuted,
                 flexShrink: 0,
               }}
             >
-              {medal || `#${item.rank}`}
+              {medalIcon ? <Icon name={medalIcon} size={24} /> : `#${item.rank}`}
             </div>
             <Avatar
               emoji={item.user.avatarEmoji}

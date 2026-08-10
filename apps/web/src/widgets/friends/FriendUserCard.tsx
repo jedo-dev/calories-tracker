@@ -2,6 +2,7 @@ import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { Avatar } from '../../ui/Avatar';
+import { Icon } from '../../ui/Icon';
 import rankBronze from '../../assets/07_achievements/rank_bronze.jpg';
 import rankSilver from '../../assets/07_achievements/rank_silver.jpg';
 import rankGold from '../../assets/07_achievements/rank_gold.jpg';
@@ -84,7 +85,7 @@ export function FriendUserCard({ user, action, busy, onOpen, onFollow, onUnfollo
                 fontWeight: 700,
               }}
             >
-              ⚡ {t('friends.xpWeek', { xp: user.xpWeek })}
+              <Icon name="xp-bolt" size={12} style={{ marginRight: 3 }} /> {t('friends.xpWeek', { xp: user.xpWeek })}
             </span>
           )}
           {user.currentStreak !== undefined && user.currentStreak > 0 && (
@@ -98,7 +99,7 @@ export function FriendUserCard({ user, action, busy, onOpen, onFollow, onUnfollo
                 fontWeight: 700,
               }}
             >
-              🔥 {t('friends.streak', { count: user.currentStreak })}
+              <Icon name="fire" size={12} style={{ marginRight: 3 }} /> {t('friends.streak', { count: user.currentStreak })}
             </span>
           )}
         </div>

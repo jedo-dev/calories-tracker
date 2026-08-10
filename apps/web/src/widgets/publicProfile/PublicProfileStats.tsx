@@ -1,12 +1,14 @@
+import type { ReactNode } from 'react';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Icon } from '../../ui/Icon';
 import { publicCardStyle, PublicProfile } from './types';
 
 export function PublicProfileStats({ profile }: { profile: PublicProfile }) {
   const theme = useTheme();
 
-  const stat = (value: string | number, label: string, accent = false) => (
+  const stat = (value: ReactNode, label: string, accent = false) => (
     <div
       style={{
         textAlign: 'center',
@@ -35,8 +37,8 @@ export function PublicProfileStats({ profile }: { profile: PublicProfile }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         {stat(profile.xpWeek, t('publicProfile.xpWeek'), true)}
         {stat(profile.xpTotal, t('publicProfile.xpTotal'))}
-        {stat(`🔥 ${profile.currentStreak}`, t('publicProfile.streak'))}
-        {stat(`🏆 ${profile.bestStreak}`, t('publicProfile.bestStreak'))}
+        {stat(<><Icon name="fire" size={18} style={{ marginRight: 4 }} />{profile.currentStreak}</>, t('publicProfile.streak'))}
+        {stat(<><Icon name="trophy" size={18} style={{ marginRight: 4 }} />{profile.bestStreak}</>, t('publicProfile.bestStreak'))}
       </div>
     </div>
   );

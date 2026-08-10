@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
+import { Icon } from '../../ui/Icon';
 import { workoutCardStyle } from '../../pages/workoutShared';
 import type { ProgramListItem } from './types';
 
@@ -43,8 +44,8 @@ export function ProgramCard({ program, onClick }: { program: ProgramListItem; on
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px' }}>
-            🏋️
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="workout" size={44} />
           </div>
         )}
         <span

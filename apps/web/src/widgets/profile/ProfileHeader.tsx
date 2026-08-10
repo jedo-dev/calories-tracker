@@ -1,6 +1,7 @@
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { Avatar } from '../../ui/Avatar';
+import { Icon } from '../../ui/Icon';
 import { t } from '../../i18n';
 import { AvatarPicker } from './AvatarPicker';
 import type { LeagueState } from './types';
@@ -128,7 +129,7 @@ export function ProfileHeader({
                 whiteSpace: 'nowrap',
               }}
             >
-              🔥 {streakDays > 0 ? formatDays(streakDays) : formatDays(2)}
+              <Icon name="fire" size={13} style={{ marginRight: 3 }} /> {streakDays > 0 ? formatDays(streakDays) : formatDays(2)}
             </div>
           </div>
         </div>
