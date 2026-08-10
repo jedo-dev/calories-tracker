@@ -37,6 +37,23 @@ export type Locale = 'ru' | 'en';
 // когда появятся другие языки, достаточно менять это значение.
 export const locale: Locale = 'ru';
 
+export type PluralKey = keyof typeof ru.plurals;
+
+/**
+ * Русская плюрализация. Формы живут в ru.plurals (как остальные строки):
+ * plural(1, 'day') → 'день'; plural(2, 'day') → 'дня'; plural(5, 'day') → 'дней'.
+ */
+export function plural(n: number, key: PluralKey): string {
+  const [one, few, many] = ru.plurals[key];
+  const abs = Math.abs(Math.trunc(n));
+  const mod10 = abs % 10;
+  const mod100 = abs % 100;
+  if (mod100 >= 11 && mod100 <= 14) return many;
+  if (mod10 === 1) return one;
+  if (mod10 >= 2 && mod10 <= 4) return few;
+  return many;
+}
+
 /**
  * Форматирует дату (ISO `YYYY-MM-DD`) под локаль:
  *  - ru  → `dd.mm.yyyy`

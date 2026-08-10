@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
+import { showToast } from '../ui/Toast';
 import { useTheme } from '../theme/useTheme';
 import { BottomSheet } from '../ui/BottomSheet';
 import { Button } from '../ui/Button';
@@ -201,10 +202,10 @@ export function RecipeDetailPage() {
     if (!recipe) return;
     try {
       const response = await apiClient.post(`/recipes/${recipe._id}/fork`);
-      alert(t('recipes.forkSuccess'));
+      showToast(t('recipes.forkSuccess'), 'success');
       navigate(`/recipes/${response.data._id}`);
     } catch (err: any) {
-      alert(err.response?.data?.message || t('recipes.forkFailed'));
+      showToast(err.response?.data?.message || t('recipes.forkFailed'));
     }
   };
 

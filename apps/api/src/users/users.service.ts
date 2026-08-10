@@ -110,7 +110,12 @@ export class UsersService implements OnModuleInit {
     const isFollowing = !!followDoc;
 
     const recentEvents = await this.activityEventModel
-      .find({ userId: new Types.ObjectId(userId) })
+      .find({
+        userId: new Types.ObjectId(userId),
+        // Служебные события лайков не показываем в публичной активности.
+        type: { $ne: 'recipe_like' },
+        'payload.isLike': { $ne: true },
+      })
       .sort({ createdAt: -1 })
       .limit(10)
       .exec();

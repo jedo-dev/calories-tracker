@@ -10,7 +10,7 @@ import { EditIcon } from '../../../ui/icons';
 import DeleteIcon from '../../../assets/DeleteIcon';
 import { workoutCardStyle } from '../../../pages/workoutShared';
 import { Thumb } from '../Thumb';
-import { ConfirmSheet } from '../ConfirmSheet';
+import { ConfirmSheet } from '../../../ui/ConfirmSheet';
 import { PhotoDropzone } from './PhotoDropzone';
 import type { WorkoutCategory } from '../types';
 

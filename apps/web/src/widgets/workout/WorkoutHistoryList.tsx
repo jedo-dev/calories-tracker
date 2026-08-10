@@ -1,4 +1,4 @@
-import { t } from '../../i18n';
+import { plural, t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { workoutCardStyle, formatDuration } from '../../pages/workoutShared';
@@ -50,7 +50,7 @@ export function WorkoutHistoryList({ sessions, emptyImage, onSessionClick }: Wor
             </Text>
             <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
               {session.date ? `${session.date} · ` : ''}
-              {session.exerciseCount} {t('workout.exerciseCount').toLowerCase()} · {formatDuration(session.totalDurationSec)}
+              {session.exerciseCount} {plural(session.exerciseCount, 'exercise')} · {formatDuration(session.totalDurationSec)}
             </Text>
           </div>
           <div style={{ textAlign: 'right', whiteSpace: 'nowrap', flexShrink: 0 }}>

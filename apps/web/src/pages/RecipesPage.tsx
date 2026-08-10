@@ -4,6 +4,7 @@ import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import { t } from '../i18n';
+import { showToast } from '../ui/Toast';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
@@ -172,9 +173,9 @@ export function RecipesPage() {
     e.stopPropagation();
     try {
       await apiClient.post(`/recipes/${id}/fork`);
-      alert(t('recipes.forkSuccess'));
+      showToast(t('recipes.forkSuccess'), 'success');
     } catch (err: any) {
-      alert(err.response?.data?.message || t('recipes.forkFailed'));
+      showToast(err.response?.data?.message || t('recipes.forkFailed'));
     }
   };
 

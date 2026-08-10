@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
-import { t } from '../../i18n';
-import { useTheme } from '../../theme/useTheme';
-import { BottomSheet } from '../../ui/BottomSheet';
-import { Text } from '../../ui/Text';
+import { t } from '../i18n';
+import { useTheme } from '../theme/useTheme';
+import { BottomSheet } from './BottomSheet';
+import { Text } from './Text';
 
 interface ConfirmSheetProps {
   isOpen: boolean;

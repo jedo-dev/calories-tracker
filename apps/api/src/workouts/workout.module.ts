@@ -9,9 +9,11 @@ import { WorkoutLog, WorkoutLogSchema } from './schemas/workout-log.schema';
 import { WorkoutProgram, WorkoutProgramSchema } from './schemas/workout-program.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { ActivityEvent, ActivityEventSchema } from '../social/schemas/activity-event.schema';
+import { SocialModule } from '../social/social.module';
 
 @Module({
   imports: [
+    SocialModule,
     MongooseModule.forFeature([
       { name: WorkoutCategory.name, schema: WorkoutCategorySchema },
       { name: Exercise.name, schema: ExerciseSchema },

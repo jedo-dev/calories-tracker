@@ -55,6 +55,11 @@ export class Entry {
 
   @Prop({ required: true })
   carb: number;
+
+  // Записи, созданные применением плана питания: метка нужна для
+  // идемпотентного re-apply (повтор сначала убирает свои прошлые записи).
+  @Prop({ type: Types.ObjectId, ref: 'MealPlan' })
+  sourcePlanId?: Types.ObjectId;
 }
 
 export const EntrySchema = SchemaFactory.createForClass(Entry);

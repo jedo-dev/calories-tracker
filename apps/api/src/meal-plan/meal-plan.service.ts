@@ -473,41 +473,60 @@ export class MealPlanService {
   async apply(id: string, userId: string): Promise<{ created: number }> {
     const plan = await this.findById(id, userId);
 
-    if (plan.status === 'applied') {
+    // Атомарный захват статуса: двойной клик / повторный запрос не пройдут —
+    // статус переключается ровно один раз (TOCTOU-проверка не работала).
+    const claimed = await this.mealPlanModel.findOneAndUpdate(
+      { _id: plan._id, userId: new Types.ObjectId(userId), status: 'draft' },
+      { $set: { status: 'applied' } },
+      { new: true },
+    ).exec();
+    if (!claimed) {
       throw new BadRequestException('План уже применён');
     }
 
-    let created = 0;
+    // Идемпотентность при повторе после сбоя: сначала убираем записи,
+    // созданные прошлой (упавшей) попыткой применения этого плана.
+    await this.entryModel.deleteMany({
+      userId: new Types.ObjectId(userId),
+      sourcePlanId: plan._id,
+    }).exec();
 
-    for (const day of plan.days) {
-      for (const meal of day.meals) {
-        for (const item of meal.items) {
-          const entry = new this.entryModel({
-            userId: new Types.ObjectId(userId),
-            date: day.date,
-            mealType: meal.mealType,
-            productId: item.sourceType === 'product' ? item.sourceId : undefined,
-            productName: item.name,
-            grams: item.grams,
-            kcalPer100g: this.round(item.kcal / (item.grams / 100)),
-            proteinPer100g: this.round(item.protein / (item.grams / 100)),
-            fatPer100g: this.round(item.fat / (item.grams / 100)),
-            carbPer100g: this.round(item.carb / (item.grams / 100)),
-            kcal: item.kcal,
-            protein: item.protein,
-            fat: item.fat,
-            carb: item.carb,
-          });
-          await entry.save();
-          created++;
-        }
-      }
+    const docs = plan.days.flatMap((day) =>
+      day.meals.flatMap((meal) =>
+        meal.items.map((item) => ({
+          userId: new Types.ObjectId(userId),
+          date: day.date,
+          mealType: meal.mealType,
+          productId: item.sourceType === 'product' ? item.sourceId : undefined,
+          productName: item.name,
+          grams: item.grams,
+          kcalPer100g: this.round(item.kcal / (item.grams / 100)),
+          proteinPer100g: this.round(item.protein / (item.grams / 100)),
+          fatPer100g: this.round(item.fat / (item.grams / 100)),
+          carbPer100g: this.round(item.carb / (item.grams / 100)),
+          kcal: item.kcal,
+          protein: item.protein,
+          fat: item.fat,
+          carb: item.carb,
+          sourcePlanId: plan._id,
+        })),
+      ),
+    );
+
+    try {
+      // Одним insertMany вместо N последовательных save.
+      await this.entryModel.insertMany(docs);
+    } catch (err) {
+      // Не удалось создать записи — возвращаем план в draft, чтобы повтор
+      // применения был возможен (его начало почистит частичные записи).
+      await this.mealPlanModel.updateOne(
+        { _id: plan._id },
+        { $set: { status: 'draft' } },
+      ).exec();
+      throw err;
     }
 
-    plan.status = 'applied';
-    await plan.save();
-
-    return { created };
+    return { created: docs.length };
   }
 
   async archive(id: string, userId: string): Promise<void> {

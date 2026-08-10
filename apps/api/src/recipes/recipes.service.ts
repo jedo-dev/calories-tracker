@@ -605,39 +605,33 @@ export class RecipesService {
   async toggleLike(id: string, userId: string): Promise<{ liked: boolean; likesCount: number }> {
     const recipe = await this.findByIdPublic(id, userId);
 
-    // For simplicity, we'll use a simple approach - store liked user IDs in payload
-    // In a real app, you'd have a separate Like collection
+    // Лайк хранится отдельным служебным событием 'recipe_like' (в ленту не
+    // попадает). Раньше он создавался как 'recipe_published' и выглядел в ленте
+    // подписчиков как публикация рецепта. $or — совместимость со старыми лайками.
     const existing = await this.activityEventModel.findOne({
       userId: new Types.ObjectId(userId),
-      type: 'recipe_published',
       'payload.recipeId': id,
-      'payload.likedBy': userId,
+      $or: [
+        { type: 'recipe_like' },
+        { type: 'recipe_published', 'payload.isLike': true, 'payload.likedBy': userId },
+      ],
     }).exec();
 
     if (existing) {
-      // Unlike
-      await this.activityEventModel.updateOne(
-        { _id: existing._id },
-        { $pull: { 'payload.likedBy': userId } },
-      );
+      // Unlike: событие удаляем целиком (раньше $pull оставлял «пустышку» в ленте).
+      await this.activityEventModel.deleteOne({ _id: existing._id });
       await this.recipeModel.updateOne(
-        { _id: recipe._id },
+        { _id: recipe._id, likesCount: { $gt: 0 } },
         { $inc: { likesCount: -1 } },
       );
       const updated = await this.recipeModel.findById(id).exec();
       return { liked: false, likesCount: updated?.likesCount || 0 };
     } else {
-      // Like - create a like event
       await this.activityEventModel.create({
         userId: new Types.ObjectId(userId),
-        type: 'recipe_published',
+        type: 'recipe_like',
         date: new Date().toISOString().split('T')[0],
-        payload: {
-          recipeId: id,
-          recipeName: recipe.name,
-          likedBy: [userId],
-          isLike: true,
-        },
+        payload: { recipeId: id, recipeName: recipe.name },
       });
       await this.recipeModel.updateOne(
         { _id: recipe._id },

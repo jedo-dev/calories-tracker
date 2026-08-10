@@ -8,8 +8,10 @@ import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
+import { ConfirmSheet } from '../ui/ConfirmSheet';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
+import { showToast } from '../ui/Toast';
 
 interface Product {
   _id: string;
@@ -38,6 +40,7 @@ export function ProductsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', kcalPer100g: '', proteinPer100g: '', fatPer100g: '', carbPer100g: '' });
   const [myUserId, setMyUserId] = useState<string | null>(null);
 
@@ -94,17 +97,18 @@ export function ProductsPage() {
       setEditingId(null);
       await fetchProducts();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update product');
+      showToast(err.response?.data?.message || t('products.updateFailed'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Удалить продукт?')) return;
     try {
       await apiClient.delete(`/products/${id}`);
       await fetchProducts();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete product');
+      showToast(err.response?.data?.message || t('products.deleteFailed'));
+    } finally {
+      setDeleteId(null);
     }
   };
 
@@ -192,7 +196,7 @@ export function ProductsPage() {
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(product)} style={{ padding: '8px', minWidth: '36px', minHeight: '36px' }} aria-label="Редактировать">
                         <EditIcon />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(product._id)} style={{ padding: '8px', minWidth: '36px', minHeight: '36px' }} aria-label="Удалить">
+                      <Button variant="ghost" size="sm" onClick={() => setDeleteId(product._id)} style={{ padding: '8px', minWidth: '36px', minHeight: '36px' }} aria-label="Удалить">
                         <DeleteIcon />
                       </Button>
                     </div>
@@ -203,6 +207,15 @@ export function ProductsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmSheet
+        isOpen={deleteId !== null}
+        title={t('products.deleteConfirm')}
+        confirmLabel={t('common.delete')}
+        danger
+        onConfirm={() => deleteId && handleDelete(deleteId)}
+        onClose={() => setDeleteId(null)}
+      />
     </div>
   );
 }

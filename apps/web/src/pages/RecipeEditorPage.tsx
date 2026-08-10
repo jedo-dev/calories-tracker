@@ -459,7 +459,15 @@ export function RecipeEditorPage() {
     >
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: theme.spacing.lg }}>
-        <IconButton label={t('common.back')} onClick={() => navigate(-1)}>
+        <IconButton
+          label={t('common.back')}
+          onClick={() => {
+            // beforeunload ловит только закрытие вкладки — SPA-переход
+            // назад тоже не должен молча терять несохранённое.
+            if (isDirty && !confirm(t('recipeEditor.unsavedConfirm'))) return;
+            navigate(-1);
+          }}
+        >
           <BackIcon />
         </IconButton>
         <Text variant="h2" bold style={{ fontSize: '20px' }}>

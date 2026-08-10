@@ -53,53 +53,108 @@ export class SocialService {
     return d.toISOString().split('T')[0];
   }
 
+  /**
+   * Атомарно начисляет XP (upsert + $inc, со сбросом недельного счётчика при
+   * смене недели). Никаких read-modify-write: параллельные запросы не теряют XP.
+   */
+  async addXp(userId: string, amount: number): Promise<void> {
+    if (amount <= 0) return;
+    const uid = new Types.ObjectId(userId);
+    const weekKey = this.getWeekKey();
+
+    // Сброс недельного счётчика, если началась новая неделя.
+    await this.userStatsModel
+      .updateOne({ userId: uid, weekKey: { $ne: weekKey } }, { $set: { weekKey, xpWeek: 0 } })
+      .exec();
+
+    try {
+      await this.userStatsModel
+        .updateOne(
+          { userId: uid },
+          {
+            $inc: { xpTotal: amount, xpWeek: amount },
+            $setOnInsert: { weekKey, currentStreak: 0, bestStreak: 0 },
+          },
+          { upsert: true },
+        )
+        .exec();
+    } catch (err: any) {
+      // Гонка двух upsert'ов упирается в unique(userId) — повторяем без upsert.
+      if (err?.code === 11000) {
+        await this.userStatsModel
+          .updateOne({ userId: uid }, { $inc: { xpTotal: amount, xpWeek: amount } })
+          .exec();
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  /** +5 XP за завершённую тренировку (событие ленты создаёт workout-сервис). */
+  async grantXpForWorkout(userId: string): Promise<void> {
+    await this.addXp(userId, 5);
+  }
+
+  /** +3 XP за закрытую норму воды (событие ленты создаёт water-сервис). */
+  async grantXpForWaterGoal(userId: string): Promise<void> {
+    await this.addXp(userId, 3);
+  }
+
   async updateStreakIfFirstLogOfDay(userId: string, date: string): Promise<void> {
     const stats = await this.ensureUserStats(userId);
-    this.maybeResetWeek(stats);
 
     const entryCount = await this.entryModel.countDocuments({
       userId: new Types.ObjectId(userId),
       date,
     }).exec();
 
-    if (entryCount !== 1) {
+    // Раньше здесь было `!== 1`: две параллельные записи обе видели count=2,
+    // и стрик не засчитывался вообще.
+    if (entryCount === 0) {
       return;
     }
-
-    const yesterday = this.getYesterday(date);
 
     if (stats.lastLoggedDate === date) {
       return;
     }
-
-    if (stats.lastLoggedDate === yesterday) {
-      stats.currentStreak += 1;
-    } else {
-      stats.currentStreak = 1;
+    // Дозапись за прошлые даты не должна сбрасывать текущий стрик.
+    if (stats.lastLoggedDate && date < stats.lastLoggedDate) {
+      return;
     }
 
-    if (stats.currentStreak > stats.bestStreak) {
-      stats.bestStreak = stats.currentStreak;
-    }
+    const yesterday = this.getYesterday(date);
+    const newStreak = stats.lastLoggedDate === yesterday ? stats.currentStreak + 1 : 1;
 
-    stats.lastLoggedDate = date;
-    await stats.save();
+    // Оптимистичная блокировка: обновляем только если lastLoggedDate не изменился
+    // с момента чтения — при гонке победит ровно один запрос.
+    const updated = await this.userStatsModel
+      .findOneAndUpdate(
+        {
+          userId: new Types.ObjectId(userId),
+          lastLoggedDate: stats.lastLoggedDate ?? null,
+        },
+        {
+          $set: { currentStreak: newStreak, lastLoggedDate: date },
+          $max: { bestStreak: newStreak },
+        },
+        { new: true },
+      )
+      .exec();
+
+    if (!updated) return;
 
     const milestones = [3, 7, 14, 30];
-    if (milestones.includes(stats.currentStreak)) {
+    if (milestones.includes(newStreak)) {
       await this.activityEventModel.create({
         userId: new Types.ObjectId(userId),
         type: 'streak_milestone',
         date,
-        payload: { streak: stats.currentStreak },
+        payload: { streak: newStreak },
       });
     }
   }
 
   async grantXpForEntry(userId: string, date: string): Promise<void> {
-    const stats = await this.ensureUserStats(userId);
-    this.maybeResetWeek(stats);
-
     const entryCount = await this.entryModel.countDocuments({
       userId: new Types.ObjectId(userId),
       date,
@@ -144,9 +199,7 @@ export class SocialService {
     }
 
     if (xpToGrant > 0) {
-      stats.xpTotal += xpToGrant;
-      stats.xpWeek += xpToGrant;
-      await stats.save();
+      await this.addXp(userId, xpToGrant);
 
       await this.activityEventModel.create({
         userId: new Types.ObjectId(userId),

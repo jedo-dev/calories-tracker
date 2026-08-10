@@ -32,6 +32,7 @@ import { MealPlanPage } from './pages/MealPlanPage';
 import { useTheme } from './theme/useTheme';
 import { Footer } from './widget/Footer/Footer';
 import { LoaderOverlayHost } from './ui/Loader';
+import { ToastHost } from './ui/Toast';
 
 function AppLayout() {
   return (
@@ -95,6 +96,7 @@ function App() {
           </Route>
         </Routes>
         <LoaderOverlayHost />
+        <ToastHost />
       </AuthProvider>
     </BrowserRouter>
   );

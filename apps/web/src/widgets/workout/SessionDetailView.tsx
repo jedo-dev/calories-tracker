@@ -1,4 +1,4 @@
-import { t } from '../../i18n';
+import { plural, t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { workoutCardStyle, formatDuration } from '../../pages/workoutShared';
@@ -68,7 +68,8 @@ export function SessionDetailView({ session, logs }: SessionDetailViewProps) {
                   {log.exerciseName}
                 </Text>
                 <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
-                  {setsDone}/{(log.setsDetail || []).length} {t('workout.setsShort')}
+                  {setsDone}/{(log.setsDetail || []).length}{' '}
+                  {plural((log.setsDetail || []).length, 'set')}
                   {volume > 0 ? ` · ${Math.round(volume * 10) / 10} ${t('workout.kg')}` : ''}
                   {log.caloriesBurned > 0 ? ` · ${Math.round(log.caloriesBurned)} ${t('workout.kcal')}` : ''}
                 </Text>

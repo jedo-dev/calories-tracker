@@ -3,7 +3,7 @@ import { apiClient } from '../api/client';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-import { ConfirmSheet } from '../widgets/workout/ConfirmSheet';
+import { ConfirmSheet } from '../ui/ConfirmSheet';
 import { MeasurementForm } from '../widgets/measurements/MeasurementForm';
 import { CurrentMeasurementsCard } from '../widgets/measurements/CurrentMeasurementsCard';
 import { MeasurementHistoryList } from '../widgets/measurements/MeasurementHistoryList';

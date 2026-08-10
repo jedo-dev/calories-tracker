@@ -15,9 +15,13 @@ export class WeightService {
     if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date))) {
       throw new BadRequestException('Некорректная дата');
     }
+    // Клиент присылает СВОЮ локальную дату. Для пользователей восточнее сервера
+    // она может быть «завтра» по серверным часам — допускаем +1 день, иначе
+    // они не могут записать вес за сегодня.
     const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    if (date > today) {
+    now.setDate(now.getDate() + 1);
+    const maxAllowed = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (date > maxAllowed) {
       throw new BadRequestException('Нельзя записать вес на будущую дату');
     }
     const weight = Number(weightKg);

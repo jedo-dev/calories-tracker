@@ -7,7 +7,7 @@ import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-import { ConfirmSheet } from '../widgets/workout/ConfirmSheet';
+import { ConfirmSheet } from '../ui/ConfirmSheet';
 import { TemplateCard, Template } from '../widgets/templates/TemplateCard';
 import { TemplateCreateCard } from '../widgets/templates/TemplateCreateCard';
 

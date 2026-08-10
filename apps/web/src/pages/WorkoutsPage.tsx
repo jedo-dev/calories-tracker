@@ -107,6 +107,7 @@ export function WorkoutsPage() {
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
         <button
           type="button"
+          disabled={categories.length === 0}
           onClick={() => {
             const target = activeCategoryId || categories[0]?._id;
             if (target) navigate(`/workout/category/${target}`);
@@ -120,7 +121,8 @@ export function WorkoutsPage() {
             color: theme.palette.text,
             fontSize: '13px',
             fontWeight: 700,
-            cursor: 'pointer',
+            cursor: categories.length === 0 ? 'default' : 'pointer',
+            opacity: categories.length === 0 ? 0.5 : 1,
             fontFamily: 'inherit',
           }}
         >

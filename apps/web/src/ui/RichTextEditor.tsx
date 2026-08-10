@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import { t } from '../i18n';
+import { showToast } from './Toast';
 import { useTheme } from '../theme/useTheme';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -152,7 +153,7 @@ export function RichTextEditor({ value, onChange, onUploadImage, placeholder }: 
     e.target.value = '';
     if (!file || !editor) return;
     if (file.size > MAX_IMAGE_SIZE) {
-      alert(t('recipeEditor.imageTooLarge'));
+      showToast(t('recipeEditor.imageTooLarge'));
       return;
     }
     setUploading(true);
@@ -161,7 +162,7 @@ export function RichTextEditor({ value, onChange, onUploadImage, placeholder }: 
       editor.chain().focus().setImage({ src: url }).run();
     } catch (err) {
       console.error('Image upload failed', err);
-      alert(t('recipeEditor.imageUploadFailed'));
+      showToast(t('recipeEditor.imageUploadFailed'));
     } finally {
       setUploading(false);
     }

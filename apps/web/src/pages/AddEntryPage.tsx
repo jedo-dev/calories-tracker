@@ -4,6 +4,7 @@ import { apiClient } from '../api/client';
 import { RecentProducts } from '../features/TodayComponents/RecentProducts';
 import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
+import { showToast } from '../ui/Toast';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -172,6 +173,8 @@ export function AddEntryPage() {
       setProducts(response.data);
     } catch (err: any) {
       console.error('Failed to search products', err);
+      // Иначе сбой поиска выглядит как «ничего не найдено».
+      showToast(t('common.loadError'));
     }
   };
 
@@ -255,11 +258,11 @@ export function AddEntryPage() {
 
   const handleSave = async () => {
     if (!selectedProduct) {
-      alert(t('entry.noProductSelected'));
+      showToast(t('entry.noProductSelected'));
       return;
     }
     if (!grams || parseFloat(grams) <= 0) {
-      alert(t('entry.invalidGrams'));
+      showToast(t('entry.invalidGrams'));
       return;
     }
 

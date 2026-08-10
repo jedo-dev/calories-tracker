@@ -3,12 +3,24 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { WaterLog, WaterLogDocument } from './schemas/water-log.schema';
 import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity-event.schema';
+import { SocialService } from '../social/social.service';
+import { User, UserDocument } from '../users/schemas/user.schema';
+
+// Дневная норма воды от веса: 30 мл/кг, шаг 250, пределы 1500–4000.
+// Формула продублирована на фронте (widgets/water/waterGoal.ts).
+export function calcWaterGoalMl(weightKg?: number | null): number {
+  if (!weightKg || weightKg <= 0) return 2000;
+  const rounded = Math.round((weightKg * 30) / 250) * 250;
+  return Math.min(4000, Math.max(1500, rounded));
+}
 
 @Injectable()
 export class WaterService {
   constructor(
     @InjectModel(WaterLog.name) private waterModel: Model<WaterLogDocument>,
     @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private socialService: SocialService,
   ) {}
 
   async add(userId: string, date: string, amountMl: number): Promise<WaterLogDocument> {
@@ -24,7 +36,10 @@ export class WaterService {
       .exec();
     const totalMl = logs.reduce((sum, l) => sum + l.amountMl, 0);
 
-    if (totalMl >= 2000) {
+    const user = await this.userModel.findById(userId).select('profile.weightKg').exec();
+    const goalMl = calcWaterGoalMl(user?.profile?.weightKg);
+
+    if (totalMl >= goalMl) {
       const existingEvent = await this.activityEventModel.findOne({
         userId: new Types.ObjectId(userId),
         type: 'water_goal',
@@ -36,8 +51,11 @@ export class WaterService {
           userId: new Types.ObjectId(userId),
           type: 'water_goal',
           date,
-          payload: { totalMl },
+          payload: { totalMl, xp: 3 },
         });
+        // «Закройте норму воды — +3 XP» (обещание из подсказок лиги);
+        // начисляется один раз в день вместе с созданием события.
+        await this.socialService.grantXpForWaterGoal(userId);
       }
     }
 

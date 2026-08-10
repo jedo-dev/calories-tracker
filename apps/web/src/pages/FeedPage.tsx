@@ -73,7 +73,32 @@ export function FeedPage() {
       )}
 
       {feed.length === 0 ? (
-        <EmptyState image={mascotFoxMain} title={t('feed.noEvents')} description={t('feed.noEventsDesc')} />
+        <EmptyState
+          image={mascotFoxMain}
+          title={t('feed.noEvents')}
+          description={t('feed.noEventsDesc')}
+          action={
+            <button
+              type="button"
+              onClick={() => navigate('/friends')}
+              style={{
+                height: '46px',
+                padding: '0 20px',
+                borderRadius: '16px',
+                border: 'none',
+                background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+                color: '#07210f',
+                fontSize: '14px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
+                fontFamily: 'inherit',
+              }}
+            >
+              {t('feed.findFriends')}
+            </button>
+          }
+        />
       ) : (
         feed.map((item) => (
           <FeedEventCard

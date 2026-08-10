@@ -1,4 +1,4 @@
-import { t } from '../../i18n';
+import { plural, t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 
@@ -22,7 +22,7 @@ export function WorkoutProgressBar({ currentIndex, totalExercises, doneSets, tot
             .replace('{n}', String(totalExercises))}
         </Text>
         <Text variant="small" muted>
-          {doneSets}/{totalSets} {t('workout.setsShort')}
+          {doneSets}/{totalSets} {plural(totalSets, 'set')}
         </Text>
       </div>
       <div

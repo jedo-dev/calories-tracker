@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
+import { showToast } from '../ui/Toast';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
@@ -107,6 +108,8 @@ export function ExercisesPage() {
       if (cat) setCategoryName(cat.name);
     } catch (err) {
       console.error('Failed to load exercises', err);
+      // Пустой каталог из-за ошибки сети не должен выглядеть как «нет упражнений».
+      showToast(t('common.loadError'));
     } finally {
       setLoading(false);
     }

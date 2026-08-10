@@ -5,14 +5,17 @@ import DeleteIcon from "../assets/DeleteIcon";
 import EditIcon from "../assets/EditIcon";
 import DayChanger from "../features/TodayComponents/DayChanger";
 import FoodList, { MealGroup } from "../features/TodayComponents/FoodList";
-import { t } from "../i18n";
+import { plural, t } from "../i18n";
 import Loader from "../ui/Loader";
 import { useTheme } from "../theme/useTheme";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ConfirmSheet } from "../ui/ConfirmSheet";
 import { DashboardRing } from "../ui/DashboardRing";
 import { Text } from "../ui/Text";
+import { showToast } from "../ui/Toast";
 import { WaterCard } from "../widgets/water/WaterCard";
+import { calcWaterGoalMl } from "../widgets/water/waterGoal";
 
 export interface Entry {
   _id: string;
@@ -363,6 +366,8 @@ export function TodayPage() {
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
+  const [waterGoal, setWaterGoal] = useState(2000);
   const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
   const [water, setWater] = useState<WaterState>({ totalMl: 0 });
   const [selectedGroup, setSelectedGroup] = useState<MealGroup | null>(null);
@@ -374,19 +379,20 @@ export function TodayPage() {
     setError(null);
 
     try {
-      const [entriesRes, dashboardRes, socialRes, waterRes] = await Promise.all(
-        [
+      const [entriesRes, dashboardRes, socialRes, waterRes, weightRes] =
+        await Promise.all([
           apiClient.get(`/entries?date=${date}`),
           apiClient.get(`/dashboard/day?date=${date}`),
           apiClient.get("/social/me"),
-          apiClient.get("/water", { params: { date } })
-        ]
-      );
+          apiClient.get("/water", { params: { date } }),
+          apiClient.get("/weight/latest").catch(() => ({ data: null }))
+        ]);
 
       setEntries(entriesRes.data);
       setDashboard(dashboardRes.data);
       setSocialStats(socialRes.data);
       setWater(waterRes.data);
+      setWaterGoal(calcWaterGoalMl(weightRes?.data?.weightKg));
     } catch (err: any) {
       setError(
         err.response?.data?.message || err.message || t("dashboard.loadFailed")
@@ -411,10 +417,15 @@ export function TodayPage() {
   };
 
   const handleDeleteEntry = async (id: string) => {
-    if (!confirm(t("today.deleteConfirm"))) return;
     try {
       await apiClient.delete(`/entries/${id}`);
-      await loadData();
+      // Локальное обновление вместо полного reload дня (4 запроса + Loader
+      // схлопывал весь экран). Дашборд обновляем тихо, без спиннера.
+      setEntries((prev) => prev.filter((entry) => entry._id !== id));
+      apiClient
+        .get(`/dashboard/day?date=${date}`)
+        .then((res) => setDashboard(res.data))
+        .catch(() => {});
       setSelectedGroup((current) =>
         current
           ? {
@@ -427,7 +438,9 @@ export function TodayPage() {
           : current
       );
     } catch (err: any) {
-      alert(err.response?.data?.message || t("today.deleteFailed"));
+      showToast(err.response?.data?.message || t("today.deleteFailed"));
+    } finally {
+      setDeleteEntryId(null);
     }
   };
 
@@ -501,7 +514,7 @@ export function TodayPage() {
         </Card>
       )}
 
-      <WaterCard totalMl={water.totalMl} onAdd={handleAddWater} />
+      <WaterCard totalMl={water.totalMl} goal={waterGoal} onAdd={handleAddWater} />
 
       <Button
         onClick={() => navigate("/entry/new")}
@@ -618,7 +631,8 @@ export function TodayPage() {
                     muted
                     style={{ display: "block", marginTop: "2px" }}
                   >
-                    {selectedGroup.entries.length} записей
+                    {selectedGroup.entries.length}{" "}
+                    {plural(selectedGroup.entries.length, "entry")}
                   </Text>
                 </div>
                 <Button
@@ -694,7 +708,7 @@ export function TodayPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteEntry(entry._id)}
+                        onClick={() => setDeleteEntryId(entry._id)}
                         style={{
                           width: "auto",
                           minWidth: "44px",
@@ -713,6 +727,15 @@ export function TodayPage() {
           </div>
         </div>
       )}
+
+      <ConfirmSheet
+        isOpen={deleteEntryId !== null}
+        title={t("today.deleteConfirm")}
+        confirmLabel={t("common.delete")}
+        danger
+        onConfirm={() => deleteEntryId && handleDeleteEntry(deleteEntryId)}
+        onClose={() => setDeleteEntryId(null)}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { WorkoutLog, WorkoutLogDocument, WorkoutSetDetail } from './schemas/work
 import { WorkoutProgram, WorkoutProgramDocument, WorkoutProgramItem } from './schemas/workout-program.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity-event.schema';
+import { SocialService } from '../social/social.service';
 import { CreateWorkoutSessionDto } from './dto/create-workout-session.dto';
 import { AddExerciseToSessionDto } from './dto/add-exercise.dto';
 import { StartProgramDto } from './dto/start-program.dto';
@@ -39,6 +40,7 @@ export class WorkoutService {
     @InjectModel(WorkoutProgram.name) private programModel: Model<WorkoutProgramDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
+    private socialService: SocialService,
   ) {}
 
   // Categories
@@ -439,9 +441,39 @@ export class WorkoutService {
     return { session, logs };
   }
 
+  private buildFinishSummary(
+    session: WorkoutSessionDocument,
+    logs: WorkoutLogDocument[],
+    prs: FinishSummary['prs'],
+  ): FinishSummary {
+    const doneSets = logs.flatMap((l) => (l.setsDetail || []).filter((s) => s.done));
+    const totalVolumeKg = doneSets.reduce(
+      (sum, s) => sum + (s.weightKg || 0) * (s.reps || 0),
+      0,
+    );
+    const realDurationSec =
+      session.startedAt && session.finishedAt
+        ? Math.max(0, Math.round((session.finishedAt.getTime() - session.startedAt.getTime()) / 1000))
+        : session.totalDurationSec;
+
+    return {
+      durationSec: realDurationSec,
+      totalVolumeKg: Math.round(totalVolumeKg * 10) / 10,
+      kcal: session.totalCaloriesBurned,
+      exercisesDone: logs.filter((l) => (l.setsDetail || []).some((s) => s.done)).length || logs.length,
+      prs,
+    };
+  }
+
   async finishSession(sessionId: string, userId: string) {
     const session = await this.getSessionById(sessionId, userId);
     const logs = await this.logModel.find({ sessionId: new Types.ObjectId(sessionId) }).exec();
+
+    // Идемпотентность: повторный finish (двойной тап, ретрай на плохой сети)
+    // не создаёт второе событие ленты, не пересчитывает PR и не даёт XP.
+    if (session.finishedAt) {
+      return { session, summary: this.buildFinishSummary(session, logs, []) };
+    }
 
     const totalCalories = logs.reduce((sum, l) => sum + l.caloriesBurned, 0);
     const totalDuration = logs.reduce((sum, l) => sum + l.durationSec, 0);
@@ -464,28 +496,14 @@ export class WorkoutService {
         caloriesBurned: saved.totalCaloriesBurned,
         durationSec: saved.totalDurationSec,
         exerciseCount: saved.exerciseCount,
+        xp: 5,
       },
     });
 
-    const doneSets = logs.flatMap((l) => (l.setsDetail || []).filter((s) => s.done));
-    const totalVolumeKg = doneSets.reduce(
-      (sum, s) => sum + (s.weightKg || 0) * (s.reps || 0),
-      0,
-    );
-    const realDurationSec =
-      saved.startedAt && saved.finishedAt
-        ? Math.max(0, Math.round((saved.finishedAt.getTime() - saved.startedAt.getTime()) / 1000))
-        : saved.totalDurationSec;
+    // «Завершите тренировку — +5 XP» (обещание из подсказок лиги).
+    await this.socialService.grantXpForWorkout(userId);
 
-    const summary: FinishSummary = {
-      durationSec: realDurationSec,
-      totalVolumeKg: Math.round(totalVolumeKg * 10) / 10,
-      kcal: saved.totalCaloriesBurned,
-      exercisesDone: logs.filter((l) => (l.setsDetail || []).some((s) => s.done)).length || logs.length,
-      prs,
-    };
-
-    return { session: saved, summary };
+    return { session: saved, summary: this.buildFinishSummary(saved, logs, prs) };
   }
 
   async deleteSession(sessionId: string, userId: string): Promise<void> {

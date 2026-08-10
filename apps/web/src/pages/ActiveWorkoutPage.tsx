@@ -13,7 +13,7 @@ import { workoutPageBackground } from './workoutShared';
 import { ExerciseSlide } from '../widgets/workout/ExerciseSlide';
 import { RestTimerBar } from '../widgets/workout/RestTimerBar';
 import { WorkoutProgressBar } from '../widgets/workout/WorkoutProgressBar';
-import { ConfirmSheet } from '../widgets/workout/ConfirmSheet';
+import { ConfirmSheet } from '../ui/ConfirmSheet';
 import { Thumb } from '../widgets/workout/Thumb';
 import type { LastPerformance, SessionLog, SetDetail, WorkoutSessionInfo } from '../widgets/workout/types';
 
@@ -58,6 +58,10 @@ export function ActiveWorkoutPage() {
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [finishing, setFinishing] = useState(false);
+  // Сбой синхронизации подходов / завершения: пользователь должен видеть,
+  // что данные не ушли на сервер (раньше падало молча в console.error).
+  const [syncError, setSyncError] = useState(false);
+  const [finishError, setFinishError] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [pickerSearch, setPickerSearch] = useState('');
 
@@ -122,7 +126,11 @@ export function ActiveWorkoutPage() {
             done: s.done,
           })),
         })
-        .catch((err) => console.error('Failed to save set', err));
+        .then(() => setSyncError(false))
+        .catch((err) => {
+          console.error('Failed to save set', err);
+          setSyncError(true);
+        });
     };
     if (immediate) send();
     else patchTimers.current.set(log._id, setTimeout(send, 600));
@@ -247,6 +255,7 @@ export function ActiveWorkoutPage() {
       navigate(`/workout/${sessionId}/summary`, { state: { summary: res.data.summary } });
     } catch (err) {
       console.error('Failed to finish workout', err);
+      setFinishError(true);
       setFinishing(false);
       setConfirmFinish(false);
     }
@@ -323,6 +332,22 @@ export function ActiveWorkoutPage() {
           {t('workout.cancelWorkout')}
         </button>
       </div>
+
+      {(syncError || finishError) && (
+        <div
+          style={{
+            marginBottom: '10px',
+            padding: '9px 12px',
+            borderRadius: '12px',
+            background: 'rgba(255, 107, 92, 0.14)',
+            border: '1px solid rgba(255, 107, 92, 0.4)',
+          }}
+        >
+          <Text variant="small" style={{ color: '#ff8a8a', lineHeight: 1.35 }}>
+            {finishError ? t('workout.finishFailed') : t('workout.syncFailed')}
+          </Text>
+        </div>
+      )}
 
       {logs.length > 0 ? (
         <>

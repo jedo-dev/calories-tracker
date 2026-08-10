@@ -229,6 +229,7 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           <MenuTile path="/templates">{t('template.title')}</MenuTile>
           <MenuTile path="/recipes">{t('recipes.title')}</MenuTile>
           <MenuTile path="/meal-plan">{t('mealPlan.title')}</MenuTile>
+          <MenuTile path="/products">{t('products.title')}</MenuTile>
           {(user?.role === 'admin' || user?.role === 'trainer') && (
             <MenuTile path="/admin/workouts">⚙️ {t('workout.adminTitle')}</MenuTile>
           )}

@@ -3,6 +3,13 @@ export const ru = {
   app: {
     name: "FlareonFit"
   },
+  // Формы склонения для plural(n, key): [1, 2-4, 5+]
+  plurals: {
+    day: ["день", "дня", "дней"],
+    entry: ["запись", "записи", "записей"],
+    set: ["подход", "подхода", "подходов"],
+    exercise: ["упражнение", "упражнения", "упражнений"],
+  },
   // Common
   common: {
     loading: "Загрузка...",
@@ -15,7 +22,9 @@ export const ru = {
     add: "Добавить",
     search: "Поиск...",
     all: "Все",
-    back: "Назад"
+    back: "Назад",
+    loadError: "Не удалось загрузить данные",
+    retryHint: "Проверьте сеть и обновите страницу"
   },
 
   // Auth
@@ -116,7 +125,10 @@ export const ru = {
     searchPlaceholder: "Поиск продуктов...",
     noProductsFound: "Продукты не найдены",
     calories: "Калории: {value} ккал/100г",
-    loadFailed: "Не удалось загрузить продукты"
+    loadFailed: "Не удалось загрузить продукты",
+    deleteConfirm: "Удалить продукт?",
+    deleteFailed: "Не удалось удалить продукт",
+    updateFailed: "Не удалось обновить продукт"
   },
 
   // League
@@ -174,6 +186,7 @@ export const ru = {
     title: "Лента",
     noEvents: "Нет событий",
     noEventsDesc: "Подпишитесь на друзей, чтобы видеть их активность",
+    findFriends: "Найти друзей",
     logDay: "залогировал день",
     xpGain: "набрал XP",
     streakMilestone: "набрал серию",
@@ -297,6 +310,8 @@ export const ru = {
     kg: "кг",
     repsShort: "повт",
     setsShort: "подходов",
+    syncFailed: "Не удалось сохранить подход — проверьте сеть, изменения могут потеряться",
+    finishFailed: "Не удалось завершить тренировку — проверьте сеть и попробуйте ещё раз",
     exerciseOf: "Упражнение {i} из {n}",
     addSet: "Добавить подход",
     setDone: "Подход выполнен",
@@ -368,6 +383,7 @@ export const ru = {
     errorWeightRange: "Вес должен быть от {min} до {max} кг",
     errorFutureDate: "Нельзя записать вес на будущую дату",
     confirmDelete: "Удалить запись веса?",
+    deleteFailed: "Не удалось удалить запись",
     pagePrev: "Назад",
     pageNext: "Вперёд",
   },
@@ -568,6 +584,7 @@ export const ru = {
   recipeEditor: {
     newTitle: "Новое блюдо",
     editTitle: "Редактировать блюдо",
+    unsavedConfirm: "Есть несохранённые изменения. Выйти без сохранения?",
     name: "Название блюда",
     namePlaceholder: "Омлет с сыром",
     description: "Описание",

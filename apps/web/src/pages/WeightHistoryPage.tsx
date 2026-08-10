@@ -2,14 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { apiClient } from "../api/client";
 import emptyWeight from "../assets/03_empty_states/empty_weight.png";
 import DeleteIcon from "../assets/DeleteIcon";
-import { t } from "../i18n";
+import { plural, t } from "../i18n";
 import { useTheme } from "../theme/useTheme";
 import { Card } from "../ui/Card";
+import { ConfirmSheet } from "../ui/ConfirmSheet";
 import { EmptyState } from "../ui/EmptyState";
 import { IconButton } from "../ui/IconButton";
 import { BackIcon, EditIcon } from "../ui/icons";
 import Loader from "../ui/Loader";
 import { Text } from "../ui/Text";
+import { showToast } from "../ui/Toast";
 import { WeightSheet } from "../widgets/weight/WeightSheet";
 
 interface WeightEntry {
@@ -286,19 +288,24 @@ export function WeightHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<WeightEntry | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(0);
 
   const today = localToday();
 
   const load = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await apiClient.get("/weight", { params: { limit: 90 } });
       setHistory(res.data);
     } catch (err) {
       console.error(err);
+      // Ошибка сети не должна выглядеть как «истории нет».
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -338,12 +345,13 @@ export function WeightHistoryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t("weight.confirmDelete"))) return;
     try {
       await apiClient.delete(`/weight/${id}`);
       await load();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to delete");
+      showToast(err.response?.data?.message || t("weight.deleteFailed"));
+    } finally {
+      setDeleteId(null);
     }
   };
 
@@ -460,7 +468,7 @@ export function WeightHistoryPage() {
               {history.length}
             </Text>
             <Text variant="small" muted style={{ fontSize: "11px" }}>
-              {t("report.days")}
+              {plural(history.length, "day")}
             </Text>
           </div>
         </div>
@@ -521,7 +529,9 @@ export function WeightHistoryPage() {
       />
 
       {/* History list with pager */}
-      {history.length === 0 ? (
+      {loadError ? (
+        <EmptyState title={t("common.loadError")} description={t("common.retryHint")} />
+      ) : history.length === 0 ? (
         <EmptyState image={emptyWeight} title={t("weight.noHistory")} />
       ) : (
         <Card style={{ ...cardStyle }}>
@@ -608,7 +618,7 @@ export function WeightHistoryPage() {
                 </IconButton>
                 <IconButton
                   label={t("common.delete")}
-                  onClick={() => handleDelete(entry._id)}
+                  onClick={() => setDeleteId(entry._id)}
                   danger
                   size={30}
                 >
@@ -619,6 +629,15 @@ export function WeightHistoryPage() {
           ))}
         </Card>
       )}
+
+      <ConfirmSheet
+        isOpen={deleteId !== null}
+        title={t("weight.confirmDelete")}
+        confirmLabel={t("common.delete")}
+        danger
+        onConfirm={() => deleteId && handleDelete(deleteId)}
+        onClose={() => setDeleteId(null)}
+      />
     </div>
   );
 }

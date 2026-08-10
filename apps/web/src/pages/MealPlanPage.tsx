@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
+import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
+import { showToast } from '../ui/Toast';
 import { PlanSettingsCard } from '../widgets/mealPlan/PlanSettingsCard';
 import { PlanDayCard } from '../widgets/mealPlan/PlanDayCard';
 import { PlanMealCard } from '../widgets/mealPlan/PlanMealCard';
@@ -29,18 +32,23 @@ export function MealPlanPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [hasProfile, setHasProfile] = useState(true);
+  const [pageLoading, setPageLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(0);
 
   useEffect(() => {
     const consider = searchParams.get('considerEaten');
     if (consider === 'true') setConsiderEaten(true);
-    apiClient
-      .get('/profile')
-      .then((res) => {
-        if (!res.data.profile?.weightKg || !res.data.profile?.heightCm) setHasProfile(false);
-      })
-      .catch(() => setHasProfile(false));
-    loadHistory();
+    // Лоадер до конца проверки профиля: раньше hasProfile=true по умолчанию
+    // рисовал основной экран, который затем мигал заглушкой «нет профиля».
+    Promise.all([
+      apiClient
+        .get('/profile')
+        .then((res) => {
+          if (!res.data.profile?.weightKg || !res.data.profile?.heightCm) setHasProfile(false);
+        })
+        .catch(() => setHasProfile(false)),
+      loadHistory(),
+    ]).finally(() => setPageLoading(false));
   }, []);
 
   const loadHistory = async () => {
@@ -49,6 +57,7 @@ export function MealPlanPage() {
       setHistory(res.data);
     } catch (err) {
       console.error(err);
+      showToast(t('common.loadError'));
     }
   };
 
@@ -178,6 +187,8 @@ export function MealPlanPage() {
     boxShadow: disabled ? 'none' : '0 14px 26px rgba(83, 212, 107, 0.22)',
     fontFamily: 'inherit',
   });
+
+  if (pageLoading) return <Loader />;
 
   if (!hasProfile) {
     return (

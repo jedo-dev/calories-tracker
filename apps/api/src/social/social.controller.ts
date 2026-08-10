@@ -213,6 +213,9 @@ export class FeedController {
       .find({
         userId: { $in: followingIds },
         createdAt: { $gte: sevenDaysAgo },
+        // Служебные события лайков (и легаси-лайки под видом публикаций) — не для ленты.
+        type: { $ne: 'recipe_like' },
+        'payload.isLike': { $ne: true },
       })
       .sort({ createdAt: -1 })
       .limit(50)
