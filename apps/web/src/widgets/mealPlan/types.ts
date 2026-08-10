@@ -1,3 +1,4 @@
+import { glassCardStyle } from '../../theme/styles';
 export interface PlanItem {
   sourceType: 'recipe' | 'product';
   sourceId: string;
@@ -55,14 +56,7 @@ export interface MealPlan {
   explanation: string[];
 }
 
-export const planCardStyle: React.CSSProperties = {
-  borderRadius: '22px',
-  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
-  border: '1px solid rgba(160, 200, 220, 0.18)',
-  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
-  padding: '14px',
-  marginBottom: '12px',
-};
+export const planCardStyle: React.CSSProperties = { ...glassCardStyle, marginBottom: '12px' };
 
 export const formatDateRu = (dateStr: string): string => {
   const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];

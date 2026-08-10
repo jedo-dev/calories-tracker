@@ -23,7 +23,7 @@ export function MeasurementHistoryList({ entries, onDelete }: MeasurementHistory
       {entries.map((entry) => (
         <div key={entry._id} style={{ ...measurementCardStyle, marginBottom: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <Text bold style={{ fontSize: '14px' }}>📅 {formatDateRu(entry.date)}</Text>
+            <Text bold style={{ fontSize: '14px' }}>{formatDateRu(entry.date)}</Text>
             <button
               type="button"
               onClick={() => onDelete(entry)}

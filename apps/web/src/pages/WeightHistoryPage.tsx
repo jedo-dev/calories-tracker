@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { apiClient } from "../api/client";
 import emptyWeight from "../assets/03_empty_states/empty_weight.png";
 import DeleteIcon from "../assets/DeleteIcon";
-import { plural, t } from "../i18n";
+import { formatDateHuman, plural, t, todayISO } from '../i18n';
+import { glassCardStyle, pageBackground } from "../theme/styles";
 import { useTheme } from "../theme/useTheme";
 import { Card } from "../ui/Card";
 import { ConfirmSheet } from "../ui/ConfirmSheet";
@@ -20,43 +21,11 @@ interface WeightEntry {
   weightKg: number;
 }
 
-const MONTHS_RU = [
-  "января",
-  "февраля",
-  "марта",
-  "апреля",
-  "мая",
-  "июня",
-  "июля",
-  "августа",
-  "сентября",
-  "октября",
-  "ноября",
-  "декабря"
-];
-
 const PAGE_SIZE = 7;
 const MIN_WEIGHT = 20;
 const MAX_WEIGHT = 300;
 
-const cardStyle: React.CSSProperties = {
-  borderRadius: "22px",
-  background:
-    "linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))",
-  border: "1px solid rgba(160, 200, 220, 0.18)",
-  boxShadow: "0 22px 44px rgba(0, 0, 0, 0.28)",
-  padding: "14px"
-};
-
-function formatDateRu(dateStr: string): string {
-  const [, month, day] = dateStr.split("-").map(Number);
-  return `${day} ${MONTHS_RU[month - 1]}`;
-}
-
-function localToday(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-}
+const cardStyle = glassCardStyle;
 
 // ─── Smooth month line chart ─────────────────────────────────────────────────
 
@@ -233,7 +202,7 @@ function WeightChart({ entries }: { entries: WeightEntry[] }) {
         )}
 
         <text x={PAD_L} y={H - 6} fontSize="9" fill={theme.palette.textMuted}>
-          {formatDateRu(entries[0].date)}
+          {formatDateHuman(entries[0].date)}
         </text>
         <text
           x={W - PAD_R}
@@ -242,7 +211,7 @@ function WeightChart({ entries }: { entries: WeightEntry[] }) {
           fontSize="9"
           fill={theme.palette.textMuted}
         >
-          {formatDateRu(entries[entries.length - 1].date)}
+          {formatDateHuman(entries[entries.length - 1].date)}
         </text>
       </svg>
 
@@ -263,7 +232,7 @@ function WeightChart({ entries }: { entries: WeightEntry[] }) {
           }}
         >
           <span style={{ fontSize: "11px", color: theme.palette.textMuted }}>
-            {formatDateRu(hover.entry.date)} ·{" "}
+            {formatDateHuman(hover.entry.date)} ·{" "}
           </span>
           <span
             style={{
@@ -294,7 +263,7 @@ export function WeightHistoryPage() {
   const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(0);
 
-  const today = localToday();
+  const today = todayISO();
 
   const load = async () => {
     setLoading(true);
@@ -388,11 +357,7 @@ export function WeightHistoryPage() {
         margin: "0 auto",
         minHeight: "100vh",
         paddingBottom: "100px",
-        background: `
-          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-        `
+        background: pageBackground(theme.palette.bg)
       }}
     >
       {/* Stats */}
@@ -593,7 +558,7 @@ export function WeightHistoryPage() {
               }}
             >
               <Text variant="small" muted>
-                {formatDateRu(entry.date)}
+                {formatDateHuman(entry.date)}
               </Text>
               <div
                 style={{

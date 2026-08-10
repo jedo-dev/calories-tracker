@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { RecentProducts } from '../features/TodayComponents/RecentProducts';
 import { useDebounce } from '../hooks/useDebounce';
-import { t } from '../i18n';
+import { t, toISODate } from '../i18n';
 import { showToast } from '../ui/Toast';
+import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -39,13 +40,6 @@ interface Entry {
   carbPer100g?: number;
 }
 
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 function formatTime(date: Date): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
@@ -60,13 +54,7 @@ function mealTypeForTime(time: string): string {
   return 'snack';
 }
 
-const cardStyle: React.CSSProperties = {
-  borderRadius: '22px',
-  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
-  border: '1px solid rgba(160, 200, 220, 0.18)',
-  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
-  padding: '14px',
-};
+const cardStyle = glassCardStyle;
 
 const MACRO_COLORS = { protein: '#5AC8FA', fat: '#FFCC66', carb: '#C792EA' };
 
@@ -90,7 +78,7 @@ export function AddEntryPage() {
   const { id } = useParams();
   const isEdit = !!id;
 
-  const [date, setDate] = useState(formatDate(new Date()));
+  const [date, setDate] = useState(toISODate(new Date()));
   const [time, setTime] = useState(() => formatTime(new Date()));
   const [mealType, setMealType] = useState(() => mealTypeForTime(formatTime(new Date())));
   // once the user picks a meal manually, stop following the clock
@@ -308,11 +296,7 @@ export function AddEntryPage() {
         margin: '0 auto',
         minHeight: '100vh',
         paddingBottom: '100px',
-        background: `
-          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-        `,
+        background: pageBackground(theme.palette.bg),
       }}
     >
       <Text variant="h2" bold style={{ fontSize: '20px', display: 'block', marginBottom: '12px' }}>

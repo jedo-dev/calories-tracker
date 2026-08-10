@@ -1,4 +1,5 @@
 import { useTheme } from '../../theme/useTheme';
+import { EmojiIcon } from '../../ui/Icon';
 import { Text } from '../../ui/Text';
 import { planCardStyle, MEAL_TITLE_EMOJI, PlanMeal } from './types';
 
@@ -27,7 +28,7 @@ export function PlanMealCard({ meal, onReplaceItem }: PlanMealCardProps) {
             flexShrink: 0,
           }}
         >
-          {MEAL_TITLE_EMOJI[meal.mealType] || '🍽️'}
+          <EmojiIcon emoji={MEAL_TITLE_EMOJI[meal.mealType] || '🍽️'} size={20} />
         </div>
         <Text bold style={{ flex: 1, minWidth: 0, fontSize: '14px' }}>{meal.title}</Text>
         <span style={{ fontSize: '14px', fontWeight: 800, color: theme.palette.primary, whiteSpace: 'nowrap' }}>

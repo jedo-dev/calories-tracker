@@ -79,7 +79,8 @@ export const ru = {
     entriesCount: "{count} записей",
     entriesCount_one: "{count} запись",
     entriesCount_few: "{count} записи",
-    entriesCount_many: "{count} записей"
+    entriesCount_many: "{count} записей",
+    nutrition: "Питание"
   },
 
   // Totals
@@ -355,6 +356,7 @@ export const ru = {
   // Water
   water: {
     title: "Вода",
+    goalReached: "Дневная норма воды выполнена",
     goal: "Цель: 2000 мл",
     addGlass: "+ Стакан (250мл)",
     addBottle: "+ Бутылка (500мл)",
@@ -501,7 +503,10 @@ export const ru = {
     kcal: "ккал",
     fat: "Жиры",
     carb: "Углеводы",
-    loadFailed: "Не удалось загрузить данные"
+    loadFailed: "Не удалось загрузить данные",
+    fillProfile: "Заполни профиль",
+    fillProfileDesc: "Нужны вес, рост и цель, чтобы рассчитать норму и показать круг прогресса.",
+    openProfile: "Открыть профиль"
   },
 
   // Command Center
@@ -699,6 +704,11 @@ export const ru = {
     noCandidates: "Нет доступных рецептов или продуктов",
     alreadyApplied: "План уже применён",
     templateSaved: "Шаблон сохранён",
+    generateFailed: "Ошибка генерации плана",
+    applyFailed: "Ошибка применения плана",
+    noAlternatives: "Нет альтернатив для замены",
+    templatesSaved: "Сохранено шаблонов: {count} (по одному на приём пищи) — они на странице «Шаблоны»",
+    saveTemplateFailed: "Ошибка сохранения шаблона",
     day: "На день",
     week: "На неделю",
     draft: "Черновик",

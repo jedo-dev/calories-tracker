@@ -1,20 +1,11 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
-import { t } from '../i18n';
+import { t, toISODate } from '../i18n';
+import { glassCardStyle, pageBackground } from '../theme/styles';
 
-export const workoutCardStyle: React.CSSProperties = {
-  borderRadius: '22px',
-  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
-  border: '1px solid rgba(160, 200, 220, 0.18)',
-  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
-  padding: '14px',
-};
+export const workoutCardStyle = glassCardStyle;
 
-export const workoutPageBackground = (bg: string) => `
-  radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-  radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-  linear-gradient(180deg, #07111d 0%, ${bg} 28%, #081523 100%)
-`;
+export const workoutPageBackground = pageBackground;
 
 export function formatDuration(sec: number): string {
   const m = Math.floor(sec / 60);
@@ -24,12 +15,7 @@ export function formatDuration(sec: number): string {
   return `${m}${t('workout.min')} ${s}${t('workout.sec')}`;
 }
 
-export function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+export const formatDate = toISODate;
 
 interface ExerciseLike {
   type: string;

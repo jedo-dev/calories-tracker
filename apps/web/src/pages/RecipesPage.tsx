@@ -5,6 +5,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import { t } from '../i18n';
 import { showToast } from '../ui/Toast';
+import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
@@ -55,13 +56,7 @@ const modeBadge: Record<string, { label: string; color: string }> = {
   mixed: { label: t('recipes.mixed'), color: '#f59e0b' },
 };
 
-const cardStyle: React.CSSProperties = {
-  borderRadius: '22px',
-  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
-  border: '1px solid rgba(160, 200, 220, 0.18)',
-  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
-  padding: '14px',
-};
+const cardStyle = glassCardStyle;
 
 function Chip({
   active,
@@ -207,11 +202,7 @@ export function RecipesPage() {
         margin: '0 auto',
         padding: '12px',
         paddingBottom: '100px',
-        background: `
-          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-        `,
+        background: pageBackground(theme.palette.bg),
       }}
     >
       {/* Header */}

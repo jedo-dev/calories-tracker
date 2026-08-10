@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
+import { useDebounce } from '../hooks/useDebounce';
 import emptyProducts from '../assets/03_empty_states/empty_products.jpg';
 import DeleteIcon from '../assets/DeleteIcon';
 import EditIcon from '../assets/EditIcon';
@@ -22,15 +23,6 @@ interface Product {
   fatPer100g: number;
   carbPer100g: number;
   createdBy?: string;
-}
-
-function useDebounce(value: string, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
 }
 
 export function ProductsPage() {

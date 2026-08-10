@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
 import { showToast } from '../ui/Toast';
+import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { BottomSheet } from '../ui/BottomSheet';
 import { Button } from '../ui/Button';
@@ -25,19 +26,7 @@ import {
 } from '../ui/icons';
 import productsImage from '../assets/products.png';
 
-const cardStyle: React.CSSProperties = {
-  borderRadius: '22px',
-  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
-  border: '1px solid rgba(160, 200, 220, 0.18)',
-  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
-  padding: '14px',
-};
-
-const pageBackground = (bg: string) => `
-  radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-  radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-  linear-gradient(180deg, #07111d 0%, ${bg} 28%, #081523 100%)
-`;
+const cardStyle = glassCardStyle;
 
 const overlayButtonStyle: React.CSSProperties = {
   width: '36px',

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { t } from "../../i18n";
 import { useTheme } from "../../theme/useTheme";
 import { Button } from "../../ui/Button";
 import { Card } from "../../ui/Card";
@@ -129,7 +130,7 @@ export function WaterCard({ totalMl, goal = 2000, onAdd }: WaterCardProps) {
           }}
         >
           <Text bold style={{ fontSize: "18px" }}>
-            Вода
+            {t('water.title')}
           </Text>
           <Text variant="small" muted>
             <span style={{ color: theme.palette.primary, fontSize: "22px", fontWeight: 700 }}>{totalMl}</span>{" "}
@@ -155,7 +156,7 @@ export function WaterCard({ totalMl, goal = 2000, onAdd }: WaterCardProps) {
           >
             <Icon name="water" size={22} />
             <Text bold style={{ color: theme.palette.primary, fontSize: "15px" }}>
-              Дневная норма воды выполнена
+              {t('water.goalReached')}
             </Text>
           </div>
         ) : (

@@ -1,30 +1,11 @@
+import { formatDateHuman, toISODate } from "../../../i18n";
 import { useTheme } from "../../../theme/useTheme";
 import { Button } from "../../../ui/Button";
 import { Text } from "../../../ui/Text";
 
-const MONTHS_RU = [
-  'января',
-  'февраля',
-  'марта',
-  'апреля',
-  'мая',
-  'июня',
-  'июля',
-  'августа',
-  'сентября',
-  'октября',
-  'ноября',
-  'декабря',
-];
-
 const DAYS_RU = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+const formatDate = toISODate;
 
 function parseDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -32,11 +13,8 @@ function parseDate(dateStr: string): Date {
 }
 
 function formatDateRu(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const date = new Date(year, month - 1, day);
-  const dayName = DAYS_RU[date.getDay()];
-  const monthName = MONTHS_RU[month - 1];
-  return `${dayName}, ${day} ${monthName}`;
+  const dayName = DAYS_RU[parseDate(dateStr).getDay()];
+  return `${dayName}, ${formatDateHuman(dateStr)}`;
 }
 
 const DayChanger = ({

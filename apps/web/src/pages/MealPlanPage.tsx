@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { pageBackground } from '../theme/styles';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
@@ -76,7 +77,7 @@ export function MealPlanPage() {
       setSelectedDay(0);
       await loadHistory();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка генерации плана');
+      setError(err.response?.data?.message || t('mealPlan.generateFailed'));
     } finally {
       setGenerating(false);
     }
@@ -91,7 +92,7 @@ export function MealPlanPage() {
       setPlan({ ...plan, status: 'applied' });
       await loadHistory();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка применения плана');
+      setError(err.response?.data?.message || t('mealPlan.applyFailed'));
     } finally {
       setApplying(false);
     }
@@ -119,7 +120,7 @@ export function MealPlanPage() {
       });
       setPlan(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Нет альтернатив для замены');
+      setError(err.response?.data?.message || t('mealPlan.noAlternatives'));
     }
   };
 
@@ -129,10 +130,10 @@ export function MealPlanPage() {
     try {
       const res = await apiClient.post(`/meal-plans/${plan._id}/save-template`, { dayIndex: selectedDay });
       const count = Array.isArray(res.data) ? res.data.length : 1;
-      setNotice(`Сохранено шаблонов: ${count} (по одному на приём пищи) — они на странице «Шаблоны»`);
+      setNotice(t('mealPlan.templatesSaved', { count }));
       setTimeout(() => setNotice(null), 4000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка сохранения шаблона');
+      setError(err.response?.data?.message || t('mealPlan.saveTemplateFailed'));
     }
   };
 
@@ -153,11 +154,7 @@ export function MealPlanPage() {
     margin: '0 auto',
     padding: '12px',
     paddingBottom: '100px',
-    background: `
-      radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-      radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-      linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-    `,
+    background: pageBackground(theme.palette.bg),
   };
 
   const ghostBtn: React.CSSProperties = {
@@ -198,12 +195,12 @@ export function MealPlanPage() {
         </Text>
         <div style={{ ...planCardStyle, textAlign: 'center', padding: '26px 16px' }}>
           <div style={{ fontSize: '44px', marginBottom: '8px' }}>📋</div>
-          <Text variant="h2" bold style={{ display: 'block', marginBottom: '6px' }}>Заполните профиль</Text>
+          <Text variant="h2" bold style={{ display: 'block', marginBottom: '6px' }}>{t('mealPlan.profileRequired')}</Text>
           <Text variant="small" muted style={{ display: 'block', marginBottom: '16px', lineHeight: 1.5 }}>
-            Для составления плана питания нужно указать вес, рост, возраст и цель
+            {t('mealPlan.profileRequiredDesc')}
           </Text>
           <button type="button" onClick={() => navigate('/profile')} style={{ ...primaryBtn(false), maxWidth: '260px' }}>
-            Перейти в профиль
+            {t('mealPlan.goToProfile')}
           </button>
         </div>
       </div>
@@ -215,9 +212,9 @@ export function MealPlanPage() {
   return (
     <div style={pageStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <Text variant="h2" bold style={{ fontSize: '20px' }}>План питания</Text>
+        <Text variant="h2" bold style={{ fontSize: '20px' }}>{t('mealPlan.title')}</Text>
         <button type="button" onClick={() => setShowHistory((v) => !v)} style={ghostBtn}>
-          {showHistory ? '← Назад' : '🗂 История'}
+          {showHistory ? `← ${t('common.back')}` : `🗂 ${t('mealPlan.history')}`}
         </button>
       </div>
 
@@ -297,11 +294,11 @@ export function MealPlanPage() {
               disabled={plan.status === 'applied' || applying}
               style={primaryBtn(plan.status === 'applied' || applying)}
             >
-              {plan.status === 'applied' ? '✓ Применён' : applying ? 'Применение...' : '📥 Применить в дневник'}
+              {plan.status === 'applied' ? `✓ ${t('mealPlan.applied')}` : applying ? t('mealPlan.applying') : `📥 ${t('mealPlan.apply')}`}
             </button>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button type="button" onClick={handleSaveTemplate} style={{ ...ghostBtn, flex: 1, height: '44px' }}>
-                💾 Как шаблон
+                💾 {t('mealPlan.saveTemplate')}
               </button>
               <button
                 type="button"
@@ -309,7 +306,7 @@ export function MealPlanPage() {
                 disabled={generating}
                 style={{ ...ghostBtn, flex: 1, height: '44px', opacity: generating ? 0.6 : 1 }}
               >
-                🔄 Другой план
+                🔄 {t('mealPlan.regenerate')}
               </button>
             </div>
             <button
@@ -317,7 +314,7 @@ export function MealPlanPage() {
               onClick={handleArchive}
               style={{ ...ghostBtn, height: '40px', color: theme.palette.textMuted }}
             >
-              В архив
+              {t('mealPlan.archive')}
             </button>
           </div>
         </>
@@ -340,7 +337,7 @@ export function MealPlanPage() {
             }}
           />
           <button type="button" onClick={handleGenerate} disabled={generating} style={primaryBtn(generating)}>
-            {generating ? '⏳ Генерация...' : '✨ Составить план'}
+            {generating ? `⏳ ${t('mealPlan.generating')}` : `✨ ${t('mealPlan.generate')}`}
           </button>
         </>
       )}

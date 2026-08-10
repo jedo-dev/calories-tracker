@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { pageBackground } from '../theme/styles';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
@@ -97,11 +98,7 @@ export function PublicProfilePage() {
         margin: '0 auto',
         padding: '12px',
         paddingBottom: '100px',
-        background: `
-          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-        `,
+        background: pageBackground(theme.palette.bg),
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>

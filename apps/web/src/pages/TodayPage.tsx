@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { pageBackground } from '../theme/styles';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api/client";
 import DeleteIcon from "../assets/DeleteIcon";
 import EditIcon from "../assets/EditIcon";
 import DayChanger from "../features/TodayComponents/DayChanger";
 import FoodList, { MealGroup } from "../features/TodayComponents/FoodList";
-import { plural, t } from "../i18n";
+import { plural, t, toISODate } from '../i18n';
 import Loader from "../ui/Loader";
 import { useTheme } from "../theme/useTheme";
 import { Button } from "../ui/Button";
@@ -63,19 +64,12 @@ type WaterState = {
 };
 
 const MEAL_LABELS: Record<string, string> = {
-  breakfast: "Завтрак",
-  lunch: "Обед",
-  dinner: "Ужин",
-  snack: "Перекус",
-  other: "Другие записи"
+  breakfast: t("mealType.breakfast"),
+  lunch: t("mealType.lunch"),
+  dinner: t("mealType.dinner"),
+  snack: t("mealType.snack"),
+  other: t("mealType.other")
 };
-
-function formatDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
 
 function MacroBar({
   label,
@@ -358,7 +352,7 @@ export function TodayPage() {
   const theme = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryDate = searchParams.get("date");
-  const date = queryDate || formatDate(new Date());
+  const date = queryDate || toISODate(new Date());
 
   const setDate = (newDate: string) => {
     setSearchParams({ date: newDate });
@@ -463,11 +457,7 @@ export function TodayPage() {
         maxWidth: "600px",
         margin: "0 auto",
         paddingBottom: "120px",
-        background: `
-          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-        `
+        background: pageBackground(theme.palette.bg)
       }}
     >
       <div
@@ -526,7 +516,7 @@ export function TodayPage() {
           boxShadow: "0 14px 28px rgba(81, 210, 105, 0.18)"
         }}
       >
-        + Добавить запись
+        {t("today.addEntry")}
       </Button>
 
       {!dashboard?.targets && (
@@ -538,21 +528,20 @@ export function TodayPage() {
           }}
         >
           <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>
-            Заполни профиль
+            {t("dashboard.fillProfile")}
           </Text>
           <Text
             variant="small"
             muted
             style={{ display: "block", marginBottom: theme.spacing.md }}
           >
-            Нужны вес, рост и цель, чтобы рассчитать норму и показать круг
-            прогресса.
+            {t("dashboard.fillProfileDesc")}
           </Text>
           <Button
             onClick={() => navigate("/profile")}
             style={{ width: "auto", minWidth: "180px" }}
           >
-            Открыть профиль
+            {t("dashboard.openProfile")}
           </Button>
         </Card>
       )}

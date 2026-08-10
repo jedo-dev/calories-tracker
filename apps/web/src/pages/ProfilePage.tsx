@@ -1,7 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { pageBackground } from '../theme/styles';
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../api/client";
-import { t } from "../i18n";
+import { t, todayISO } from '../i18n';
 import { useTheme } from "../theme/useTheme";
 import Loader from "../ui/Loader";
 import { ProfileAchievements } from "../widgets/profile/ProfileAchievements";
@@ -14,11 +15,6 @@ import type {
   ProfileData
 } from "../widgets/profile/types";
 
-function localToday(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-}
-
 export function ProfilePage() {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -27,7 +23,6 @@ export function ProfilePage() {
   const [editingBody, setEditingBody] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
-  const [, setPrediction] = useState<any>(null);
   const [league, setLeague] = useState<LeagueState | null>(null);
   const [streakDays, setStreakDays] = useState(0);
   const [achievements, setAchievements] = useState<AchievementState[]>([]);
@@ -43,23 +38,14 @@ export function ProfilePage() {
     setError(null);
 
     try {
-      const [
-        profileRes,
-        predictionRes,
-        socialRes,
-        leagueRes,
-        achievementsRes,
-        weightRes
-      ] = await Promise.all([
-        apiClient.get("/profile"),
-        apiClient
-          .get("/weight/prediction")
-          .catch(() => ({ data: { available: false } })),
-        apiClient.get("/social/me").catch(() => null),
-        apiClient.get("/leaderboard/week/friends").catch(() => null),
-        apiClient.get("/achievements").catch(() => null),
-        apiClient.get("/weight/latest").catch(() => ({ data: null }))
-      ]);
+      const [profileRes, socialRes, leagueRes, achievementsRes, weightRes] =
+        await Promise.all([
+          apiClient.get("/profile"),
+          apiClient.get("/social/me").catch(() => null),
+          apiClient.get("/leaderboard/week/friends").catch(() => null),
+          apiClient.get("/achievements").catch(() => null),
+          apiClient.get("/weight/latest").catch(() => ({ data: null }))
+        ]);
 
       // Текущий вес берём из журнала веса (/weight), а не из поля профиля.
       // Пустой журнал приходит как 200 с пустым телом → data == "".
@@ -85,7 +71,6 @@ export function ProfilePage() {
       }
 
       setUser(profileRes.data.user);
-      setPrediction(predictionRes.data);
       setStreakDays(socialRes?.data?.stats?.currentStreak || 0);
       if (leagueRes?.data?.me) setLeague(leagueRes.data.me);
       if (achievementsRes?.data) {
@@ -118,7 +103,7 @@ export function ProfilePage() {
       if (!hasWeightLog && payload.weightKg != null) {
         if (payload.startWeightKg == null) payload.startWeightKg = payload.weightKg;
         await apiClient
-          .post("/weight", { date: localToday(), weightKg: payload.weightKg })
+          .post("/weight", { date: todayISO(), weightKg: payload.weightKg })
           .catch(() => null);
         setHasWeightLog(true);
       }
@@ -155,11 +140,7 @@ export function ProfilePage() {
         margin: "0 auto",
         padding: "12px",
         paddingBottom: "100px",
-        background: `
-          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-        `
+        background: pageBackground(theme.palette.bg)
       }}
     >
       <ProfileHeader

@@ -55,7 +55,7 @@ const FoodList = ({ entries, onMealClick }: Props) => {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: theme.spacing.sm }}>
         <Text variant="h2" bold>
-          Питание
+          {t('today.nutrition')}
         </Text>
         <Text variant="small" muted>
           {entries.length} {plural(entries.length, 'entry')}

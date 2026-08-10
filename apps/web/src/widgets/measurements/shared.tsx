@@ -1,6 +1,8 @@
 import chestImage from '../../assets/measurements/body_chest.jpg';
 import hipsImage from '../../assets/measurements/body_hips.jpg';
 import waistImage from '../../assets/measurements/body_waist.jpg';
+import { formatDateHuman } from '../../i18n';
+import { glassCardStyle } from '../../theme/styles';
 
 export interface Measurement {
   _id: string;
@@ -14,24 +16,9 @@ export interface Measurement {
 
 export type MeasurementKey = 'waistCm' | 'hipsCm' | 'chestCm' | 'bicepCm' | 'thighCm';
 
-export const measurementCardStyle: React.CSSProperties = {
-  borderRadius: '22px',
-  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
-  border: '1px solid rgba(160, 200, 220, 0.18)',
-  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
-  padding: '14px',
-  marginBottom: '12px',
-};
+export const measurementCardStyle: React.CSSProperties = { ...glassCardStyle, marginBottom: '12px' };
 
-export function formatDateRu(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const monthNames = [
-    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-  ];
-  if (!year || !month || !day) return dateStr;
-  return `${day} ${monthNames[month - 1]} ${year}`;
-}
+export const formatDateRu = (dateStr: string) => formatDateHuman(dateStr, true);
 
 function BodySvg({ kind }: { kind: 'bicep' | 'thigh' }) {
   const common = {

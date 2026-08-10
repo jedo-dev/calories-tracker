@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
+import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -13,13 +14,7 @@ import { RichTextEditor, isRichTextEmpty } from '../ui/RichTextEditor';
 import { IconButton } from '../ui/IconButton';
 import { BackIcon } from '../ui/icons';
 
-const cardStyle: React.CSSProperties = {
-  borderRadius: '22px',
-  background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.96), rgba(10, 32, 46, 0.96))',
-  border: '1px solid rgba(160, 200, 220, 0.18)',
-  boxShadow: '0 22px 44px rgba(0, 0, 0, 0.28)',
-  padding: '14px',
-};
+const cardStyle = glassCardStyle;
 
 interface Ingredient {
   productId?: string;
@@ -415,11 +410,7 @@ export function RecipeEditorPage() {
           maxWidth: '520px',
           margin: '0 auto',
           minHeight: '100vh',
-          background: `
-            radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-            radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-            linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-          `,
+          background: pageBackground(theme.palette.bg),
         }}
       >
         <Card style={{ ...cardStyle, textAlign: 'center', padding: theme.spacing.xl }}>
@@ -450,11 +441,7 @@ export function RecipeEditorPage() {
         margin: '0 auto',
         paddingBottom: '100px',
         minHeight: '100vh',
-        background: `
-          radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-          radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-        `,
+        background: pageBackground(theme.palette.bg),
       }}
     >
       {/* Header */}

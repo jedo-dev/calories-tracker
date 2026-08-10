@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
+import { pageBackground } from '../theme/styles';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/01_brand/logo_main.jpg';
 import { useAuth } from '../context/AuthContext';
-import { t } from '../i18n';
+import { t, todayISO } from '../i18n';
 //@ts-ignore
 import { apiClient } from '../api/client';
 import { useTheme } from '../theme/useTheme';
 import { DailyTips } from '../features/TodayComponents/DailyTips';
 import { BottomSheet } from '../ui/BottomSheet';
 import { hapticImpact } from '../utils/hapticFeedback';
+import { calcWaterGoalMl } from '../widgets/water/waterGoal';
 
 interface DashboardData {
   consumed: { kcal: number; protein: number; fat: number; carb: number };
@@ -16,58 +18,22 @@ interface DashboardData {
   progress: { kcalPct: number; proteinPct: number; fatPct: number; carbPct: number } | null;
 }
 
-export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean) => void, isOpen: boolean }) {
+// Вынесен из тела Drawer: компонент, объявленный внутри рендера, для React —
+// новый тип на каждый рендер, всё поддерево тайлов размонтировалось заново.
+function MenuTile({
+  path,
+  onNavigate,
+  children,
+}: {
+  path: string;
+  onNavigate: (path: string) => void;
+  children: React.ReactNode;
+}) {
   const theme = useTheme();
-  const { logout, user } = useAuth();
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [waterMl, setWaterMl] = useState(0);
-  const navigate = useNavigate();
-  const waterGoal = 2000;
-
-  const todayDate = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
-
-  // Prefetch on mount, so the first open animates without a content pop-in
-  useEffect(() => {
-    loadMenuStats();
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      loadMenuStats();
-    }
-  }, [isOpen, todayDate]);
-
-  const loadMenuStats = async () => {
-    try {
-      const [dashboardRes, waterRes] = await Promise.all([
-        apiClient.get('/dashboard/day', { params: { date: todayDate } }),
-        apiClient.get('/water', { params: { date: todayDate } }),
-      ]);
-      setDashboard(dashboardRes.data);
-      setWaterMl(waterRes.data?.totalMl || 0);
-    } catch (err) {
-      console.error('Failed to load menu stats:', err);
-    }
-  };
-
-  const handleClose = () => {
-    onClick(false);
-  };
-
-  const handleNavigate = (path: string) => {
-    handleClose();
-    navigate(path);
-  };
-
-  const handleAddEntry = () => {
-    hapticImpact('medium');
-    handleNavigate('/entry/new');
-  };
-
-  const MenuTile = ({ path, children }: { path: string; children: React.ReactNode }) => (
+  return (
     <button
       type="button"
-      onClick={() => handleNavigate(path)}
+      onClick={() => onNavigate(path)}
       style={{
         minHeight: '48px',
         padding: '10px 12px',
@@ -92,17 +58,63 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
       {children}
     </button>
   );
+}
 
+export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean) => void, isOpen: boolean }) {
+  const theme = useTheme();
+  const { logout, user } = useAuth();
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [waterMl, setWaterMl] = useState(0);
+  const [waterGoal, setWaterGoal] = useState(2000);
+  const navigate = useNavigate();
+
+  const todayDate = todayISO();
+
+  // Prefetch on mount, so the first open animates without a content pop-in
+  useEffect(() => {
+    loadMenuStats();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadMenuStats();
+    }
+  }, [isOpen, todayDate]);
+
+  const loadMenuStats = async () => {
+    try {
+      const [dashboardRes, waterRes, weightRes] = await Promise.all([
+        apiClient.get('/dashboard/day', { params: { date: todayDate } }),
+        apiClient.get('/water', { params: { date: todayDate } }),
+        apiClient.get('/weight/latest').catch(() => ({ data: null })),
+      ]);
+      setDashboard(dashboardRes.data);
+      setWaterMl(waterRes.data?.totalMl || 0);
+      setWaterGoal(calcWaterGoalMl(weightRes?.data?.weightKg));
+    } catch (err) {
+      console.error('Failed to load menu stats:', err);
+    }
+  };
+
+  const handleClose = () => {
+    onClick(false);
+  };
+
+  const handleNavigate = (path: string) => {
+    handleClose();
+    navigate(path);
+  };
+
+  const handleAddEntry = () => {
+    hapticImpact('medium');
+    handleNavigate('/entry/new');
+  };
 
   return (
     <BottomSheet
       isOpen={isOpen}
       onClose={handleClose}
-      background={`
-        radial-gradient(circle at top, rgba(83, 212, 107, 0.18), transparent 34%),
-        radial-gradient(circle at 20% 25%, rgba(60, 140, 255, 0.12), transparent 24%),
-        linear-gradient(180deg, #07111d 0%, ${theme.palette.bg} 28%, #081523 100%)
-      `}
+      background={pageBackground(theme.palette.bg)}
       handle={
         <div
           style={{
@@ -221,17 +233,17 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           >
             + {t('commandCenter.addEntry')}
           </button>
-          <MenuTile path="/today">{t('commandCenter.selectDate')}</MenuTile>
-          <MenuTile path="/workouts">{t('workout.title')}</MenuTile>
-          <MenuTile path="/weight">{t('weight.title')}</MenuTile>
-          <MenuTile path="/reports">{t('report.title')}</MenuTile>
-          <MenuTile path="/measurements">{t('measurement.title')}</MenuTile>
-          <MenuTile path="/templates">{t('template.title')}</MenuTile>
-          <MenuTile path="/recipes">{t('recipes.title')}</MenuTile>
-          <MenuTile path="/meal-plan">{t('mealPlan.title')}</MenuTile>
-          <MenuTile path="/products">{t('products.title')}</MenuTile>
+          <MenuTile path="/today" onNavigate={handleNavigate}>{t('commandCenter.selectDate')}</MenuTile>
+          <MenuTile path="/workouts" onNavigate={handleNavigate}>{t('workout.title')}</MenuTile>
+          <MenuTile path="/weight" onNavigate={handleNavigate}>{t('weight.title')}</MenuTile>
+          <MenuTile path="/reports" onNavigate={handleNavigate}>{t('report.title')}</MenuTile>
+          <MenuTile path="/measurements" onNavigate={handleNavigate}>{t('measurement.title')}</MenuTile>
+          <MenuTile path="/templates" onNavigate={handleNavigate}>{t('template.title')}</MenuTile>
+          <MenuTile path="/recipes" onNavigate={handleNavigate}>{t('recipes.title')}</MenuTile>
+          <MenuTile path="/meal-plan" onNavigate={handleNavigate}>{t('mealPlan.title')}</MenuTile>
+          <MenuTile path="/products" onNavigate={handleNavigate}>{t('products.title')}</MenuTile>
           {(user?.role === 'admin' || user?.role === 'trainer') && (
-            <MenuTile path="/admin/workouts">⚙️ {t('workout.adminTitle')}</MenuTile>
+            <MenuTile path="/admin/workouts" onNavigate={handleNavigate}>⚙️ {t('workout.adminTitle')}</MenuTile>
           )}
         </div>
 

@@ -67,3 +67,29 @@ export function formatDate(dateStr: string, loc: Locale = locale): string {
   const yyyy = y.padStart(4, '0');
   return loc === 'ru' ? `${dd}.${mm}.${yyyy}` : `${yyyy}.${mm}.${dd}`;
 }
+
+/** Date → ISO `YYYY-MM-DD` в локальной таймзоне (раньше — 8 копий по коду). */
+export function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** Сегодняшняя локальная дата в ISO. */
+export function todayISO(): string {
+  return toISODate(new Date());
+}
+
+const MONTHS_RU_GENITIVE = [
+  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+];
+
+/** Человекочитаемая дата: «5 августа» / «5 августа 2026» (из ISO-строки). */
+export function formatDateHuman(dateStr: string, withYear = false): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
+  const base = `${d} ${MONTHS_RU_GENITIVE[m - 1]}`;
+  return withYear ? `${base} ${y}` : base;
+}
