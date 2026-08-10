@@ -42,7 +42,10 @@ export class FriendsService {
   }
 
   async searchUsers(query: string, currentUserId: string, limit: number = 20) {
-    const searchRegex = new RegExp(query, 'i');
+    // Экранируем спецсимволы: иначе regex-инъекция/ReDoS через строку поиска.
+    const escaped = String(query ?? '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!escaped) return [];
+    const searchRegex = new RegExp(escaped, 'i');
     const users = await this.userModel
       .find({
         _id: { $ne: new Types.ObjectId(currentUserId) },

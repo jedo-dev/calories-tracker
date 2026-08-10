@@ -17,6 +17,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { Role, RoleDocument } from '../users/schemas/role.schema';
 import { ADMIN_PAGE_HTML } from './admin.page';
@@ -34,7 +35,8 @@ export class AdminController {
     @InjectModel(Role.name) private roleModel: Model<RoleDocument>,
   ) {}
 
-  // Public HTML shell — whitelisted in JwtAuthGuard; the data endpoints below are admin-only.
+  // Public HTML shell; the data endpoints below are admin-only.
+  @Public()
   @Get()
   @Header('Content-Type', 'text/html; charset=utf-8')
   getPage(): string {

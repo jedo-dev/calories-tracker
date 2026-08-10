@@ -22,3 +22,23 @@ apiClient.interceptors.request.use(
   },
 );
 
+// Протухший/невалидный токен: чистим его и уводим на логин, вместо того чтобы
+// молча показывать пустые страницы. Запросы самого логина (auth/*) не трогаем —
+// там 401 значит «неверный пароль», его обрабатывает форма.
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const url: string = error.config?.url || '';
+    const isAuthRequest = url.includes('/auth/');
+    const onLoginPage =
+      window.location.pathname === '/login' || window.location.pathname === '/register';
+
+    if (status === 401 && !isAuthRequest && !onLoginPage && localStorage.getItem('token')) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  },
+);
+

@@ -12,6 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { Public } from '../common/decorators/public.decorator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductsDto } from './dto/query-products.dto';
@@ -21,16 +22,19 @@ import { ProductsService } from './products.service';
 export class ProductsController {
   constructor(private productsService: ProductsService) {}
 
+  @Public()
   @Get()
   async findAll(@Query(ValidationPipe) query: QueryProductsDto) {
     return this.productsService.findAll(query);
   }
 
+  @Public()
   @Get('barcode/:barcode')
   async findByBarcode(@Param('barcode') barcode: string) {
     return this.productsService.findByBarcode(barcode);
   }
 
+  @Public()
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.productsService.findById(id);

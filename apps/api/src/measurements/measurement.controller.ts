@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { MeasurementService } from './measurement.service';
+import { SaveMeasurementDto } from './dto/save-measurement.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('measurements')
@@ -8,7 +9,7 @@ export class MeasurementController {
   constructor(private service: MeasurementService) {}
 
   @Post()
-  async save(@Body() body: { date: string; waistCm?: number; hipsCm?: number; chestCm?: number; bicepCm?: number; thighCm?: number }, @Request() req: any) {
+  async save(@Body() body: SaveMeasurementDto, @Request() req: any) {
     return this.service.save(req.user.id, body.date, body);
   }
 

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -13,21 +14,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   canActivate(context: ExecutionContext) {
-    const request = context.switchToHttp().getRequest();
-    const path = request.url;
-    const method = request.method;
-
-    if (
-      path === '/health' ||
-      path === '/admin' || // static admin page shell; its API calls are guarded
-      path === '/admin/' ||
-      path.startsWith('/auth/telegram') ||
-      path.startsWith('/auth/register') ||
-      path.startsWith('/auth/login') ||
-      (path.startsWith('/products') && method === 'GET')
-    ) {
-      return true;
-    }
+    // Публичность задаётся явным декоратором @Public() на роуте/контроллере,
+    // а не сравнением URL-строк (то ломалось на новых роутах с тем же префиксом).
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
 
     return super.canActivate(context);
   }
@@ -39,4 +32,3 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return user;
   }
 }
-

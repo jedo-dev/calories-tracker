@@ -8,9 +8,17 @@ export class MeasurementService {
   constructor(@InjectModel(BodyMeasurement.name) private model: Model<BodyMeasurementDocument>) {}
 
   async save(userId: string, date: string, data: Partial<BodyMeasurement>): Promise<BodyMeasurementDocument> {
+    // Явный список полей: userId/date из тела не должны попадать в $set.
+    const update = {
+      waistCm: data.waistCm,
+      hipsCm: data.hipsCm,
+      chestCm: data.chestCm,
+      bicepCm: data.bicepCm,
+      thighCm: data.thighCm,
+    };
     return this.model.findOneAndUpdate(
       { userId: new Types.ObjectId(userId), date },
-      { ...data },
+      { $set: update },
       { upsert: true, new: true },
     ).exec();
   }

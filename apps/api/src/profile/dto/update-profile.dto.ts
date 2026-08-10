@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, Matches, Max, Min } from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -34,4 +34,22 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsEnum(['lose', 'maintain', 'gain'])
   goal?: 'lose' | 'maintain' | 'gain';
+
+  // Диапазоны как у weightKg: targetWeightKg=0 раньше давал деление на 0
+  // в прогнозе веса (progressPct → Infinity).
+  @IsOptional()
+  @IsNumber()
+  @Min(30)
+  @Max(300)
+  startWeightKg?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(30)
+  @Max(300)
+  targetWeightKg?: number;
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  targetDate?: string;
 }
