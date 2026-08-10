@@ -9,4 +9,4 @@ export interface FriendUser {
   league?: { name: string; color: string };
 }
 
-export type FriendsTab = 'search' | 'following' | 'followers';
+export type FriendsTab = 'following' | 'followers';

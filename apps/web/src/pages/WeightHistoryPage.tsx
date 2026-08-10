@@ -5,15 +5,14 @@ import activityMedium from '../assets/12_activity/activity_medium.jpg';
 import DeleteIcon from '../assets/DeleteIcon';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
-import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
-import { Input } from '../ui/Input';
 import Loader from '../ui/Loader';
 import { SectionIcon } from '../ui/SectionIcon';
 import { Text } from '../ui/Text';
 import { IconButton } from '../ui/IconButton';
-import { BackIcon } from '../ui/icons';
+import { BackIcon, EditIcon } from '../ui/icons';
+import { WeightSheet } from '../widgets/weight/WeightSheet';
 
 interface WeightEntry { _id: string; date: string; weightKg: number }
 
@@ -206,8 +205,9 @@ export function WeightHistoryPage() {
   const theme = useTheme();
   const [history, setHistory] = useState<WeightEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [weightInput, setWeightInput] = useState('');
-  const [dateInput, setDateInput] = useState(localToday());
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editEntry, setEditEntry] = useState<WeightEntry | null>(null);
+  const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
 
@@ -224,9 +224,8 @@ export function WeightHistoryPage() {
 
   useEffect(() => { load(); }, []);
 
-  const handleSave = async () => {
-    const weight = parseFloat(weightInput.replace(',', '.'));
-    if (!weightInput || isNaN(weight)) {
+  const handleSave = async (dateStr: string, weight: number) => {
+    if (isNaN(weight)) {
       setFormError(t('weight.errorNoWeight'));
       return;
     }
@@ -234,18 +233,21 @@ export function WeightHistoryPage() {
       setFormError(t('weight.errorWeightRange', { min: MIN_WEIGHT, max: MAX_WEIGHT }));
       return;
     }
-    if (!dateInput || dateInput > today) {
+    if (!dateStr || dateStr > today) {
       setFormError(t('weight.errorFutureDate'));
       return;
     }
     setFormError(null);
+    setSaving(true);
     try {
-      await apiClient.post('/weight', { date: dateInput, weightKg: weight });
-      setWeightInput('');
+      await apiClient.post('/weight', { date: dateStr, weightKg: weight });
       setPage(0);
+      setSheetOpen(false);
       await load();
     } catch (err: any) {
       setFormError(err.response?.data?.message || t('common.error'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -330,35 +332,39 @@ export function WeightHistoryPage() {
       )}
 
       {/* Add weight */}
-      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
-        <Text variant="h2" bold style={{ marginBottom: theme.spacing.sm, fontSize: '18px' }}>{t('weight.logWeight')}</Text>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
-          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-            <Input
-              type="date"
-              value={dateInput}
-              max={today}
-              onChange={(e) => { setDateInput(e.target.value); setFormError(null); }}
-              style={{ flex: 1, minWidth: 0 }}
-            />
-            <Input
-              type="number"
-              placeholder={t('weight.kg')}
-              value={weightInput}
-              onChange={(e) => { setWeightInput(e.target.value); setFormError(null); }}
-              step="0.1"
-              min={MIN_WEIGHT}
-              max={MAX_WEIGHT}
-              inputMode="decimal"
-              style={{ flex: 1, minWidth: 0 }}
-            />
-          </div>
-          {formError && (
-            <Text variant="small" style={{ color: '#ff8a8a' }}>{formError}</Text>
-          )}
-          <Button onClick={handleSave}>{t('common.save')}</Button>
-        </div>
-      </Card>
+      <button
+        type="button"
+        onClick={() => { setFormError(null); setEditEntry(null); setSheetOpen(true); }}
+        style={{
+          width: '100%',
+          height: '54px',
+          marginBottom: '12px',
+          borderRadius: '18px',
+          border: 'none',
+          background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+          color: '#07210f',
+          fontSize: '16px',
+          fontWeight: 800,
+          cursor: 'pointer',
+          boxShadow: '0 18px 30px rgba(83, 212, 107, 0.24)',
+          fontFamily: 'inherit',
+        }}
+      >
+        + {t('weight.logWeight')}
+      </button>
+
+      <WeightSheet
+        isOpen={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title={editEntry ? t('weight.editWeight') : t('weight.addWeight')}
+        initialWeight={editEntry?.weightKg ?? latest?.weightKg ?? 70}
+        date={editEntry?.date ?? today}
+        min={MIN_WEIGHT}
+        max={MAX_WEIGHT}
+        saving={saving}
+        error={formError}
+        onConfirm={handleSave}
+      />
 
       {/* History list with pager */}
       {history.length === 0 ? (
@@ -395,6 +401,13 @@ export function WeightHistoryPage() {
               <Text variant="small" muted>{formatDateRu(entry.date)}</Text>
               <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
                 <Text bold>{entry.weightKg} {t('weight.kg')}</Text>
+                <IconButton
+                  label={t('common.edit')}
+                  onClick={() => { setFormError(null); setEditEntry(entry); setSheetOpen(true); }}
+                  size={30}
+                >
+                  <EditIcon size={16} />
+                </IconButton>
                 <IconButton label={t('common.delete')} onClick={() => handleDelete(entry._id)} danger size={30}>
                   <DeleteIcon />
                 </IconButton>

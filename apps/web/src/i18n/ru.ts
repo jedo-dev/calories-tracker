@@ -353,6 +353,10 @@ export const ru = {
   weight: {
     title: "Вес",
     logWeight: "Записать вес",
+    addWeight: "Добавить вес",
+    editWeight: "Изменить вес",
+    dragHint: "Передвигайте влево/вправо для настройки значений",
+    confirm: "Подтвердить",
     current: "Текущий",
     change: "Изменение",
     history: "История веса",
