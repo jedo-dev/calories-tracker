@@ -12,6 +12,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { DashboardRing } from "../ui/DashboardRing";
 import { Text } from "../ui/Text";
+import { WaterCard } from "../widgets/water/WaterCard";
 
 export interface Entry {
   _id: string;
@@ -71,19 +72,6 @@ function formatDate(date: Date): string {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
-}
-
-function WaterDrop({ filled }: { filled: boolean }) {
-  return (
-    <svg width="24" height="32" viewBox="0 0 24 32" aria-hidden="true">
-      <path
-        d="M12 2C12 2 4 11 4 17c0 4.4 3.6 8 8 8s8-3.6 8-8c0-6-8-15-8-15z"
-        fill={filled ? "#5CAEF8" : "transparent"}
-        stroke={filled ? "#5CAEF8" : "rgba(223, 236, 248, 0.8)"}
-        strokeWidth="1.6"
-      />
-    </svg>
-  );
 }
 
 function MacroBar({
@@ -443,14 +431,6 @@ export function TodayPage() {
     }
   };
 
-  const waterGoal = 2000;
-  const waterReached = water.totalMl >= waterGoal;
-  const waterDrops = 8;
-  const filledDrops = Math.max(
-    0,
-    Math.min(waterDrops, Math.round((water.totalMl / waterGoal) * waterDrops))
-  );
-
   if (loading) return <Loader />;
   if (error) {
     return (
@@ -521,103 +501,7 @@ export function TodayPage() {
         </Card>
       )}
 
-      <Card
-        style={{
-          marginBottom: theme.spacing.md,
-          background:
-            "linear-gradient(180deg, rgba(23, 62, 83, 0.96) 0%, rgba(15, 39, 56, 0.98) 100%)",
-          border: "1px solid rgba(146, 188, 221, 0.18)",
-          borderRadius: "24px"
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: theme.spacing.sm
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: theme.spacing.sm
-            }}
-          >
-            <Text bold style={{ fontSize: "18px" }}>
-              Вода
-            </Text>
-          </div>
-          <Text variant="small" muted>
-            <span
-              style={{
-                color: theme.palette.primary,
-                fontSize: "22px",
-                fontWeight: 700
-              }}
-            >
-              {water.totalMl}
-            </span>{" "}
-            / {waterGoal} мл
-          </Text>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "6px",
-            flexWrap: "wrap",
-            marginBottom: theme.spacing.md
-          }}
-        >
-          {Array.from({ length: waterDrops }).map((_, index) => (
-            <WaterDrop key={index} filled={index < filledDrops} />
-          ))}
-        </div>
-
-        <div style={{ display: "flex", gap: theme.spacing.sm }}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleAddWater(250)}
-            style={{
-              flex: 1,
-              borderColor: "rgba(88, 212, 93, 0.8)",
-              color: theme.palette.primary,
-              backgroundColor: "rgba(88, 212, 93, 0.06)"
-            }}
-          >
-            +250 мл
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleAddWater(500)}
-            style={{
-              flex: 1,
-              borderColor: "rgba(88, 212, 93, 0.8)",
-              color: theme.palette.primary,
-              backgroundColor: "rgba(88, 212, 93, 0.06)"
-            }}
-          >
-            +500 мл
-          </Button>
-        </div>
-
-        {waterReached && (
-          <Text
-            variant="small"
-            style={{
-              color: theme.palette.primary,
-              display: "block",
-              marginTop: theme.spacing.sm
-            }}
-          >
-            Вода закрыта на сегодня.
-          </Text>
-        )}
-      </Card>
+      <WaterCard totalMl={water.totalMl} onAdd={handleAddWater} />
 
       <Button
         onClick={() => navigate("/entry/new")}
