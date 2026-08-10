@@ -153,7 +153,11 @@ export function WorkoutsPage() {
       <Text variant="h2" bold style={{ display: 'block', marginBottom: '8px', fontSize: '17px' }}>
         {t('workout.history')}
       </Text>
-      <WorkoutHistoryList sessions={history} emptyImage={emptyWorkouts} />
+      <WorkoutHistoryList
+        sessions={history}
+        emptyImage={emptyWorkouts}
+        onSessionClick={(s) => navigate(`/workout/history/${s._id}`)}
+      />
     </div>
   );
 }

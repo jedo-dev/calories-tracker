@@ -429,6 +429,16 @@ export class WorkoutService {
     return this.logModel.find({ sessionId: new Types.ObjectId(sessionId) }).sort({ createdAt: 1 }).exec();
   }
 
+  // Read-only detail view for history: session + its logs in one round-trip.
+  async getSessionDetail(sessionId: string, userId: string) {
+    const session = await this.getSessionById(sessionId, userId);
+    const logs = await this.logModel
+      .find({ sessionId: session._id })
+      .sort({ order: 1, createdAt: 1 })
+      .exec();
+    return { session, logs };
+  }
+
   async finishSession(sessionId: string, userId: string) {
     const session = await this.getSessionById(sessionId, userId);
     const logs = await this.logModel.find({ sessionId: new Types.ObjectId(sessionId) }).exec();

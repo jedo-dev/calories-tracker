@@ -193,6 +193,11 @@ export class WorkoutController {
     return this.workoutService.getSessionsByDate(date, req.user.id);
   }
 
+  @Get('sessions/:id/detail')
+  async getSessionDetail(@Param('id') id: string, @Request() req: any) {
+    return this.workoutService.getSessionDetail(id, req.user.id);
+  }
+
   @Get('sessions/:id')
   async getSession(@Param('id') id: string, @Request() req: any) {
     return this.workoutService.getSessionById(id, req.user.id);
