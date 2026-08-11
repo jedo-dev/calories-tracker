@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
-import { useDebounce } from '../hooks/useDebounce';
 import { t } from '../i18n';
 import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
@@ -12,33 +11,10 @@ import { Text } from '../ui/Text';
 import Loader from '../ui/Loader';
 import { RichTextEditor, isRichTextEmpty } from '../ui/RichTextEditor';
 import { IconButton } from '../ui/IconButton';
+import { Ingredient, IngredientProduct, IngredientsCard } from '../widgets/recipeEditor/IngredientsCard';
 import { BackIcon } from '../ui/icons';
 
 const cardStyle = glassCardStyle;
-
-interface Ingredient {
-  productId?: string;
-  productName: string;
-  grams: number;
-  kcalPer100g: number;
-  proteinPer100g: number;
-  fatPer100g: number;
-  carbPer100g: number;
-  kcal: number;
-  protein: number;
-  fat: number;
-  carb: number;
-}
-
-interface Product {
-  _id: string;
-  name: string;
-  kcalPer100g: number;
-  proteinPer100g: number;
-  fatPer100g: number;
-  carbPer100g: number;
-  source?: string;
-}
 
 export function RecipeEditorPage() {
   const navigate = useNavigate();
@@ -69,25 +45,12 @@ export function RecipeEditorPage() {
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
   const [visibility, setVisibility] = useState<'private' | 'public'>('private');
 
-  // Ingredient search
-  const [ingredientSearch, setIngredientSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const debouncedIngredientSearch = useDebounce(ingredientSearch, 300);
-
   // Dirty tracking
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (isEdit) loadRecipe();
   }, [id]);
-
-  useEffect(() => {
-    if (debouncedIngredientSearch.trim().length >= 2) {
-      searchProducts();
-    } else {
-      setSearchResults([]);
-    }
-  }, [debouncedIngredientSearch]);
 
   const loadRecipe = async () => {
     if (!id) return;
@@ -116,20 +79,9 @@ export function RecipeEditorPage() {
     }
   };
 
-  const searchProducts = async () => {
-    try {
-      const response = await apiClient.get('/products', {
-        params: { search: debouncedIngredientSearch, limit: 15 },
-      });
-      setSearchResults(response.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const markDirty = useCallback(() => setIsDirty(true), []);
 
-  const addIngredient = (product: Product) => {
+  const addIngredient = (product: IngredientProduct) => {
     markDirty();
     setIngredients((prev) => [
       ...prev,
@@ -147,8 +99,6 @@ export function RecipeEditorPage() {
         carb: product.carbPer100g,
       },
     ]);
-    setIngredientSearch('');
-    setSearchResults([]);
   };
 
   const updateIngredientGrams = (index: number, grams: number) => {
@@ -696,127 +646,13 @@ export function RecipeEditorPage() {
         </Card>
       )}
 
-      {/* Ingredients */}
       {calculationMode !== 'manual' && (
-        <Card style={{ ...cardStyle, marginBottom: '12px' }}>
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>{t('recipeEditor.ingredientsTitle')}</Text>
-
-          <Input
-            type="text"
-            placeholder={t('recipeEditor.searchProducts')}
-            value={ingredientSearch}
-            onChange={(e) => setIngredientSearch(e.target.value)}
-          />
-
-          {searchResults.length > 0 && (
-            <Card style={{ marginTop: theme.spacing.xs, maxHeight: '200px', overflowY: 'auto', padding: 0 }}>
-              {searchResults.map((product) => (
-                <div
-                  key={product._id}
-                  onClick={() => addIngredient(product)}
-                  style={{
-                    padding: theme.spacing.sm,
-                    cursor: 'pointer',
-                    borderBottom: `1px solid ${theme.palette.border}`,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = theme.palette.surface; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                >
-                  <div>
-                    <Text bold>{product.name}</Text>
-                    {product.source === 'RECIPE' && (
-                      <span style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '3px', backgroundColor: theme.palette.primary + '20', color: theme.palette.primary, marginLeft: '4px' }}>
-                        {t('recipes.dish')}
-                      </span>
-                    )}
-                  </div>
-                  <Text variant="small" muted>{product.kcalPer100g} ккал</Text>
-                </div>
-              ))}
-            </Card>
-          )}
-
-          {ingredients.length > 0 ? (
-            <div style={{ marginTop: theme.spacing.sm }}>
-              {ingredients.map((ing, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: theme.spacing.sm,
-                    padding: `${theme.spacing.sm} 0`,
-                    borderBottom: `1px solid ${theme.palette.border}`,
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text bold style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                      {ing.productName}
-                    </Text>
-                    <Text variant="small" muted>
-                      {ing.kcal.toFixed(0)} ккал · Б{ing.protein.toFixed(1)} Ж{ing.fat.toFixed(1)} У{ing.carb.toFixed(1)}
-                    </Text>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      value={ing.grams}
-                      onChange={(e) => updateIngredientGrams(index, parseFloat(e.target.value) || 0)}
-                      style={{
-                        width: '70px',
-                        padding: '4px 6px',
-                        fontSize: theme.typography.small.fontSize,
-                        backgroundColor: theme.palette.bg,
-                        color: theme.palette.text,
-                        border: `1px solid ${theme.palette.border}`,
-                        borderRadius: theme.radius.sm,
-                        textAlign: 'right',
-                        outline: 'none',
-                      }}
-                    />
-                    <Text variant="small" muted>г</Text>
-                    <button
-                      onClick={() => removeIngredient(index)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: theme.palette.danger,
-                        cursor: 'pointer',
-                        fontSize: '18px',
-                        padding: '4px',
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              <div style={{
-                marginTop: theme.spacing.sm,
-                padding: theme.spacing.sm,
-                backgroundColor: theme.palette.surface,
-                borderRadius: theme.radius.md,
-              }}>
-                <Text variant="small" bold>{t('recipeEditor.ingredientTotal')}</Text>
-                <Text variant="small" muted style={{ display: 'block' }}>
-                  {ingredientsTotal.kcal.toFixed(0)} ккал · Б{ingredientsTotal.protein.toFixed(1)} Ж{ingredientsTotal.fat.toFixed(1)} У{ingredientsTotal.carb.toFixed(1)}
-                </Text>
-                <Text variant="small" muted style={{ display: 'block' }}>
-                  {t('recipes.totalWeight')}: {ingredientsWeightSum}г
-                </Text>
-              </div>
-            </div>
-          ) : (
-            <Text variant="small" muted style={{ display: 'block', marginTop: theme.spacing.sm }}>
-              {t('recipes.noIngredients')}
-            </Text>
-          )}
-        </Card>
+        <IngredientsCard
+          ingredients={ingredients}
+          onAdd={addIngredient}
+          onUpdateGrams={updateIngredientGrams}
+          onRemove={removeIngredient}
+        />
       )}
 
       {/* Total Weight */}
