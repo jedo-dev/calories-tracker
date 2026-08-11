@@ -19,6 +19,8 @@ export function WorkoutsPage() {
   const [categories, setCategories] = useState<WorkoutCategory[]>([]);
   const [todaySessions, setTodaySessions] = useState<WorkoutSessionInfo[]>([]);
   const [history, setHistory] = useState<WorkoutSessionInfo[]>([]);
+  const [historyHasMore, setHistoryHasMore] = useState(false);
+  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -35,10 +37,30 @@ export function WorkoutsPage() {
         if (programsRes) setPrograms(programsRes.data);
         if (catRes) setCategories(catRes.data);
         if (sessionsRes) setTodaySessions(sessionsRes.data.filter((s: WorkoutSessionInfo) => !s.finishedAt));
-        if (historyRes) setHistory(historyRes.data);
+        if (historyRes) {
+          setHistory(historyRes.data);
+          setHistoryHasMore(historyRes.data.length === 5);
+        }
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Догрузка истории: раньше были видны только последние 5 тренировок.
+  const loadMoreHistory = async () => {
+    if (historyLoadingMore) return;
+    setHistoryLoadingMore(true);
+    try {
+      const res = await apiClient.get('/workouts/history', {
+        params: { limit: 10, offset: history.length },
+      });
+      setHistory((prev) => [...prev, ...res.data]);
+      setHistoryHasMore(res.data.length === 10);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setHistoryLoadingMore(false);
+    }
+  };
 
   const filteredPrograms = useMemo(
     () => (activeCategoryId ? programs.filter((p) => p.categoryId === activeCategoryId) : programs),
@@ -160,6 +182,28 @@ export function WorkoutsPage() {
         emptyImage={emptyWorkouts}
         onSessionClick={(s) => navigate(`/workout/history/${s._id}`)}
       />
+      {historyHasMore && (
+        <button
+          type="button"
+          onClick={loadMoreHistory}
+          disabled={historyLoadingMore}
+          style={{
+            width: '100%',
+            height: '44px',
+            borderRadius: '14px',
+            border: '1px solid rgba(160, 200, 220, 0.24)',
+            background: 'rgba(255,255,255,0.06)',
+            color: theme.palette.text,
+            fontSize: '13px',
+            fontWeight: 700,
+            cursor: historyLoadingMore ? 'default' : 'pointer',
+            opacity: historyLoadingMore ? 0.6 : 1,
+            fontFamily: 'inherit',
+          }}
+        >
+          {historyLoadingMore ? t('common.loading') : t('common.showMore')}
+        </button>
+      )}
     </div>
   );
 }

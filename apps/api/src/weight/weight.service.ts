@@ -36,10 +36,11 @@ export class WeightService {
     ).exec();
   }
 
-  async getHistory(userId: string, limit = 90): Promise<WeightLogDocument[]> {
+  async getHistory(userId: string, limit = 90, offset = 0): Promise<WeightLogDocument[]> {
     return this.weightModel
       .find({ userId: new Types.ObjectId(userId) })
       .sort({ date: -1 })
+      .skip(offset)
       .limit(limit)
       .exec();
   }

@@ -23,8 +23,8 @@ export class MeasurementService {
     ).exec();
   }
 
-  async getHistory(userId: string, limit = 90): Promise<BodyMeasurementDocument[]> {
-    return this.model.find({ userId: new Types.ObjectId(userId) }).sort({ date: -1 }).limit(limit).exec();
+  async getHistory(userId: string, limit = 90, offset = 0): Promise<BodyMeasurementDocument[]> {
+    return this.model.find({ userId: new Types.ObjectId(userId) }).sort({ date: -1 }).skip(offset).limit(limit).exec();
   }
 
   async delete(id: string, userId: string): Promise<void> {

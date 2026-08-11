@@ -189,7 +189,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
   const handlePhotoSelect = async (file: File) => {
     if (!editor) return;
     if (file.size > 5 * 1024 * 1024) {
-      setError('Фото больше 5 МБ');
+      setError(t('adminEditor.photoTooBig'));
       return;
     }
     if (editor._id) {
@@ -200,7 +200,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
         setEditor((prev) => (prev ? { ...prev, gifUrl: url } : prev));
         setItems((prev) => prev.map((ex) => (ex._id === editor._id ? { ...ex, gifUrl: url } : ex)));
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Не удалось загрузить фото');
+        setError(err.response?.data?.message || t('adminEditor.photoUploadFailed'));
       } finally {
         setUploadingPhoto(false);
       }
@@ -216,7 +216,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
 
   const handleSave = async () => {
     if (!editor || editor.name.trim().length < 2) {
-      setError('Название от 2 символов');
+      setError(t('adminEditor.nameMin2'));
       return;
     }
     setSaving(true);
@@ -276,23 +276,23 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
     return (
       <div style={{ ...workoutCardStyle, padding: '14px' }}>
         <Text variant="h2" bold style={{ display: 'block', fontSize: '17px', marginBottom: '10px' }}>
-          {editor._id ? 'Редактировать упражнение' : 'Новое упражнение'}
+          {editor._id ? t('adminEditor.editExercise') : t('adminEditor.newExercise')}
         </Text>
 
         <PhotoDropzone
           photoUrl={editor.gifUrl}
-          alt={editor.name || 'Фото упражнения'}
+          alt={editor.name || t('adminEditor.exercisePhoto')}
           onSelect={handlePhotoSelect}
           busy={uploadingPhoto}
         />
 
         <label style={{ display: 'block', marginBottom: '8px' }}>
-          {fieldLabel('Название')}
+          {fieldLabel(t('adminEditor.name'))}
           <input style={inputStyle} value={editor.name} onChange={(e) => setEditor({ ...editor, name: e.target.value })} />
         </label>
 
         <label style={{ display: 'block', marginBottom: '8px' }}>
-          {fieldLabel('Описание техники')}
+          {fieldLabel(t('adminEditor.technique'))}
           <textarea
             rows={4}
             style={{ ...inputStyle, height: 'auto', padding: '10px 12px', resize: 'vertical', lineHeight: 1.45 }}
@@ -303,7 +303,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
           <label>
-            {fieldLabel('Категория')}
+            {fieldLabel(t('adminEditor.category'))}
             <select style={inputStyle} value={editor.categoryId} onChange={(e) => setEditor({ ...editor, categoryId: e.target.value })}>
               {categories.map((c) => (
                 <option key={c._id} value={c._id} style={{ color: '#000' }}>{c.name}</option>
@@ -311,7 +311,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
             </select>
           </label>
           <label>
-            {fieldLabel('Тип')}
+            {fieldLabel(t('adminEditor.type'))}
             <select style={inputStyle} value={editor.type} onChange={(e) => setEditor({ ...editor, type: e.target.value })}>
               <option value="strength" style={{ color: '#000' }}>{t('workout.strength')}</option>
               <option value="cardio" style={{ color: '#000' }}>{t('workout.cardio')}</option>
@@ -319,7 +319,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
             </select>
           </label>
           <label>
-            {fieldLabel('Сложность')}
+            {fieldLabel(t('adminEditor.difficulty'))}
             <select style={inputStyle} value={editor.difficulty} onChange={(e) => setEditor({ ...editor, difficulty: e.target.value })}>
               <option value="beginner" style={{ color: '#000' }}>{t('workout.beginner')}</option>
               <option value="intermediate" style={{ color: '#000' }}>{t('workout.intermediate')}</option>
@@ -327,30 +327,30 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
             </select>
           </label>
           <label>
-            {fieldLabel('MET (интенсивность)')}
+            {fieldLabel(t('adminEditor.met'))}
             <input type="number" step="0.5" min="0.5" style={inputStyle} value={editor.metValue} onChange={(e) => setEditor({ ...editor, metValue: e.target.value })} />
           </label>
           <label>
-            {fieldLabel('Подходы по умолчанию')}
+            {fieldLabel(t('adminEditor.defaultSets'))}
             <input type="number" min="1" style={inputStyle} value={editor.defaultSets} onChange={(e) => setEditor({ ...editor, defaultSets: e.target.value })} />
           </label>
           <label>
-            {fieldLabel('Повторы по умолчанию')}
+            {fieldLabel(t('adminEditor.defaultReps'))}
             <input type="number" min="1" style={inputStyle} value={editor.defaultReps} onChange={(e) => setEditor({ ...editor, defaultReps: e.target.value })} />
           </label>
           <label>
-            {fieldLabel('Время, сек (для планок/кардио)')}
+            {fieldLabel(t('adminEditor.durationSec'))}
             <input type="number" min="1" placeholder="—" style={inputStyle} value={editor.defaultDurationSec} onChange={(e) => setEditor({ ...editor, defaultDurationSec: e.target.value })} />
           </label>
           <label>
-            {fieldLabel('Оборудование')}
-            <input placeholder="Штанга, скамья…" style={inputStyle} value={editor.equipment} onChange={(e) => setEditor({ ...editor, equipment: e.target.value })} />
+            {fieldLabel(t('adminEditor.equipment'))}
+            <input placeholder={t('adminEditor.equipmentPlaceholder')} style={inputStyle} value={editor.equipment} onChange={(e) => setEditor({ ...editor, equipment: e.target.value })} />
           </label>
         </div>
 
         <label style={{ display: 'block', marginBottom: '10px' }}>
-          {fieldLabel('Группы мышц (через запятую)')}
-          <input placeholder="Большая грудная, Трицепс" style={inputStyle} value={editor.muscleGroups} onChange={(e) => setEditor({ ...editor, muscleGroups: e.target.value })} />
+          {fieldLabel(t('adminEditor.muscleGroups'))}
+          <input placeholder={t('adminEditor.muscleGroupsPlaceholder')} style={inputStyle} value={editor.muscleGroups} onChange={(e) => setEditor({ ...editor, muscleGroups: e.target.value })} />
         </label>
 
         {error && (
@@ -422,7 +422,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
           fontFamily: 'inherit',
         }}
       >
-        + Новое упражнение
+        + {t('adminEditor.newExercise')}
       </button>
 
       <input
@@ -458,7 +458,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
               size="sm"
               onClick={() => openEdit(ex)}
               style={{ padding: '8px', minWidth: '36px', minHeight: '36px', width: 'auto' }}
-              aria-label="Редактировать"
+              aria-label={t('common.edit')}
             >
               <EditIcon />
             </Button>
@@ -467,7 +467,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
               size="sm"
               onClick={() => setDeleteTarget(ex)}
               style={{ padding: '8px', minWidth: '36px', minHeight: '36px', width: 'auto' }}
-              aria-label="Удалить"
+              aria-label={t('common.delete')}
             >
               <DeleteIcon />
             </Button>
@@ -477,7 +477,7 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
 
       {!listLoading && items.length === 0 && (
         <Text variant="small" muted style={{ display: 'block', textAlign: 'center', padding: '16px 0' }}>
-          Ничего не найдено
+          {t('adminEditor.nothingFound')}
         </Text>
       )}
 
@@ -504,14 +504,14 @@ export function AdminExercisesTab({ categories }: AdminExercisesTabProps) {
             fontFamily: 'inherit',
           }}
         >
-          Показать ещё
+          {t('common.showMore')}
         </button>
       )}
 
       <ConfirmSheet
         isOpen={deleteTarget !== null}
-        title="Удалить упражнение?"
-        description={deleteTarget ? `${deleteTarget.name}. Прошлые тренировки не пострадают, но добавить его заново будет нельзя.` : undefined}
+        title={t('adminEditor.deleteExerciseConfirm')}
+        description={deleteTarget ? `${deleteTarget.name}. ${t('adminEditor.deleteExerciseDesc')}` : undefined}
         confirmLabel={t('common.delete')}
         danger
         onConfirm={handleDelete}

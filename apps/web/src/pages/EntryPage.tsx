@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import onboardingGoals from '../assets/09_onboarding/onboarding_1_goals.png';
 import onboardingTracking from '../assets/09_onboarding/onboarding_2_tracking.png';
 import onboardingWorkouts from '../assets/09_onboarding/onboarding_3_workouts.png';
+import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
@@ -13,20 +14,20 @@ const slides = [
   {
     image: onboardingGoals,
 
-    title: 'Ставь цели',
-    description: 'Укажи вес, рост и желаемый результат — мы рассчитаем норму калорий.',
+    title: t('onboarding.slide1Title'),
+    description: t('onboarding.slide1Desc'),
   },
   {
     image: onboardingTracking,
 
-    title: 'Считай калории',
-    description: 'Добавляй продукты — калории и БЖУ посчитаются автоматически.',
+    title: t('onboarding.slide2Title'),
+    description: t('onboarding.slide2Desc'),
   },
   {
     image: onboardingWorkouts,
 
-    title: 'Тренируйся',
-    description: 'Выбирай программы тренировок — мы посчитаем сожжённые калории.',
+    title: t('onboarding.slide3Title'),
+    description: t('onboarding.slide3Desc'),
   },
 ];
 
@@ -184,10 +185,10 @@ export function EntryPage() {
         }}
       >
         <Button onClick={handleNext} size="lg">
-          {currentIndex === slides.length - 1 ? 'Начать' : 'Далее'}
+          {currentIndex === slides.length - 1 ? t('onboarding.start') : t('onboarding.next')}
         </Button>
         <Button variant="ghost" onClick={() => navigate('/login')} size="md">
-          Уже есть аккаунт? Войти
+          {t('onboarding.haveAccount')}
         </Button>
       </div>
     </div>

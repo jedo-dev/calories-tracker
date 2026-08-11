@@ -35,21 +35,45 @@ export function WeightHistoryPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const today = todayISO();
+  const BATCH = 90;
 
   const load = async () => {
     setLoading(true);
     setLoadError(false);
     try {
-      const res = await apiClient.get("/weight", { params: { limit: 90 } });
+      const res = await apiClient.get("/weight", { params: { limit: BATCH } });
       setHistory(res.data);
+      setHasMore(res.data.length === BATCH);
     } catch (err) {
       console.error(err);
       // Ошибка сети не должна выглядеть как «истории нет».
       setLoadError(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Догрузка старой истории: раньше всё старше 90 записей было недоступно.
+  const loadMore = async (): Promise<boolean> => {
+    if (loadingMore || !hasMore) return false;
+    setLoadingMore(true);
+    try {
+      const res = await apiClient.get("/weight", {
+        params: { limit: BATCH, offset: history.length }
+      });
+      setHistory((prev) => [...prev, ...res.data]);
+      setHasMore(res.data.length === BATCH);
+      return res.data.length > 0;
+    } catch (err) {
+      console.error(err);
+      showToast(t("common.loadError"));
+      return false;
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -284,7 +308,7 @@ export function WeightHistoryPage() {
             <Text variant="h2" bold style={{ fontSize: "18px" }}>
               {t("weight.history")}
             </Text>
-            {totalPages > 1 && (
+            {(totalPages > 1 || hasMore) && (
               <div
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
@@ -301,12 +325,18 @@ export function WeightHistoryPage() {
                   style={{ minWidth: "38px", textAlign: "center" }}
                 >
                   {safePage + 1} / {totalPages}
+                  {hasMore ? "+" : ""}
                 </Text>
                 <IconButton
                   label={t("weight.pageNext")}
-                  onClick={() =>
-                    setPage(Math.min(totalPages - 1, safePage + 1))
-                  }
+                  onClick={async () => {
+                    // На последней загруженной странице тянем следующую пачку с сервера.
+                    if (safePage >= totalPages - 1) {
+                      if (await loadMore()) setPage(safePage + 1);
+                    } else {
+                      setPage(safePage + 1);
+                    }
+                  }}
                   size={30}
                 >
                   <span style={{ display: "flex", transform: "scaleX(-1)" }}>

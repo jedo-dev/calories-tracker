@@ -26,6 +26,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { StorageService } from '../storage/storage.service';
+import { parseLimit } from '../common/utils/query';
 
 const CONTENT_EDITORS = ['admin', 'trainer'];
 
@@ -247,8 +248,13 @@ export class WorkoutController {
 
   // History
   @Get('history')
-  async getHistory(@Query('limit') limit: string, @Request() req: any) {
-    const limitNum = limit ? parseInt(limit, 10) : 30;
-    return this.workoutService.getHistory(req.user.id, limitNum);
+  async getHistory(
+    @Query('limit') limit: string,
+    @Query('offset') offset: string,
+    @Request() req: any,
+  ) {
+    const limitNum = parseLimit(limit, 30);
+    const offsetNum = Math.max(0, parseInt(offset || '0', 10) || 0);
+    return this.workoutService.getHistory(req.user.id, limitNum, offsetNum);
   }
 }

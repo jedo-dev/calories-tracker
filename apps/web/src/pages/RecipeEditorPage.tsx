@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
@@ -11,6 +11,7 @@ import { Text } from '../ui/Text';
 import Loader from '../ui/Loader';
 import { RichTextEditor, isRichTextEmpty } from '../ui/RichTextEditor';
 import { IconButton } from '../ui/IconButton';
+import { CoverPhotoCard } from '../widgets/recipeEditor/CoverPhotoCard';
 import { Ingredient, IngredientProduct, IngredientsCard } from '../widgets/recipeEditor/IngredientsCard';
 import { BackIcon } from '../ui/icons';
 
@@ -21,7 +22,6 @@ export function RecipeEditorPage() {
   const { id } = useParams();
   const theme = useTheme();
   const isEdit = !!id;
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
@@ -281,10 +281,7 @@ export function RecipeEditorPage() {
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handlePhotoUpload = async (file: File) => {
     if (file.size > 5 * 1024 * 1024) {
       setError(t('recipeEditor.photoTooLarge'));
       return;
@@ -418,94 +415,12 @@ export function RecipeEditorPage() {
         </Card>
       )}
 
-      {/* Cover photo */}
-      <Card style={{ ...cardStyle, marginBottom: '12px' }}>
-        <Text variant="h2" bold style={{ marginBottom: theme.spacing.sm, fontSize: '18px' }}>{t('recipeEditor.coverPhoto')}</Text>
-        {photoUrl ? (
-          <div style={{ position: 'relative' }}>
-            <img
-              src={photoUrl}
-              alt={name}
-              style={{
-                width: '100%',
-                aspectRatio: '16 / 9',
-                objectFit: 'cover',
-                borderRadius: '14px',
-                display: 'block',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            />
-            <div style={{ position: 'absolute', right: '10px', bottom: '10px', display: 'flex', gap: '6px' }}>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.18)',
-                  background: 'rgba(3, 18, 28, 0.72)',
-                  color: theme.palette.text,
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(6px)',
-                }}
-              >
-                {t('recipeEditor.replacePhoto')}
-              </button>
-              <button
-                type="button"
-                onClick={handleRemovePhoto}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,120,120,0.35)',
-                  background: 'rgba(3, 18, 28, 0.72)',
-                  color: '#ff8a8a',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(6px)',
-                }}
-              >
-                {t('recipeEditor.removePhoto')}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            style={{
-              width: '100%',
-              aspectRatio: '16 / 9',
-              boxSizing: 'border-box',
-              border: '2px dashed rgba(160, 200, 220, 0.28)',
-              borderRadius: '14px',
-              background: 'rgba(255,255,255,0.03)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              gap: theme.spacing.xs,
-            }}
-          >
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke={theme.palette.textMuted} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="4" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
-            <Text variant="small" muted>{t('recipeEditor.addPhoto')}</Text>
-          </div>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          style={{ display: 'none' }}
-          onChange={handlePhotoUpload}
-        />
-      </Card>
+      <CoverPhotoCard
+        photoUrl={photoUrl}
+        alt={name}
+        onFileSelected={handlePhotoUpload}
+        onRemove={handleRemovePhoto}
+      />
 
       {/* Basic Info */}
       <Card style={{ ...cardStyle, marginBottom: '12px' }}>

@@ -10,6 +10,47 @@ export const ru = {
     set: ["подход", "подхода", "подходов"],
     exercise: ["упражнение", "упражнения", "упражнений"],
   },
+  // Админ-редактор тренировок
+  adminEditor: {
+    photoTooBig: "Фото больше 5 МБ",
+    photoUploadFailed: "Не удалось загрузить фото",
+    nameMin2: "Название от 2 символов",
+    editExercise: "Редактировать упражнение",
+    newExercise: "Новое упражнение",
+    exercisePhoto: "Фото упражнения",
+    name: "Название",
+    technique: "Описание техники",
+    category: "Категория",
+    type: "Тип",
+    difficulty: "Сложность",
+    met: "MET (интенсивность)",
+    defaultSets: "Подходы по умолчанию",
+    defaultReps: "Повторы по умолчанию",
+    durationSec: "Время, сек (для планок/кардио)",
+    equipment: "Оборудование",
+    equipmentPlaceholder: "Штанга, скамья…",
+    muscleGroups: "Группы мышц (через запятую)",
+    muscleGroupsPlaceholder: "Большая грудная, Трицепс",
+    nothingFound: "Ничего не найдено",
+    deleteExerciseConfirm: "Удалить упражнение?",
+    deleteExerciseDesc: "Прошлые тренировки не пострадают, но добавить его заново будет нельзя.",
+    programValidation: "Название от 3 символов и хотя бы одно упражнение",
+    programCover: "Обложка программы",
+    moveUp: "Вверх",
+    moveDown: "Вниз",
+  },
+  // Onboarding
+  onboarding: {
+    slide1Title: "Ставь цели",
+    slide1Desc: "Укажи вес, рост и желаемый результат — мы рассчитаем норму калорий.",
+    slide2Title: "Считай калории",
+    slide2Desc: "Добавляй продукты — калории и БЖУ посчитаются автоматически.",
+    slide3Title: "Тренируйся",
+    slide3Desc: "Выбирай программы тренировок — мы посчитаем сожжённые калории.",
+    start: "Начать",
+    next: "Далее",
+    haveAccount: "Уже есть аккаунт? Войти",
+  },
   // Common
   common: {
     loading: "Загрузка...",
@@ -24,7 +65,8 @@ export const ru = {
     all: "Все",
     back: "Назад",
     loadError: "Не удалось загрузить данные",
-    retryHint: "Проверьте сеть и обновите страницу"
+    retryHint: "Проверьте сеть и обновите страницу",
+    showMore: "Показать ещё"
   },
 
   // Auth
@@ -108,7 +150,12 @@ export const ru = {
     invalidGrams: "Пожалуйста, введите граммы > 0",
     saveFailed: "Не удалось сохранить запись",
     loadFailed: "Не удалось загрузить запись",
-    selectProduct: "Пожалуйста, выберите продукт"
+    selectProduct: "Пожалуйста, выберите продукт",
+    timeShort: "Время",
+    per100g: "на 100 г",
+    totalLabel: "Итого",
+    quickAdd: "Быстрое добавление",
+    quickAddHint: "Нажми на продукт, чтобы сразу добавить его в дневник"
   },
 
   // Meal types
@@ -544,6 +591,8 @@ export const ru = {
 
   // Recipes
   recipes: {
+    onePortion: "1 порция",
+    notFound: "Блюдо не найдено",
     title: "Блюда",
     create: "Создать блюдо",
     noRecipes: "Нет блюд",
@@ -710,6 +759,7 @@ export const ru = {
     protein: "белки",
     fat: "жиры",
     carb: "углев.",
+    carbFull: "углеводы",
     noHistory: "Нет сохранённых планов",
     profileRequired: "Заполните профиль",
     profileRequiredDesc: "Для составления плана питания нужно указать вес, рост, возраст и цель",

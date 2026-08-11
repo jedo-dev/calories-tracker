@@ -237,7 +237,7 @@ export function AddEntryPage() {
         <div style={{ display: 'flex', gap: '10px' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <label style={{ display: 'block', marginBottom: '4px', fontWeight: 600, color: theme.palette.textMuted, fontSize: '12px' }}>
-              Время
+              {t('entry.timeShort')}
             </label>
             <input
               type="time"
@@ -399,7 +399,7 @@ export function AddEntryPage() {
               <span style={{ whiteSpace: 'nowrap' }}><span style={{ fontSize: '11px', fontWeight: 800, color: MACRO_COLORS.protein }}>Б</span><span style={{ fontSize: '13px', fontWeight: 700 }}> {selectedProduct.proteinPer100g.toFixed(1)}</span></span>
               <span style={{ whiteSpace: 'nowrap' }}><span style={{ fontSize: '11px', fontWeight: 800, color: MACRO_COLORS.fat }}>Ж</span><span style={{ fontSize: '13px', fontWeight: 700 }}> {selectedProduct.fatPer100g.toFixed(1)}</span></span>
               <span style={{ whiteSpace: 'nowrap' }}><span style={{ fontSize: '11px', fontWeight: 800, color: MACRO_COLORS.carb }}>У</span><span style={{ fontSize: '13px', fontWeight: 700 }}> {selectedProduct.carbPer100g.toFixed(1)}</span></span>
-              <span style={{ fontSize: '11px', color: theme.palette.textMuted }}>на 100 г</span>
+              <span style={{ fontSize: '11px', color: theme.palette.textMuted }}>{t('entry.per100g')}</span>
             </div>
 
             {foundInOff && (
@@ -459,7 +459,7 @@ export function AddEntryPage() {
                 flexWrap: 'wrap',
               }}
             >
-              <span style={{ fontSize: '12px', color: theme.palette.textMuted }}>Итого {g > 0 ? `${g} г` : ''}:</span>
+              <span style={{ fontSize: '12px', color: theme.palette.textMuted }}>{t('entry.totalLabel')} {g > 0 ? `${g} г` : ''}:</span>
               <span><span style={{ fontSize: '20px', fontWeight: 800, color: theme.palette.primary }}>{Math.round(total.kcal)}</span><span style={{ fontSize: '11px', color: theme.palette.textMuted }}> ккал</span></span>
               <span style={{ fontSize: '13px', fontWeight: 700 }}><span style={{ color: MACRO_COLORS.protein }}>Б</span> {total.protein.toFixed(1)}</span>
               <span style={{ fontSize: '13px', fontWeight: 700 }}><span style={{ color: MACRO_COLORS.fat }}>Ж</span> {total.fat.toFixed(1)}</span>
@@ -498,10 +498,10 @@ export function AddEntryPage() {
       {!isEdit && (
         <div style={{ ...cardStyle, marginTop: '14px' }}>
           <Text bold style={{ fontSize: '16px', display: 'block' }}>
-            Быстрое добавление
+            {t('entry.quickAdd')}
           </Text>
           <Text variant="small" muted style={{ display: 'block', marginTop: '2px', marginBottom: '8px' }}>
-            Нажми на продукт, чтобы сразу добавить его в дневник
+            {t('entry.quickAddHint')}
           </Text>
           <RecentProducts date={date} onAdded={() => navigate('/today')} compact />
         </div>
