@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { pageBackground } from '../theme/styles';
 import { apiClient } from '../api/client';
+import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
@@ -18,15 +19,39 @@ export function MeasurementsPage() {
   const [showForm, setShowForm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Measurement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const BATCH = 90;
 
   const load = async () => {
     try {
-      const res = await apiClient.get('/measurements', { params: { limit: 90 } });
-      setMeasurements(Array.isArray(res.data) ? res.data : []);
+      const res = await apiClient.get('/measurements', { params: { limit: BATCH } });
+      const items = Array.isArray(res.data) ? res.data : [];
+      setMeasurements(items);
+      setHasMore(items.length === BATCH);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Догрузка старых замеров: раньше всё старше 90 записей было недоступно.
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const res = await apiClient.get('/measurements', {
+        params: { limit: BATCH, offset: measurements.length },
+      });
+      const items = Array.isArray(res.data) ? res.data : [];
+      setMeasurements((prev) => [...prev, ...items]);
+      setHasMore(items.length === BATCH);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -154,7 +179,31 @@ export function MeasurementsPage() {
           <CurrentMeasurementsCard latest={latest} previous={previous} />
         </>
       ) : (
-        <MeasurementHistoryList entries={historyEntries} onDelete={setDeleteTarget} />
+        <>
+          <MeasurementHistoryList entries={historyEntries} onDelete={setDeleteTarget} />
+          {hasMore && (
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loadingMore}
+              style={{
+                width: '100%',
+                height: '44px',
+                borderRadius: '14px',
+                border: '1px solid rgba(160, 200, 220, 0.24)',
+                background: 'rgba(255,255,255,0.06)',
+                color: theme.palette.text,
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: loadingMore ? 'default' : 'pointer',
+                opacity: loadingMore ? 0.6 : 1,
+                fontFamily: 'inherit',
+              }}
+            >
+              {loadingMore ? t('common.loading') : t('common.showMore')}
+            </button>
+          )}
+        </>
       )}
 
       <ConfirmSheet

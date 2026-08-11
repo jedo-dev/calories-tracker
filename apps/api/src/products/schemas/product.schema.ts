@@ -46,6 +46,12 @@ export class Product {
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
-ProductSchema.index({ source: 1, sourceId: 1 }, { unique: true, sparse: true });
+// partial вместо sparse: у составного sparse-индекса документ индексируется,
+// если заполнено ХОТЯ БЫ одно поле — продукты без sourceId попадали в индекс
+// как {source, null} и второй такой продукт падал с E11000.
+ProductSchema.index(
+  { source: 1, sourceId: 1 },
+  { unique: true, partialFilterExpression: { sourceId: { $exists: true } } },
+);
 ProductSchema.index({ nameNormalized: 1 });
 ProductSchema.index({ barcode: 1 }, { unique: true, sparse: true });

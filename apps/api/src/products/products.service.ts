@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -8,11 +8,36 @@ import { Product, ProductDocument } from './schemas/product.schema';
 import { OpenFoodFactsService } from './openfoodfacts.service';
 
 @Injectable()
-export class ProductsService {
+export class ProductsService implements OnModuleInit {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private openFoodFacts: OpenFoodFactsService,
   ) {}
+
+  // Миграция индекса source_1_sourceId_1: старый sparse-вариант индексировал
+  // документы без sourceId как {source, null} → E11000 на втором продукте
+  // со сканера. Если в базе ещё старый индекс — дропаем и создаём partial.
+  async onModuleInit(): Promise<void> {
+    try {
+      const collection = this.productModel.collection;
+      const indexes = await collection.indexes();
+      const legacy = indexes.find(
+        (idx: any) => idx.name === 'source_1_sourceId_1' && !idx.partialFilterExpression,
+      );
+      if (legacy) {
+        await collection.dropIndex('source_1_sourceId_1');
+        await collection.createIndex(
+          { source: 1, sourceId: 1 },
+          { unique: true, partialFilterExpression: { sourceId: { $exists: true } } },
+        );
+        this.logger.log('Migrated products index source_1_sourceId_1 to partial');
+      }
+    } catch (err) {
+      this.logger.error('Failed to migrate products index', err as any);
+    }
+  }
 
   normalizeName(name: string): string {
     return name.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -33,23 +58,34 @@ export class ProductsService {
     const searchNormalized = this.normalizeName(search);
     const escapedSearch = this.escapeRegex(searchNormalized);
 
-    const filter = { nameNormalized: { $regex: escapedSearch } };
+    // Двухфазный поиск вместо неякорного $regex с перевыборкой ×3 и сортировкой
+    // в JS (это был полный скан коллекции на каждый ввод символа):
+    // 1) якорный ^prefix — идёт по индексу nameNormalized; сортировка по нему же
+    //    даёт тот же порядок, что старый ранкер (точное → префикс → алфавит).
+    const prefixMatches = await this.productModel
+      .find({ nameNormalized: { $regex: `^${escapedSearch}` } })
+      .sort({ nameNormalized: 1 })
+      .limit(maxResults)
+      .exec();
 
-    const all = await this.productModel.find(filter).limit(maxResults * 3).exec();
+    if (prefixMatches.length >= maxResults) {
+      return prefixMatches;
+    }
 
-    all.sort((a, b) => {
-      const aN = a.nameNormalized;
-      const bN = b.nameNormalized;
-      const aExact = aN === searchNormalized ? 0 : 1;
-      const bExact = bN === searchNormalized ? 0 : 1;
-      if (aExact !== bExact) return aExact - bExact;
-      const aStarts = aN.startsWith(searchNormalized) ? 0 : 1;
-      const bStarts = bN.startsWith(searchNormalized) ? 0 : 1;
-      if (aStarts !== bStarts) return aStarts - bStarts;
-      return aN.localeCompare(bN);
-    });
+    // 2) Добираем подстрочные совпадения (не начинающиеся с запроса) — только
+    //    когда префиксных не хватило; substring-семантика поиска сохранена.
+    const substringMatches = await this.productModel
+      .find({
+        nameNormalized: {
+          $regex: escapedSearch,
+          $not: new RegExp(`^${escapedSearch}`),
+        },
+      })
+      .sort({ nameNormalized: 1 })
+      .limit(maxResults - prefixMatches.length)
+      .exec();
 
-    return all.slice(0, maxResults);
+    return [...prefixMatches, ...substringMatches];
   }
 
   async findById(id: string): Promise<ProductDocument> {
@@ -116,6 +152,8 @@ export class ProductsService {
     if (createProductDto.barcode) {
       productData.barcode = createProductDto.barcode;
       productData.source = 'BARCODE';
+      // Осмысленная идентичность для уникального индекса {source, sourceId}.
+      productData.sourceId = createProductDto.barcode;
     }
 
     if (createProductDto.brand) {

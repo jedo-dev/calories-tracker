@@ -382,8 +382,9 @@ export class WorkoutService {
 
     let query = this.exerciseModel.find(filter).sort({ name: 1 });
     if (offset && offset > 0) query = query.skip(offset);
-    // limit is opt-in to keep legacy full-catalog callers working
-    if (limit && limit > 0) query = query.limit(Math.min(limit, 100));
+    // limit is opt-in to keep legacy full-catalog callers working;
+    // без limit — backstop 1000, чтобы выборка не была неограниченной
+    query = query.limit(limit && limit > 0 ? Math.min(limit, 100) : 1000);
     return query.exec();
   }
 
@@ -655,10 +656,11 @@ export class WorkoutService {
   }
 
   // History
-  async getHistory(userId: string, limit = 30): Promise<WorkoutSessionDocument[]> {
+  async getHistory(userId: string, limit = 30, offset = 0): Promise<WorkoutSessionDocument[]> {
     return this.sessionModel
       .find({ userId: new Types.ObjectId(userId), finishedAt: { $ne: null } })
       .sort({ finishedAt: -1 })
+      .skip(offset)
       .limit(limit)
       .exec();
   }

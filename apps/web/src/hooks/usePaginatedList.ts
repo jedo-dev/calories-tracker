@@ -7,6 +7,8 @@ interface PaginatedList<T> {
   hasMore: boolean;
   sentinelRef: (node: HTMLElement | null) => void;
   reload: () => void;
+  /** Локально изменить загруженные элементы (напр. обновить реакции) без перезагрузки. */
+  mutate: (updater: (items: T[]) => T[]) => void;
 }
 
 // Offset-based infinite scroll over endpoints that return a bare array.
@@ -85,5 +87,9 @@ export function usePaginatedList<T>(
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
-  return { items, loading, loadingMore, hasMore, sentinelRef, reload };
+  const mutate = useCallback((updater: (items: T[]) => T[]) => {
+    setItems((prev) => updater(prev));
+  }, []);
+
+  return { items, loading, loadingMore, hasMore, sentinelRef, reload, mutate };
 }

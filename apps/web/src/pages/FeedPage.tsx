@@ -3,46 +3,46 @@ import { pageBackground } from '../theme/styles';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import mascotFoxMain from '../assets/08_mascot/mascot_fox_main.png';
+import { usePaginatedList } from '../hooks/usePaginatedList';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
-import Loader from '../ui/Loader';
+import Loader, { InlineLoader } from '../ui/Loader';
 import { Text } from '../ui/Text';
+import { showToast } from '../ui/Toast';
 import { FeedEventCard, FeedItem } from '../widgets/feed/FeedEventCard';
 
 export function FeedPage() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [feed, setFeed] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [myUserId, setMyUserId] = useState<string | null>(null);
 
+  // Бесконечная лента: раньше — жёсткие 50 событий, дальше лента обрывалась.
+  const { items: feed, loading, loadingMore, hasMore, sentinelRef, mutate } = usePaginatedList<FeedItem>(
+    (offset, limit) =>
+      apiClient.get('/feed', { params: { offset, limit } }).then((res) => res.data),
+    [],
+    20,
+  );
+
   useEffect(() => {
-    Promise.all([
-      apiClient.get('/feed', { params: { limit: 50 } }),
-      apiClient.get('/social/me').catch(() => null),
-    ])
-      .then(([feedRes, meRes]) => {
-        setFeed(feedRes.data);
-        if (meRes?.data?.user?.id) setMyUserId(meRes.data.user.id);
+    apiClient
+      .get('/social/me')
+      .then((res) => {
+        if (res?.data?.user?.id) setMyUserId(res.data.user.id);
       })
-      .catch((err: any) => {
-        setError(err.response?.data?.message || err.message || t('common.error'));
-      })
-      .finally(() => setLoading(false));
+      .catch(() => null);
   }, []);
 
   const handleReact = async (eventId: string, emoji: string) => {
     try {
       const res = await apiClient.post(`/feed/${eventId}/react`, { emoji });
-      setFeed((prev) =>
+      mutate((prev) =>
         prev.map((item) => (item.id === eventId ? { ...item, reactions: res.data.reactions } : item)),
       );
     } catch (err: any) {
       console.error('Failed to react', err);
-      setError(err.response?.data?.message || t('common.error'));
-      setTimeout(() => setError(null), 3000);
+      showToast(err.response?.data?.message || t('common.error'));
     }
   };
 
@@ -62,12 +62,6 @@ export function FeedPage() {
       <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
         {t('feed.title')}
       </Text>
-
-      {error && (
-        <Text variant="small" style={{ display: 'block', color: '#ff8a8a', marginBottom: '10px' }}>
-          {error}
-        </Text>
-      )}
 
       {feed.length === 0 ? (
         <EmptyState
@@ -97,21 +91,25 @@ export function FeedPage() {
           }
         />
       ) : (
-        feed.map((item) => (
-          <FeedEventCard
-            key={item.id}
-            item={item}
-            myUserId={myUserId}
-            onOpenUser={() => navigate(`/users/${item.user.id}`)}
-            onReact={(emoji) => handleReact(item.id, emoji)}
-            onOpenRecipe={(recipeId) => navigate(`/recipes/${recipeId}`)}
-            onAddRecipeToDiary={(payload) =>
-              navigate(
-                `/entry/new?recipeId=${payload.recipeId}&recipeName=${encodeURIComponent(payload.recipeName || '')}&kcal=${payload.kcalPer100g || 0}`,
-              )
-            }
-          />
-        ))
+        <>
+          {feed.map((item) => (
+            <FeedEventCard
+              key={item.id}
+              item={item}
+              myUserId={myUserId}
+              onOpenUser={() => navigate(`/users/${item.user.id}`)}
+              onReact={(emoji) => handleReact(item.id, emoji)}
+              onOpenRecipe={(recipeId) => navigate(`/recipes/${recipeId}`)}
+              onAddRecipeToDiary={(payload) =>
+                navigate(
+                  `/entry/new?recipeId=${payload.recipeId}&recipeName=${encodeURIComponent(payload.recipeName || '')}&kcal=${payload.kcalPer100g || 0}`,
+                )
+              }
+            />
+          ))}
+          {loadingMore && <InlineLoader />}
+          {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
+        </>
       )}
     </div>
   );

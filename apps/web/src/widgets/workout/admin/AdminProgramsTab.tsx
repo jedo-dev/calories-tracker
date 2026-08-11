@@ -168,7 +168,7 @@ export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgr
 
   const handleSave = async () => {
     if (!editor || editor.name.trim().length < 3 || editor.items.length === 0) {
-      setError('Название от 3 символов и хотя бы одно упражнение');
+      setError(t('adminEditor.programValidation'));
       return;
     }
     setSaving(true);
@@ -232,11 +232,11 @@ export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgr
 
         <PhotoDropzone
           photoUrl={editor.imageUrl}
-          alt={editor.name || 'Обложка программы'}
+          alt={editor.name || t('adminEditor.programCover')}
           busy={uploadingPhoto}
           onSelect={async (file) => {
             if (file.size > 5 * 1024 * 1024) {
-              setError('Фото больше 5 МБ');
+              setError(t('adminEditor.photoTooBig'));
               return;
             }
             if (editor._id) {
@@ -247,7 +247,7 @@ export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgr
                 setEditor((prev) => (prev ? { ...prev, imageUrl: url } : prev));
                 onChanged();
               } catch (err: any) {
-                setError(err.response?.data?.message || 'Не удалось загрузить фото');
+                setError(err.response?.data?.message || t('adminEditor.photoUploadFailed'));
               } finally {
                 setUploadingPhoto(false);
               }
@@ -323,8 +323,8 @@ export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgr
                 <Text bold style={{ flex: 1, minWidth: 0, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {item.name || item.exerciseId}
                 </Text>
-                <button type="button" aria-label="Вверх" onClick={() => moveItem(i, -1)} style={{ ...numInputStyle(theme), width: '32px', cursor: 'pointer' }}>↑</button>
-                <button type="button" aria-label="Вниз" onClick={() => moveItem(i, 1)} style={{ ...numInputStyle(theme), width: '32px', cursor: 'pointer' }}>↓</button>
+                <button type="button" aria-label={t('adminEditor.moveUp')} onClick={() => moveItem(i, -1)} style={{ ...numInputStyle(theme), width: '32px', cursor: 'pointer' }}>↑</button>
+                <button type="button" aria-label={t('adminEditor.moveDown')} onClick={() => moveItem(i, 1)} style={{ ...numInputStyle(theme), width: '32px', cursor: 'pointer' }}>↓</button>
                 <button
                   type="button"
                   aria-label={t('common.delete')}
@@ -385,7 +385,7 @@ export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgr
               {pickerLoading && <InlineLoader size={44} />}
               {!pickerLoading && pickerResults.length === 0 && (
                 <Text variant="small" muted style={{ display: 'block', padding: '10px 12px' }}>
-                  Ничего не найдено
+                  {t('adminEditor.nothingFound')}
                 </Text>
               )}
               {!pickerLoading && pickerResults.map((ex) => (
@@ -546,7 +546,7 @@ export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgr
               size="sm"
               onClick={() => openEdit(p)}
               style={{ padding: '8px', minWidth: '36px', minHeight: '36px', width: 'auto' }}
-              aria-label="Редактировать"
+              aria-label={t('common.edit')}
             >
               <EditIcon />
             </Button>
@@ -555,7 +555,7 @@ export function AdminProgramsTab({ programs, categories, onChanged }: AdminProgr
               size="sm"
               onClick={() => setDeleteTarget(p)}
               style={{ padding: '8px', minWidth: '36px', minHeight: '36px', width: 'auto' }}
-              aria-label="Удалить"
+              aria-label={t('common.delete')}
             >
               <DeleteIcon />
             </Button>

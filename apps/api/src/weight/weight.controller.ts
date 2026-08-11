@@ -14,9 +14,13 @@ export class WeightController {
   }
 
   @Get()
-  async getHistory(@Query('limit') limit: string, @Request() req: any) {
-    const limitNum = parseLimit(limit, 90);
-    return this.weightService.getHistory(req.user.id, limitNum);
+  async getHistory(
+    @Query('limit') limit: string,
+    @Query('offset') offset: string,
+    @Request() req: any,
+  ) {
+    const offsetNum = Math.max(0, parseInt(offset || '0', 10) || 0);
+    return this.weightService.getHistory(req.user.id, parseLimit(limit, 90), offsetNum);
   }
 
   @Get('latest')

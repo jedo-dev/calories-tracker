@@ -15,8 +15,13 @@ export class MeasurementController {
   }
 
   @Get()
-  async getHistory(@Query('limit') limit: string, @Request() req: any) {
-    return this.service.getHistory(req.user.id, parseLimit(limit, 90));
+  async getHistory(
+    @Query('limit') limit: string,
+    @Query('offset') offset: string,
+    @Request() req: any,
+  ) {
+    const offsetNum = Math.max(0, parseInt(offset || '0', 10) || 0);
+    return this.service.getHistory(req.user.id, parseLimit(limit, 90), offsetNum);
   }
 
   @Delete(':id')

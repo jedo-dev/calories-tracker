@@ -1,6 +1,7 @@
-import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { SocialService } from './social.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { parseLimit } from '../common/utils/query';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { UserStats, UserStatsDocument } from './schemas/user-stats.schema';
@@ -199,7 +200,13 @@ export class FeedController {
   ) {}
 
   @Get()
-  async getFeed(@Request() req: any) {
+  async getFeed(
+    @Request() req: any,
+    @Query('limit') limitRaw?: string,
+    @Query('offset') offsetRaw?: string,
+  ) {
+    const limit = parseLimit(limitRaw, 20, 50);
+    const offset = Math.max(0, parseInt(offsetRaw || '0', 10) || 0);
     const followingIds = await this.followModel
       .find({ followerId: new Types.ObjectId(req.user.id) })
       .distinct('followingId')
@@ -221,7 +228,8 @@ export class FeedController {
         'payload.isLike': { $ne: true },
       })
       .sort({ createdAt: -1 })
-      .limit(50)
+      .skip(offset)
+      .limit(limit)
       .populate('userId', 'displayName username firstName avatarEmoji isPublicProfile')
       .exec();
 
