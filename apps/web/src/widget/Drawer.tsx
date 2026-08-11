@@ -11,6 +11,9 @@ import { DailyTips } from '../features/TodayComponents/DailyTips';
 import { BottomSheet } from '../ui/BottomSheet';
 import { hapticImpact } from '../utils/hapticFeedback';
 import { calcWaterGoalMl } from '../widgets/water/waterGoal';
+import { showToast } from '../ui/Toast';
+import { ShareDaySheet } from '../widgets/share/ShareDaySheet';
+import { renderDayReport } from '../widgets/share/shareDayImage';
 
 interface DashboardData {
   consumed: { kcal: number; protein: number; fat: number; carb: number };
@@ -66,6 +69,9 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [waterMl, setWaterMl] = useState(0);
   const [waterGoal, setWaterGoal] = useState(2000);
+  const [shareBlob, setShareBlob] = useState<Blob | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
   const navigate = useNavigate();
 
   const todayDate = todayISO();
@@ -108,6 +114,30 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
   const handleAddEntry = () => {
     hapticImpact('medium');
     handleNavigate('/entry/new');
+  };
+
+  // Собираем данные дня и рисуем картинку-отчёт для шаринга
+  const handleShareDay = async () => {
+    if (shareLoading) return;
+    hapticImpact('medium');
+    setShareLoading(true);
+    try {
+      const entriesRes = await apiClient.get('/entries', { params: { date: todayDate } });
+      const blob = await renderDayReport({
+        dateISO: todayDate,
+        entries: entriesRes.data || [],
+        dashboard,
+        waterMl,
+        waterGoalMl: waterGoal,
+      });
+      setShareBlob(blob);
+      setShareOpen(true);
+    } catch (err) {
+      console.error('Failed to build day report:', err);
+      showToast('Не удалось создать отчёт');
+    } finally {
+      setShareLoading(false);
+    }
   };
 
   return (
@@ -233,6 +263,27 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           >
             + {t('commandCenter.addEntry')}
           </button>
+          <button
+            type="button"
+            onClick={handleShareDay}
+            disabled={shareLoading}
+            style={{
+              gridColumn: '1 / -1',
+              minHeight: '48px',
+              borderRadius: '16px',
+              border: '1px solid rgba(83, 212, 107, 0.45)',
+              background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.94), rgba(10, 32, 46, 0.94))',
+              color: theme.palette.primary,
+              fontSize: '15px',
+              fontWeight: 700,
+              cursor: shareLoading ? 'wait' : 'pointer',
+              opacity: shareLoading ? 0.7 : 1,
+              outline: 'none',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {shareLoading ? 'Готовим отчёт…' : '📤 Поделиться результатом дня'}
+          </button>
           <MenuTile path="/today" onNavigate={handleNavigate}>{t('commandCenter.selectDate')}</MenuTile>
           <MenuTile path="/workouts" onNavigate={handleNavigate}>{t('workout.title')}</MenuTile>
           <MenuTile path="/weight" onNavigate={handleNavigate}>{t('weight.title')}</MenuTile>
@@ -297,6 +348,12 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           </div>
         </div>
       </div>
+
+      <ShareDaySheet
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+        imageBlob={shareBlob}
+      />
     </BottomSheet>
   );
 }
