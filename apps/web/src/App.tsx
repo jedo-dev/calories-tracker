@@ -36,6 +36,7 @@ const RecipesPage = lazy(() => import('./pages/RecipesPage').then((m) => ({ defa
 const RecipeEditorPage = lazy(() => import('./pages/RecipeEditorPage').then((m) => ({ default: m.RecipeEditorPage })));
 const RecipeDetailPage = lazy(() => import('./pages/RecipeDetailPage').then((m) => ({ default: m.RecipeDetailPage })));
 const MealPlanPage = lazy(() => import('./pages/MealPlanPage').then((m) => ({ default: m.MealPlanPage })));
+const AiLimitsPage = lazy(() => import('./pages/AiLimitsPage').then((m) => ({ default: m.AiLimitsPage })));
 
 function AppLayout() {
   return (
@@ -73,6 +74,7 @@ function App() {
           <Route element={<AppLayout />}>
             <Route path="/today" element={<TodayPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/ai-limits" element={<AiLimitsPage />} />
             <Route path="/achievements" element={<AchievementsPage />} />
             <Route path="/entry/new" element={<AddEntryPage />} />
             <Route path="/entry/:id" element={<AddEntryPage />} />

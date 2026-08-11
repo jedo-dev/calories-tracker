@@ -5,6 +5,7 @@ import { apiClient } from "../api/client";
 import { t, todayISO } from '../i18n';
 import { useTheme } from "../theme/useTheme";
 import Loader from "../ui/Loader";
+import { AiQuotaCard } from "../widgets/profile/AiQuotaCard";
 import { ProfileAchievements } from "../widgets/profile/ProfileAchievements";
 import { ProfileBodyCard } from "../widgets/profile/ProfileBodyCard";
 import { ProfileGoalCard } from "../widgets/profile/ProfileGoalCard";
@@ -170,6 +171,8 @@ export function ProfilePage() {
           compact
         />
       )}
+
+      {!editingBody && <AiQuotaCard />}
 
       {!editingBody && (
         <ProfileGoalCard
