@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity-event.schema';
@@ -75,7 +75,7 @@ export class FriendsService {
 
   async follow(followerId: string, followingId: string): Promise<void> {
     if (followerId === followingId) {
-      throw new Error('Cannot follow yourself');
+      throw new BadRequestException('Cannot follow yourself');
     }
 
     const user = await this.userModel.findById(followingId).exec();

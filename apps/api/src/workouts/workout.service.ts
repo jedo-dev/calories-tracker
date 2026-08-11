@@ -717,35 +717,59 @@ export class WorkoutService {
     sessionId: string,
     logs: WorkoutLogDocument[],
   ): Promise<FinishSummary['prs']> {
-    const prs: FinishSummary['prs'] = [];
+    // Лучший рабочий подход по каждому упражнению текущей сессии.
+    const bestByExercise = new Map<
+      string,
+      { exerciseName: string; weightKg: number; reps: number | null }
+    >();
     for (const log of logs) {
       const doneSets = (log.setsDetail || []).filter((s) => s.done && s.weightKg != null && s.weightKg > 0);
       if (!doneSets.length) continue;
       const best = doneSets.reduce((a, b) => ((b.weightKg || 0) > (a.weightKg || 0) ? b : a));
+      const key = log.exerciseId.toString();
+      const current = bestByExercise.get(key);
+      if (!current || (best.weightKg || 0) > current.weightKg) {
+        bestByExercise.set(key, {
+          exerciseName: log.exerciseName,
+          weightKg: best.weightKg as number,
+          reps: best.reps ?? null,
+        });
+      }
+    }
+    if (bestByExercise.size === 0) return [];
 
-      const [historicMax] = await this.logModel
-        .aggregate([
-          {
-            $match: {
-              userId: new Types.ObjectId(userId),
-              exerciseId: log.exerciseId,
-              sessionId: { $ne: new Types.ObjectId(sessionId) },
-            },
+    // Одна агрегация по всем упражнениям сразу (раньше — по одной на каждое:
+    // 10 упражнений = 10 полных сканов истории пользователя).
+    const historicMaxes = await this.logModel
+      .aggregate([
+        {
+          $match: {
+            userId: new Types.ObjectId(userId),
+            exerciseId: { $in: [...bestByExercise.keys()].map((id) => new Types.ObjectId(id)) },
+            sessionId: { $ne: new Types.ObjectId(sessionId) },
           },
-          { $unwind: { path: '$setsDetail', preserveNullAndEmptyArrays: true } },
-          {
-            $group: {
-              _id: null,
-              maxSetWeight: { $max: '$setsDetail.weightKg' },
-              maxLogWeight: { $max: '$weightKg' },
-            },
+        },
+        { $unwind: { path: '$setsDetail', preserveNullAndEmptyArrays: true } },
+        {
+          $group: {
+            _id: '$exerciseId',
+            maxSetWeight: { $max: '$setsDetail.weightKg' },
+            maxLogWeight: { $max: '$weightKg' },
           },
-        ])
-        .exec();
+        },
+      ])
+      .exec();
+    const prevMaxByExercise = new Map<string, number>(
+      historicMaxes.map((h: any) => [
+        h._id.toString(),
+        Math.max(h.maxSetWeight || 0, h.maxLogWeight || 0),
+      ]),
+    );
 
-      const prevMax = Math.max(historicMax?.maxSetWeight || 0, historicMax?.maxLogWeight || 0);
-      if ((best.weightKg || 0) > prevMax) {
-        prs.push({ exerciseName: log.exerciseName, weightKg: best.weightKg as number, reps: best.reps ?? null });
+    const prs: FinishSummary['prs'] = [];
+    for (const [exerciseId, best] of bestByExercise) {
+      if (best.weightKg > (prevMaxByExercise.get(exerciseId) || 0)) {
+        prs.push(best);
       }
     }
     return prs;

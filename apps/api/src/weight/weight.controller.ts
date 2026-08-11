@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { WeightService } from './weight.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { parseLimit } from '../common/utils/query';
 
 @Controller('weight')
 @UseGuards(JwtAuthGuard)
@@ -14,7 +15,7 @@ export class WeightController {
 
   @Get()
   async getHistory(@Query('limit') limit: string, @Request() req: any) {
-    const limitNum = limit ? parseInt(limit, 10) : 90;
+    const limitNum = parseLimit(limit, 90);
     return this.weightService.getHistory(req.user.id, limitNum);
   }
 

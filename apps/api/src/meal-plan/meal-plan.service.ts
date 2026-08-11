@@ -89,11 +89,15 @@ export class MealPlanService {
   private async collectCandidates(userId: string, settings: GenerateMealPlanDto): Promise<Candidate[]> {
     const candidates: Candidate[] = [];
 
-    // Own recipes
+    // Только нужные генератору поля — не тащим ингредиенты/описания в память.
+    const recipeFields =
+      'name kcalPer100g proteinPer100g fatPer100g carbPer100g servingGrams totalCookedWeightG mealTypes tags photoUrl authorSnapshot';
+
+    // Own recipes (с лимитом: раньше выборка была неограниченной)
     const ownRecipes = await this.recipeModel.find({
       userId: new Types.ObjectId(userId),
       isArchived: false,
-    }).lean();
+    }).select(recipeFields).limit(200).lean();
 
     for (const r of ownRecipes) {
       candidates.push({
@@ -119,7 +123,7 @@ export class MealPlanService {
         visibility: 'public',
         isArchived: false,
         userId: { $ne: new Types.ObjectId(userId) },
-      }).limit(200).lean();
+      }).select(recipeFields).limit(200).lean();
 
       for (const r of publicRecipes) {
         candidates.push({
@@ -141,7 +145,11 @@ export class MealPlanService {
     }
 
     // Products as fallback
-    const products = await this.productModel.find({}).limit(300).lean();
+    const products = await this.productModel
+      .find({})
+      .select('name kcalPer100g proteinPer100g fatPer100g carbPer100g')
+      .limit(300)
+      .lean();
     for (const p of products) {
       candidates.push({
         sourceType: 'product',

@@ -72,3 +72,5 @@ export const WorkoutLogSchema = SchemaFactory.createForClass(WorkoutLog);
 
 WorkoutLogSchema.index({ sessionId: 1 });
 WorkoutLogSchema.index({ userId: 1, createdAt: 1 });
+// Детект PR и «последнее выполнение» фильтруют по userId+exerciseId.
+WorkoutLogSchema.index({ userId: 1, exerciseId: 1 });

@@ -28,3 +28,7 @@ export class UserStats {
 }
 
 export const UserStatsSchema = SchemaFactory.createForClass(UserStats);
+
+// Недельный лидерборд: find({weekKey}).sort({xpWeek:-1}) — без этого
+// индекса каждый запрос топа был COLLSCAN + сортировкой в памяти.
+UserStatsSchema.index({ weekKey: 1, xpWeek: -1 });

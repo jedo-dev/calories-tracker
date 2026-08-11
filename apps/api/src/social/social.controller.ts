@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { SocialService } from './social.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { InjectModel } from '@nestjs/mongoose';
@@ -23,7 +23,7 @@ export class SocialController {
   async getMe(@Request() req: any) {
     const user = await this.userModel.findById(req.user.id).exec();
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const stats = await this.socialService.ensureUserStats(req.user.id);
@@ -69,10 +69,12 @@ export class LeaderboardController {
   @Get('week/global')
   async getGlobalLeaderboard(@Request() req: any) {
     const weekKey = this.socialService.getWeekKey();
+    // Берём с запасом (x3): приватные профили отфильтровываются после populate
+    // и раньше «съедали» места в топ-50.
     const statsList = await this.userStatsModel
       .find({ weekKey })
       .sort({ xpWeek: -1, updatedAt: -1 })
-      .limit(50)
+      .limit(150)
       .populate('userId', 'displayName username firstName avatarEmoji isPublicProfile')
       .exec();
 
@@ -81,6 +83,7 @@ export class LeaderboardController {
         const user = s.userId;
         return user && user.isPublicProfile !== false;
       })
+      .slice(0, 50)
       .map((s: any, index: number) => {
         const user = s.userId;
         return {
@@ -249,12 +252,12 @@ export class FeedController {
   async reactToEvent(@Param('eventId') eventId: string, @Body() body: { emoji: string }, @Request() req: any) {
     const { emoji } = body;
     if (!emoji || !['🔥', '💪', '👏'].includes(emoji)) {
-      throw new Error('Invalid emoji');
+      throw new BadRequestException('Invalid emoji');
     }
 
     const event = await this.activityEventModel.findById(eventId).exec();
     if (!event) {
-      throw new Error('Event not found');
+      throw new NotFoundException('Event not found');
     }
 
     if (!event.reactions) {

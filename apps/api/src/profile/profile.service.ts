@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../users/schemas/user.schema';
@@ -29,7 +29,7 @@ export class ProfileService {
   async getProfile(userId: string): Promise<{ user: any; profile: ProfileData | null; targets: Targets | null }> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const profile = user.profile || null;
@@ -53,7 +53,7 @@ export class ProfileService {
   ): Promise<{ user: any; profile: ProfileData; targets: Targets | null }> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const { avatarEmoji, ...profileData } = updateData;
@@ -100,7 +100,7 @@ export class ProfileService {
     const { weightKg, heightCm, age, gender, activityLevel, goal } = profile;
 
     if (!weightKg || !heightCm || !age || !gender || !activityLevel || !goal) {
-      throw new Error('Profile incomplete');
+      throw new BadRequestException('Profile incomplete');
     }
 
     // Mifflin-St Jeor BMR

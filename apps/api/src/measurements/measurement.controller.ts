@@ -2,6 +2,7 @@ import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Request }
 import { MeasurementService } from './measurement.service';
 import { SaveMeasurementDto } from './dto/save-measurement.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { parseLimit } from '../common/utils/query';
 
 @Controller('measurements')
 @UseGuards(JwtAuthGuard)
@@ -15,7 +16,7 @@ export class MeasurementController {
 
   @Get()
   async getHistory(@Query('limit') limit: string, @Request() req: any) {
-    return this.service.getHistory(req.user.id, limit ? parseInt(limit, 10) : 90);
+    return this.service.getHistory(req.user.id, parseLimit(limit, 90));
   }
 
   @Delete(':id')

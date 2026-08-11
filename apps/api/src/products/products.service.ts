@@ -52,8 +52,11 @@ export class ProductsService {
     return all.slice(0, maxResults);
   }
 
-  async findById(id: string): Promise<ProductDocument | null> {
-    return this.productModel.findById(id).exec();
+  async findById(id: string): Promise<ProductDocument> {
+    const product = await this.productModel.findById(id).exec();
+    // Раньше отдавали 200 с пустым телом.
+    if (!product) throw new NotFoundException('Продукт не найден');
+    return product;
   }
 
   // Our catalog first; on a miss, ask Open Food Facts and cache the answer
