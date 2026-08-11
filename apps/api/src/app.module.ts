@@ -22,6 +22,7 @@ import { MeasurementModule } from './measurements/measurement.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MealPlanModule } from './meal-plan/meal-plan.module';
 import { StorageModule } from './storage/storage.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { StorageModule } from './storage/storage.module';
     MealPlanModule,
     StorageModule,
     AdminModule,
+    AiModule,
   ],
   providers: [
     {

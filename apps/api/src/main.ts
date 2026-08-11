@@ -1,9 +1,13 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { json } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Фото для AI-распознавания приходит base64 в JSON — дефолтных 100kb мало
+  app.use(json({ limit: '4mb' }));
 
   // Глобальная валидация: неизвестные поля вырезаются из тела запроса
   // (защита от mass-assignment), декорированные DTO валидируются везде.

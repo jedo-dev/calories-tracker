@@ -464,6 +464,20 @@ export const ru = {
     createProduct: "Создать продукт",
     foundInOff: "Найдено в открытой базе Open Food Facts — проверьте КБЖУ на упаковке",
   },
+  // AI-распознавание еды по фото
+  aiPhoto: {
+    button: "Определить по фото",
+    analyzing: "Распознаём фото...",
+    confirmTitle: "Нейросеть определила:",
+    confirmHint: "Проверь список и граммовки — вес по фото это оценка",
+    nothingFound: "Еду на фото не нашли — попробуйте другой ракурс",
+    failed: "Не удалось распознать фото",
+    nothingSelected: "Ничего не выбрано",
+    addSelected: "Добавить ({count})",
+    added: "Добавлено записей: {count}",
+    saveFailed: "Не все записи сохранились",
+    lowConfidence: "Низкая уверенность в оценке веса",
+  },
   // Templates
   template: {
     title: "Шаблоны",

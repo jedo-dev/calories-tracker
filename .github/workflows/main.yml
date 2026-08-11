@@ -20,6 +20,7 @@ jobs:
           S3_PUBLIC_URL: ${{ secrets.S3_PUBLIC_URL }}
           S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
           VITE_API_URL: /api
           WEB_PORT: 3322
         run: |
@@ -35,6 +36,7 @@ jobs:
           S3_PUBLIC_URL: ${{ secrets.S3_PUBLIC_URL }}
           S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
           VITE_API_URL: /api
           WEB_PORT: 3322
         run: |

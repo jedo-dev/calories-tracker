@@ -6,6 +6,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { t, toISODate } from '../i18n';
 import { showToast } from '../ui/Toast';
 import { BarcodeSection } from '../widgets/entry/BarcodeSection';
+import { PhotoFoodSection } from '../widgets/entry/PhotoFoodSection';
 import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -231,6 +232,8 @@ export function AddEntryPage() {
           setSelectedProduct(product);
         }}
       />
+
+      {!isEdit && <PhotoFoodSection date={date} time={time} mealType={mealType} />}
 
       {/* Time + meal type in one row; the date is always today */}
       <div style={{ ...cardStyle, marginBottom: '10px' }}>
