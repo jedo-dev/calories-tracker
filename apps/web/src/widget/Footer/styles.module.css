@@ -54,27 +54,42 @@
   width: 24px;
   height: 24px;
   opacity: 0.92;
+  transition: opacity 0.16s ease;
 }
 
+.footerItemActive svg {
+  transition-delay: 0.28s;
+}
+
+/* Хореография переключения: старая иконка гаснет сразу (базовый transition
+   без задержки), полоска едет ~0.28s, и только после этого новая иконка
+   плавно загорается зелёным (delay на color/opacity у активного пункта). */
 .footerItemActive {
   color: #53d46b;
+  transition-delay: 0s, 0.28s, 0.28s;
 }
 
 .footerItemActive svg {
   opacity: 1;
 }
 
-/* Short accent bar pinned to the top edge of the panel */
-.footerItemActive::before {
-  content: "";
+/* Единая полоска-индикатор на верхней кромке панели. Позиция считается от
+   геометрии сетки: паддинги 14px по бокам, 4 зазора по 4px, 5 равных колонок;
+   --col — номер колонки активного пункта (0–4, центр «+» = 2). */
+.indicator {
   position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 18px;
+  top: 0;
   height: 3px;
+  width: 18px;
   border-radius: 999px;
   background: #53d46b;
+  left: calc(
+    14px + var(--col) * 4px + (100% - 44px) / 5 * (var(--col) + 0.5) - 9px
+  );
+  transition:
+    left 0.28s cubic-bezier(0.22, 0.9, 0.24, 1),
+    opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .footerLabel {

@@ -22,6 +22,12 @@ export const Footer = () => {
   const leftItems = items.slice(0, 2);
   const rightItems = items.slice(2, 4);
 
+  // Колонка активного пункта в сетке 5 слотов (центральный «+» занимает 3-ю).
+  const activeIndex = items.findIndex((item) =>
+    item.match.some((p) => location.pathname.startsWith(p)),
+  );
+  const activeCol = activeIndex < 0 ? -1 : activeIndex < 2 ? activeIndex : activeIndex + 1;
+
   // Тап по пункту при открытом листе закрывает лист И выполняет переход —
   // раньше он только закрывал, и нажатие «в никуда» ощущалось как баг.
   const handleNavClick = (path: string) => {
@@ -49,6 +55,12 @@ export const Footer = () => {
   return (
     <div className={styles.footerWrapper}>
       <nav className={styles.footer} role="navigation" aria-label="Основная навигация">
+        {/* Единая полоска-индикатор: плавно переезжает между разделами */}
+        <span
+          className={styles.indicator}
+          style={{ '--col': activeCol, opacity: activeCol < 0 ? 0 : 1 } as React.CSSProperties}
+          aria-hidden="true"
+        />
         {leftItems.map(renderItem)}
 
         <button
