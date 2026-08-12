@@ -16,8 +16,8 @@ import { renderDayReport } from '../widgets/share/shareDayImage';
 import {
   IconBarcode,
   IconCamera,
-  IconDrop,
   IconDumbbell,
+  IconRuler,
   IconScale,
   IconTemplate,
   IconShare,
@@ -86,7 +86,6 @@ export function QuickActionsSheet({ onClick, isOpen = false }: { onClick: (open:
   const [shareBlob, setShareBlob] = useState<Blob | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
-  const [waterSaving, setWaterSaving] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [waterMl, setWaterMl] = useState(0);
   const [waterGoal, setWaterGoal] = useState(2000);
@@ -133,23 +132,6 @@ export function QuickActionsSheet({ onClick, isOpen = false }: { onClick: (open:
   const handleAddFood = () => {
     hapticImpact('medium');
     handleNavigate('/entry/new');
-  };
-
-  // Вода — единственное действие, которое выполняется прямо из листа.
-  const handleAddWater = async () => {
-    if (waterSaving) return;
-    hapticImpact('medium');
-    setWaterSaving(true);
-    try {
-      await apiClient.post('/water', { date: todayISO(), amountMl: 250 });
-      showToast(t('quickActions.waterAdded'));
-      handleClose();
-    } catch (err) {
-      console.error('Failed to add water:', err);
-      showToast(t('quickActions.waterFailed'));
-    } finally {
-      setWaterSaving(false);
-    }
   };
 
   // Собираем данные дня и рисуем картинку-отчёт для шаринга
@@ -318,10 +300,10 @@ export function QuickActionsSheet({ onClick, isOpen = false }: { onClick: (open:
             marginBottom: theme.spacing.md,
           }}
         >
-          <ActionTile icon={<IconBarcode size={22} />} label={t('quickActions.barcode')} onClick={() => handleNavigate('/entry/new')} />
-          <ActionTile icon={<IconCamera size={22} />} label={t('quickActions.photo')} onClick={() => handleNavigate('/entry/new')} />
+          <ActionTile icon={<IconBarcode size={22} />} label={t('quickActions.barcode')} onClick={() => handleNavigate('/entry/new?mode=barcode')} />
+          <ActionTile icon={<IconCamera size={22} />} label={t('quickActions.photo')} onClick={() => handleNavigate('/entry/new?mode=photo')} />
           <ActionTile icon={<IconDumbbell size={22} />} label={t('quickActions.workout')} onClick={() => handleNavigate('/workouts')} />
-          <ActionTile icon={<IconDrop size={22} />} label={t('quickActions.water250')} onClick={handleAddWater} disabled={waterSaving} />
+          <ActionTile icon={<IconRuler size={22} />} label={t('measurement.title')} onClick={() => handleNavigate('/measurements')} />
           <ActionTile icon={<IconScale size={22} />} label={t('quickActions.weight')} onClick={() => handleNavigate('/weight')} />
           <ActionTile icon={<IconTemplate size={22} />} label={t('quickActions.template')} onClick={() => handleNavigate('/templates')} />
         </div>

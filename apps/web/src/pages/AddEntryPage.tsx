@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { RecentProducts } from '../features/TodayComponents/RecentProducts';
 import { useDebounce } from '../hooks/useDebounce';
@@ -76,6 +76,9 @@ export function AddEntryPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const { id } = useParams();
+  // Диплинки из листа быстрых действий: ?mode=barcode | ?mode=photo
+  const [searchParams] = useSearchParams();
+  const entryMode = searchParams.get('mode');
   const isEdit = !!id;
 
   const [date, setDate] = useState(toISODate(new Date()));
@@ -229,13 +232,21 @@ export function AddEntryPage() {
       )}
 
       <BarcodeSection
+        autoOpenScanner={entryMode === 'barcode'}
         onProductSelected={(product, fromOff) => {
           setFoundInOff(fromOff);
           setSelectedProduct(product);
         }}
       />
 
-      {!isEdit && <PhotoFoodSection date={date} time={time} mealType={mealType} />}
+      {!isEdit && (
+        <PhotoFoodSection
+          date={date}
+          time={time}
+          mealType={mealType}
+          autoOpenPicker={entryMode === 'photo'}
+        />
+      )}
 
       {/* Time + meal type in one row; the date is always today */}
       <div style={{ ...cardStyle, marginBottom: '10px' }}>

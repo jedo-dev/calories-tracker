@@ -621,9 +621,9 @@ export const ru = {
   // Нижняя навигация
   nav: {
     home: "Главная",
-    stats: "Статистика",
     club: "Клуб",
     profile: "Профиль",
+    menu: "Меню",
     add: "Добавить",
   },
 
@@ -634,19 +634,15 @@ export const ru = {
     barcode: "Штрихкод",
     photo: "Фото блюда",
     workout: "Тренировка",
-    water250: "Вода 250 мл",
     weight: "Вес",
     template: "Шаблон дня",
     share: "Поделиться результатом дня",
     sharePreparing: "Готовим отчёт…",
-    waterAdded: "+250 мл воды записано",
-    waterFailed: "Не удалось записать воду",
   },
 
-  // Экран «Ещё» (/menu)
+  // Экран «Меню» (/menu)
   menu: {
-    title: "Ещё",
-    allSections: "Все разделы",
+    title: "Меню",
     diaries: "Дневники",
     nutrition: "Питание",
     club: "Клуб",

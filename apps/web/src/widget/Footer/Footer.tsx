@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { QuickActionsSheet } from "../QuickActionsSheet";
 import styles from "./styles.module.css";
 
-import { IconClub, IconHome, IconPlus, IconStats, IconUser } from "../../ui/navIcons";
+import { IconClub, IconGrid, IconHome, IconPlus, IconUser } from "../../ui/navIcons";
 import { t } from "../../i18n";
 
 export const Footer = () => {
@@ -14,9 +14,9 @@ export const Footer = () => {
   // «Клуб» — один слот на три соц. раздела: активен на любом из них.
   const items = [
     { icon: <IconHome />, label: t("nav.home"), path: "/today", match: ["/today"] },
-    { icon: <IconStats />, label: t("nav.stats"), path: "/reports", match: ["/reports"] },
-    { icon: <IconClub />, label: t("nav.club"), path: "/league", match: ["/league", "/feed", "/friends"] },
     { icon: <IconUser />, label: t("nav.profile"), path: "/profile", match: ["/profile"] },
+    { icon: <IconClub />, label: t("nav.club"), path: "/league", match: ["/league", "/feed", "/friends"] },
+    { icon: <IconGrid />, label: t("nav.menu"), path: "/menu", match: ["/menu"] },
   ];
 
   const leftItems = items.slice(0, 2);

@@ -27,6 +27,8 @@ interface Props {
   date: string;
   time: string;
   mealType: string;
+  /** Диплинк /entry/new?mode=photo: сразу открыть выбор/съёмку фото. */
+  autoOpenPicker?: boolean;
 }
 
 const MACRO_COLORS = { protein: '#5AC8FA', fat: '#FFCC66', carb: '#C792EA' };
@@ -72,7 +74,7 @@ const chipBtn = (theme: any): React.CSSProperties => ({
 // (в стиле карточки выбранного продукта). После подтверждения создаёт
 // продукты (или переиспользует существующие по точному совпадению имени)
 // и записи в дневнике.
-export function PhotoFoodSection({ date, time, mealType }: Props) {
+export function PhotoFoodSection({ date, time, mealType, autoOpenPicker = false }: Props) {
   const theme = useTheme();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,6 +90,13 @@ export function PhotoFoodSection({ date, time, mealType }: Props) {
       .then((res) => setRemaining(res.data?.remaining ?? null))
       .catch(() => setRemaining(null));
   }, []);
+
+  // Диплинк из листа быстрых действий: открываем системный выбор фото сразу.
+  // Если браузер требует жеста и блокирует программный click — пользователь
+  // просто нажмёт видимую кнопку, ничего не ломается.
+  useEffect(() => {
+    if (autoOpenPicker) fileInputRef.current?.click();
+  }, [autoOpenPicker]);
 
   const quotaExhausted = remaining !== null && remaining <= 0;
 

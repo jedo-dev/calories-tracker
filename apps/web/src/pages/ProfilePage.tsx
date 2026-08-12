@@ -5,7 +5,6 @@ import { apiClient } from "../api/client";
 import { t, todayISO } from '../i18n';
 import { useTheme } from "../theme/useTheme";
 import Loader from "../ui/Loader";
-import { IconChevronRight } from "../ui/navIcons";
 import { AiQuotaCard } from "../widgets/profile/AiQuotaCard";
 import { ProfileAchievements } from "../widgets/profile/ProfileAchievements";
 import { ProfileBodyCard } from "../widgets/profile/ProfileBodyCard";
@@ -174,38 +173,6 @@ export function ProfilePage() {
       )}
 
       {!editingBody && <AiQuotaCard />}
-
-      {/* Вход в каталог всех разделов («Ещё») — бывшие плитки зелёного меню */}
-      {!editingBody && (
-        <button
-          type="button"
-          onClick={() => navigate("/menu")}
-          style={{
-            width: "100%",
-            minHeight: "52px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            padding: "8px 14px",
-            marginBottom: "10px",
-            borderRadius: "20px",
-            background: "linear-gradient(180deg, rgba(17, 49, 69, 0.94), rgba(10, 32, 46, 0.94))",
-            border: "1px solid rgba(160, 200, 220, 0.18)",
-            color: theme.palette.text,
-            fontSize: "15px",
-            fontWeight: 700,
-            textAlign: "left",
-            cursor: "pointer",
-            outline: "none",
-            WebkitTapHighlightColor: "transparent",
-          }}
-        >
-          <span style={{ flex: 1 }}>{t("menu.allSections")}</span>
-          <span style={{ color: theme.palette.textMuted, display: "flex", opacity: 0.7 }}>
-            <IconChevronRight size={18} />
-          </span>
-        </button>
-      )}
 
       {!editingBody && (
         <ProfileGoalCard

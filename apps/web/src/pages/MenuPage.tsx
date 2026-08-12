@@ -19,6 +19,7 @@ import {
   IconSearch,
   IconSettings,
   IconSparkles,
+  IconStats,
   IconTemplate,
   IconTrophy,
 } from '../ui/navIcons';
@@ -79,6 +80,7 @@ export function MenuPage() {
     {
       title: t('menu.diaries'),
       rows: [
+        { icon: <IconStats size={20} />, tint: TINT.diaries, label: t('report.title'), path: '/reports' },
         {
           icon: <IconScale size={20} />,
           tint: TINT.diaries,

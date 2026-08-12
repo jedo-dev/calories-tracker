@@ -75,6 +75,16 @@ export const IconPlus = makeIcon(
 
 export const IconChevronRight = makeIcon(<path d="m9.5 6 6 6-6 6" />);
 
+/** «Все разделы» — сетка 2×2 для пункта «Меню» в нижней панели. */
+export const IconGrid = makeIcon(
+  <>
+    <rect x="4" y="4" width="7" height="7" rx="2" />
+    <rect x="13" y="4" width="7" height="7" rx="2" />
+    <rect x="4" y="13" width="7" height="7" rx="2" />
+    <rect x="13" y="13" width="7" height="7" rx="2" />
+  </>,
+);
+
 export const IconBarcode = makeIcon(
   <>
     <path d="M4 7V4.5h3M20 7V4.5h-3M4 17v2.5h3M20 17v2.5h-3" />
