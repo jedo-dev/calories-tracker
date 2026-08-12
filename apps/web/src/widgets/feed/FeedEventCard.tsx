@@ -1,3 +1,4 @@
+import { IconBook, IconDownload } from '../../ui/navIcons';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
@@ -228,7 +229,7 @@ export function FeedEventCard({
                 fontFamily: 'inherit',
               }}
             >
-              📖 {t('feed.openRecipe')}
+              <IconBook size={14} style={{ verticalAlign: '-2px', marginRight: '5px' }} />{t('feed.openRecipe')}
             </button>
             <button
               type="button"
@@ -246,7 +247,7 @@ export function FeedEventCard({
                 fontFamily: 'inherit',
               }}
             >
-              📥 {t('feed.toDiary')}
+              <IconDownload size={14} style={{ verticalAlign: '-2px', marginRight: '5px' }} />{t('feed.toDiary')}
             </button>
           </div>
         </div>

@@ -6,8 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-import { IconButton } from '../ui/IconButton';
-import { BackIcon } from '../ui/icons';
+import { PageHeader } from '../ui/PageHeader';
 import { workoutPageBackground } from './workoutShared';
 import { AdminCategoriesTab } from '../widgets/workout/admin/AdminCategoriesTab';
 import { AdminExercisesTab } from '../widgets/workout/admin/AdminExercisesTab';
@@ -81,14 +80,7 @@ export function AdminWorkoutsPage() {
         background: workoutPageBackground(theme.palette.bg),
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <IconButton label={t('common.back')} onClick={() => navigate('/workouts')}>
-          <BackIcon />
-        </IconButton>
-        <Text variant="h2" bold style={{ fontSize: '19px', flex: 1 }}>
-          {t('workout.adminTitle')}
-        </Text>
-      </div>
+      <PageHeader title={t('workout.adminTitle')} onBack={() => navigate('/workouts')} />
 
       {!canEdit ? (
         <Text muted style={{ display: 'block', padding: '20px 0', textAlign: 'center' }}>

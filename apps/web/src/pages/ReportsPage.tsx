@@ -1,3 +1,5 @@
+import { PageHeader } from '../ui/PageHeader';
+import { t } from '../i18n';
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
 import emptyReports from '../assets/03_empty_states/empty_reports.png';
@@ -116,9 +118,9 @@ export function ReportsPage() {
         `,
       }}
     >
-      <div style={{ marginBottom: '8px' }}>
-     
+      <PageHeader title={t('report.title')} style={{ marginBottom: '8px' }} />
 
+      <div style={{ marginBottom: '8px' }}>
         <ReportsPeriodSwitcher
           period={period}
           onChange={(nextPeriod) => {

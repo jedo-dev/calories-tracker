@@ -1,3 +1,4 @@
+import { PageHeader } from '../ui/PageHeader';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
@@ -205,12 +206,9 @@ export function RecipesPage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <Text variant="h2" bold style={{ fontSize: '20px' }}>
-          {tab === 'my' ? t('recipes.myRecipes') : t('recipes.boardTitle')}
-        </Text>
-        {tab === 'my' && (
+      <PageHeader
+        title={tab === 'my' ? t('recipes.myRecipes') : t('recipes.boardTitle')}
+        right={tab === 'my' ? (
           <button
             type="button"
             onClick={() => navigate('/recipes/new')}
@@ -234,8 +232,8 @@ export function RecipesPage() {
           >
             +
           </button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>

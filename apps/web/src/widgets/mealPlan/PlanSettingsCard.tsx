@@ -93,10 +93,10 @@ export function PlanSettingsCard(props: PlanSettingsCardProps) {
         <Text bold style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>Режим</Text>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" onClick={() => onChange({ mode: 'day' })} style={chip(mode === 'day')}>
-            📅 Сегодня
+            Сегодня
           </button>
           <button type="button" onClick={() => onChange({ mode: 'week' })} style={chip(mode === 'week')}>
-            🗓️ Неделя
+            Неделя
           </button>
         </div>
       </div>

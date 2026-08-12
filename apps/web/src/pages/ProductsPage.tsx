@@ -12,6 +12,7 @@ import { EmptyState } from '../ui/EmptyState';
 import { ConfirmSheet } from '../ui/ConfirmSheet';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
+import { PageHeader } from '../ui/PageHeader';
 import { showToast } from '../ui/Toast';
 
 interface Product {
@@ -110,7 +111,7 @@ export function ProductsPage() {
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
-      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>🛒 {t('products.title')}</Text>
+      <PageHeader title={t('products.title')} />
 
       <Input
         type="text"

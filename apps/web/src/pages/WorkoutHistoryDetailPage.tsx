@@ -1,3 +1,4 @@
+import { PageHeader } from '../ui/PageHeader';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
@@ -5,8 +6,6 @@ import { formatDate, t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-import { IconButton } from '../ui/IconButton';
-import { BackIcon } from '../ui/icons';
 import { workoutPageBackground } from './workoutShared';
 import { SessionDetailView } from '../widgets/workout/SessionDetailView';
 import type { SessionLog, WorkoutSessionInfo } from '../widgets/workout/types';
@@ -46,21 +45,11 @@ export function WorkoutHistoryDetailPage() {
         background: workoutPageBackground(theme.palette.bg),
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <IconButton label={t('common.back')} onClick={() => navigate(-1)} size={34}>
-          <BackIcon size={18} />
-        </IconButton>
-        <div style={{ minWidth: 0 }}>
-          <Text variant="h2" bold style={{ display: 'block', fontSize: '18px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {session?.name || session?.programName || t('workout.activeWorkout')}
-          </Text>
-          {session?.date && (
-            <Text variant="small" muted style={{ fontSize: '12px' }}>
-              {formatDate(session.date)}
-            </Text>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title={session?.name || session?.programName || t('workout.activeWorkout')}
+        subtitle={session?.date ? formatDate(session.date) : undefined}
+        onBack={() => navigate(-1)}
+      />
 
       {error && (
         <Text variant="small" style={{ display: 'block', color: '#ff8a8a', marginBottom: '10px' }}>

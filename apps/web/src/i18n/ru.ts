@@ -618,6 +618,43 @@ export const ru = {
     openProfile: "Открыть профиль"
   },
 
+  // Нижняя навигация
+  nav: {
+    home: "Главная",
+    stats: "Статистика",
+    club: "Клуб",
+    profile: "Профиль",
+    add: "Добавить",
+  },
+
+  // Лист быстрых действий («+» в нижней панели)
+  quickActions: {
+    title: "Что записать?",
+    food: "Еда — поиск продукта",
+    barcode: "Штрихкод",
+    photo: "Фото блюда",
+    workout: "Тренировка",
+    water250: "Вода 250 мл",
+    weight: "Вес",
+    template: "Шаблон дня",
+    share: "Поделиться результатом дня",
+    sharePreparing: "Готовим отчёт…",
+    waterAdded: "+250 мл воды записано",
+    waterFailed: "Не удалось записать воду",
+  },
+
+  // Экран «Ещё» (/menu)
+  menu: {
+    title: "Ещё",
+    allSections: "Все разделы",
+    diaries: "Дневники",
+    nutrition: "Питание",
+    club: "Клуб",
+    account: "Аккаунт",
+    aiLimits: "Лимиты ИИ",
+    settingsGoal: "Настройки и цель",
+  },
+
   // Command Center
   commandCenter: {
     addEntry: "Добавить запись",

@@ -1,3 +1,4 @@
+import { PageHeader } from '../ui/PageHeader';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
@@ -5,8 +6,6 @@ import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-import { IconButton } from '../ui/IconButton';
-import { BackIcon } from '../ui/icons';
 import { BottomSheet } from '../ui/BottomSheet';
 import { hapticImpact } from '../utils/hapticFeedback';
 import { workoutPageBackground } from './workoutShared';
@@ -307,31 +306,28 @@ export function ActiveWorkoutPage() {
         background: workoutPageBackground(theme.palette.bg),
       }}
     >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <IconButton label={t('common.back')} onClick={() => navigate('/workouts')}>
-          <BackIcon />
-        </IconButton>
-        <Text variant="h2" bold style={{ fontSize: '18px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {session.name || t('workout.activeWorkout')}
-        </Text>
-        <button
-          type="button"
-          onClick={() => setConfirmCancel(true)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#ff8a8a',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            padding: '6px',
-          }}
-        >
-          {t('workout.cancelWorkout')}
-        </button>
-      </div>
+      <PageHeader
+        title={session.name || t('workout.activeWorkout')}
+        onBack={() => navigate('/workouts')}
+        right={
+          <button
+            type="button"
+            onClick={() => setConfirmCancel(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#ff8a8a',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              padding: '6px',
+            }}
+          >
+            {t('workout.cancelWorkout')}
+          </button>
+        }
+      />
 
       {(syncError || finishError) && (
         <div

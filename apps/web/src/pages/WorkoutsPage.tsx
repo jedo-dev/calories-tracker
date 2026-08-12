@@ -1,3 +1,4 @@
+import { PageHeader } from '../ui/PageHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
@@ -95,9 +96,7 @@ export function WorkoutsPage() {
         background: workoutPageBackground(theme.palette.bg),
       }}
     >
-      <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
-        {t('workout.title')}
-      </Text>
+      <PageHeader title={t('workout.title')} />
 
       {/* Unfinished sessions today */}
       {todaySessions.length > 0 && (

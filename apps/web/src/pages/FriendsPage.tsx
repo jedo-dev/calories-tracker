@@ -9,6 +9,7 @@ import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
 import Loader, { InlineLoader } from '../ui/Loader';
 import { Text } from '../ui/Text';
+import { ClubHeader } from '../widgets/club/ClubHeader';
 import { FriendsTabs } from '../widgets/friends/FriendsTabs';
 import { FriendsSearchBar } from '../widgets/friends/FriendsSearchBar';
 import { FriendUserCard } from '../widgets/friends/FriendUserCard';
@@ -138,9 +139,7 @@ export function FriendsPage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
-        {t('friends.title')}
-      </Text>
+      <ClubHeader />
 
       <FriendsTabs
         tab={tab}

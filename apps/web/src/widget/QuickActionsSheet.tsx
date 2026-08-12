@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react';
-import { pageBackground } from '../theme/styles';
 import { useNavigate } from 'react-router-dom';
+import { pageBackground } from '../theme/styles';
 import logo from '../assets/01_brand/logo_main.jpg';
-import { useAuth } from '../context/AuthContext';
 import { t, todayISO } from '../i18n';
+import { DailyTips } from '../features/TodayComponents/DailyTips';
 //@ts-ignore
 import { apiClient } from '../api/client';
 import { useTheme } from '../theme/useTheme';
-import { DailyTips } from '../features/TodayComponents/DailyTips';
 import { BottomSheet } from '../ui/BottomSheet';
 import { hapticImpact } from '../utils/hapticFeedback';
 import { calcWaterGoalMl } from '../widgets/water/waterGoal';
 import { showToast } from '../ui/Toast';
 import { ShareDaySheet } from '../widgets/share/ShareDaySheet';
 import { renderDayReport } from '../widgets/share/shareDayImage';
+import {
+  IconBarcode,
+  IconCamera,
+  IconDrop,
+  IconDumbbell,
+  IconScale,
+  IconTemplate,
+  IconShare,
+} from '../ui/navIcons';
 
 interface DashboardData {
   consumed: { kcal: number; protein: number; fat: number; carb: number };
@@ -21,24 +29,26 @@ interface DashboardData {
   progress: { kcalPct: number; proteinPct: number; fatPct: number; carbPct: number } | null;
 }
 
-// Вынесен из тела Drawer: компонент, объявленный внутри рендера, для React —
-// новый тип на каждый рендер, всё поддерево тайлов размонтировалось заново.
-function MenuTile({
-  path,
-  onNavigate,
-  children,
+// Плитка быстрого действия: иконка + подпись, вход в трекинг за один тап.
+function ActionTile({
+  icon,
+  label,
+  onClick,
+  disabled,
 }: {
-  path: string;
-  onNavigate: (path: string) => void;
-  children: React.ReactNode;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
 }) {
   const theme = useTheme();
   return (
     <button
       type="button"
-      onClick={() => onNavigate(path)}
+      onClick={onClick}
+      disabled={disabled}
       style={{
-        minHeight: '48px',
+        minHeight: '52px',
         padding: '10px 12px',
         borderRadius: '16px',
         border: '1px solid rgba(160, 200, 220, 0.18)',
@@ -46,10 +56,12 @@ function MenuTile({
         color: theme.palette.text,
         fontSize: '14px',
         fontWeight: 700,
-        cursor: 'pointer',
+        cursor: disabled ? 'wait' : 'pointer',
+        opacity: disabled ? 0.7 : 1,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
+        gap: '10px',
         outline: 'none',
         WebkitTapHighlightColor: 'transparent',
         transition: 'transform 0.15s ease, border-color 0.15s ease',
@@ -58,36 +70,43 @@ function MenuTile({
       onPointerUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
       onPointerLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
     >
-      {children}
+      <span style={{ color: theme.palette.primary, display: 'flex' }}>{icon}</span>
+      {label}
     </button>
   );
 }
 
-export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean) => void, isOpen: boolean }) {
+/**
+ * Лист быстрых действий под центральной «+» в нижней панели.
+ * Это центр действий (записать еду/воду/вес/тренировку), а не меню
+ * навигации — каталог разделов живёт на /menu.
+ */
+export function QuickActionsSheet({ onClick, isOpen = false }: { onClick: (open: boolean) => void, isOpen: boolean }) {
   const theme = useTheme();
-  const { logout, user } = useAuth();
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [waterMl, setWaterMl] = useState(0);
-  const [waterGoal, setWaterGoal] = useState(2000);
   const [shareBlob, setShareBlob] = useState<Blob | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
+  const [waterSaving, setWaterSaving] = useState(false);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [waterMl, setWaterMl] = useState(0);
+  const [waterGoal, setWaterGoal] = useState(2000);
   const navigate = useNavigate();
 
   const todayDate = todayISO();
 
   // Prefetch on mount, so the first open animates without a content pop-in
   useEffect(() => {
-    loadMenuStats();
+    loadTipsStats();
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      loadMenuStats();
+      loadTipsStats();
     }
   }, [isOpen, todayDate]);
 
-  const loadMenuStats = async () => {
+  // Данные дня для блока «Совет дня»
+  const loadTipsStats = async () => {
     try {
       const [dashboardRes, waterRes, weightRes] = await Promise.all([
         apiClient.get('/dashboard/day', { params: { date: todayDate } }),
@@ -98,7 +117,7 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
       setWaterMl(waterRes.data?.totalMl || 0);
       setWaterGoal(calcWaterGoalMl(weightRes?.data?.weightKg));
     } catch (err) {
-      console.error('Failed to load menu stats:', err);
+      console.error('Failed to load tips stats:', err);
     }
   };
 
@@ -111,9 +130,26 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
     navigate(path);
   };
 
-  const handleAddEntry = () => {
+  const handleAddFood = () => {
     hapticImpact('medium');
     handleNavigate('/entry/new');
+  };
+
+  // Вода — единственное действие, которое выполняется прямо из листа.
+  const handleAddWater = async () => {
+    if (waterSaving) return;
+    hapticImpact('medium');
+    setWaterSaving(true);
+    try {
+      await apiClient.post('/water', { date: todayISO(), amountMl: 250 });
+      showToast(t('quickActions.waterAdded'));
+      handleClose();
+    } catch (err) {
+      console.error('Failed to add water:', err);
+      showToast(t('quickActions.waterFailed'));
+    } finally {
+      setWaterSaving(false);
+    }
   };
 
   // Собираем данные дня и рисуем картинку-отчёт для шаринга
@@ -121,14 +157,20 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
     if (shareLoading) return;
     hapticImpact('medium');
     setShareLoading(true);
+    const todayDate = todayISO();
     try {
-      const entriesRes = await apiClient.get('/entries', { params: { date: todayDate } });
+      const [entriesRes, dashboardRes, waterRes, weightRes] = await Promise.all([
+        apiClient.get('/entries', { params: { date: todayDate } }),
+        apiClient.get('/dashboard/day', { params: { date: todayDate } }),
+        apiClient.get('/water', { params: { date: todayDate } }),
+        apiClient.get('/weight/latest').catch(() => ({ data: null })),
+      ]);
       const blob = await renderDayReport({
         dateISO: todayDate,
         entries: entriesRes.data || [],
-        dashboard,
-        waterMl,
-        waterGoalMl: waterGoal,
+        dashboard: dashboardRes.data,
+        waterMl: waterRes.data?.totalMl || 0,
+        waterGoalMl: calcWaterGoalMl(weightRes?.data?.weightKg),
       });
       setShareBlob(blob);
       setShareOpen(true);
@@ -190,11 +232,12 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
             </div>
             <button
               onClick={handleClose}
+              aria-label="Закрыть"
               style={{
                 background: 'none',
                 border: 'none',
-                color: theme.palette.text,
-                fontSize: '24px',
+                color: theme.palette.textMuted,
+                fontSize: '22px',
                 cursor: 'pointer',
                 padding: theme.spacing.sm,
                 lineHeight: 1,
@@ -221,7 +264,7 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
       }
     >
       <div style={{ padding: `0 ${theme.spacing.lg}`, paddingBottom: theme.spacing.xl }}>
-        {/* Daily Tips */}
+        {/* Совет дня */}
         {dashboard && (
           <div
             onClick={() => handleNavigate('/today')}
@@ -234,7 +277,39 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
           </div>
         )}
 
-        {/* Quick Actions */}
+        <h2
+          style={{
+            color: theme.palette.text,
+            fontSize: '16px',
+            fontWeight: 700,
+            margin: `0 0 ${theme.spacing.md}`,
+          }}
+        >
+          {t('quickActions.title')}
+        </h2>
+
+        <button
+          type="button"
+          onClick={handleAddFood}
+          style={{
+            width: '100%',
+            minHeight: '54px',
+            borderRadius: '16px',
+            border: 'none',
+            background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+            color: '#07210f',
+            fontSize: '15px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
+            outline: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            marginBottom: theme.spacing.md,
+          }}
+        >
+          + {t('quickActions.food')}
+        </button>
+
         <div
           style={{
             display: 'grid',
@@ -243,110 +318,40 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
             marginBottom: theme.spacing.md,
           }}
         >
-          <button
-            type="button"
-            onClick={handleAddEntry}
-            style={{
-              gridColumn: '1 / -1',
-              minHeight: '50px',
-              borderRadius: '16px',
-              border: 'none',
-              background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
-              color: '#07210f',
-              fontSize: '15px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
-              outline: 'none',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            + {t('commandCenter.addEntry')}
-          </button>
-          <button
-            type="button"
-            onClick={handleShareDay}
-            disabled={shareLoading}
-            style={{
-              gridColumn: '1 / -1',
-              minHeight: '48px',
-              borderRadius: '16px',
-              border: '1px solid rgba(83, 212, 107, 0.45)',
-              background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.94), rgba(10, 32, 46, 0.94))',
-              color: theme.palette.primary,
-              fontSize: '15px',
-              fontWeight: 700,
-              cursor: shareLoading ? 'wait' : 'pointer',
-              opacity: shareLoading ? 0.7 : 1,
-              outline: 'none',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {shareLoading ? 'Готовим отчёт…' : '📤 Поделиться результатом дня'}
-          </button>
-          <MenuTile path="/today" onNavigate={handleNavigate}>{t('commandCenter.selectDate')}</MenuTile>
-          <MenuTile path="/workouts" onNavigate={handleNavigate}>{t('workout.title')}</MenuTile>
-          <MenuTile path="/weight" onNavigate={handleNavigate}>{t('weight.title')}</MenuTile>
-          <MenuTile path="/reports" onNavigate={handleNavigate}>{t('report.title')}</MenuTile>
-          <MenuTile path="/measurements" onNavigate={handleNavigate}>{t('measurement.title')}</MenuTile>
-          <MenuTile path="/templates" onNavigate={handleNavigate}>{t('template.title')}</MenuTile>
-          <MenuTile path="/recipes" onNavigate={handleNavigate}>{t('recipes.title')}</MenuTile>
-          <MenuTile path="/meal-plan" onNavigate={handleNavigate}>{t('mealPlan.title')}</MenuTile>
-          <MenuTile path="/products" onNavigate={handleNavigate}>{t('products.title')}</MenuTile>
-          {(user?.role === 'admin' || user?.role === 'trainer') && (
-            <MenuTile path="/admin/workouts" onNavigate={handleNavigate}>⚙️ {t('workout.adminTitle')}</MenuTile>
-          )}
+          <ActionTile icon={<IconBarcode size={22} />} label={t('quickActions.barcode')} onClick={() => handleNavigate('/entry/new')} />
+          <ActionTile icon={<IconCamera size={22} />} label={t('quickActions.photo')} onClick={() => handleNavigate('/entry/new')} />
+          <ActionTile icon={<IconDumbbell size={22} />} label={t('quickActions.workout')} onClick={() => handleNavigate('/workouts')} />
+          <ActionTile icon={<IconDrop size={22} />} label={t('quickActions.water250')} onClick={handleAddWater} disabled={waterSaving} />
+          <ActionTile icon={<IconScale size={22} />} label={t('quickActions.weight')} onClick={() => handleNavigate('/weight')} />
+          <ActionTile icon={<IconTemplate size={22} />} label={t('quickActions.template')} onClick={() => handleNavigate('/templates')} />
         </div>
 
-        {/* Logout */}
-        <div
+        <button
+          type="button"
+          onClick={handleShareDay}
+          disabled={shareLoading}
           style={{
-            paddingTop: theme.spacing.md,
-            borderTop: `1px solid ${theme.palette.border}`,
-            marginTop: theme.spacing.md,
+            width: '100%',
+            minHeight: '48px',
+            borderRadius: '16px',
+            border: '1px solid rgba(83, 212, 107, 0.45)',
+            background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.94), rgba(10, 32, 46, 0.94))',
+            color: theme.palette.primary,
+            fontSize: '15px',
+            fontWeight: 700,
+            cursor: shareLoading ? 'wait' : 'pointer',
+            opacity: shareLoading ? 0.7 : 1,
+            outline: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
           }}
         >
-          <button
-            onClick={() => {
-              logout();
-              handleClose();
-              navigate('/login');
-            }}
-            style={{
-              background: 'none',
-              border: `1px solid ${theme.palette.danger}`,
-              color: theme.palette.danger,
-              padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
-              borderRadius: theme.radius.md,
-              cursor: 'pointer',
-              fontSize: theme.typography.body.fontSize,
-              width: '100%',
-            }}
-          >
-            {t('auth.logout')}
-          </button>
-          <div
-            style={{
-              color: theme.palette.textMuted,
-              fontSize: theme.typography.small.fontSize,
-              textAlign: 'center',
-              marginTop: theme.spacing.sm,
-            }}
-          >
-            version: {__APP_VERSION__}
-          </div>
-          <div
-            style={{
-              color: theme.palette.textMuted,
-              fontSize: '11px',
-              textAlign: 'center',
-              marginTop: '4px',
-              opacity: 0.7,
-            }}
-          >
-            Иллюстрации упражнений: wger.de (CC BY-SA)
-          </div>
-        </div>
+          <IconShare size={20} />
+          {shareLoading ? t('quickActions.sharePreparing') : t('quickActions.share')}
+        </button>
       </div>
 
       <ShareDaySheet

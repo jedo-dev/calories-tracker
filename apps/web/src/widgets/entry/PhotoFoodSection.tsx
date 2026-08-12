@@ -1,3 +1,4 @@
+import { IconCamera } from '../../ui/navIcons';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../api/client';
@@ -295,7 +296,7 @@ export function PhotoFoodSection({ date, time, mealType }: Props) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      📷 {t('aiPhoto.tag')}
+                      <IconCamera size={12} style={{ verticalAlign: '-2px', marginRight: '4px' }} />{t('aiPhoto.tag')}
                       {item.confidence === 'low' && <span title={t('aiPhoto.lowConfidence')}> · ⚠️</span>}
                     </span>
                   </div>
@@ -347,7 +348,7 @@ export function PhotoFoodSection({ date, time, mealType }: Props) {
                       }}
                     />
                     <button type="button" onClick={() => updateGrams(index, String(aiGrams))} style={chipBtn(theme)} title={t('aiPhoto.aiGramsHint')}>
-                      📷 {aiGrams}г
+                      <IconCamera size={12} style={{ verticalAlign: '-2px', marginRight: '4px' }} />{aiGrams}г
                     </button>
                     <button type="button" onClick={() => updateGrams(index, '100')} style={chipBtn(theme)}>100г</button>
                   </div>

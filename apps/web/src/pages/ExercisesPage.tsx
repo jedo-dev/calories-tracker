@@ -6,9 +6,8 @@ import { showToast } from '../ui/Toast';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-import { IconButton } from '../ui/IconButton';
+import { PageHeader } from '../ui/PageHeader';
 import mascotFoxDumbbell from '../assets/08_mascot/mascot_fox_dumbbell.png';
-import { BackIcon } from '../ui/icons';
 import {
   workoutCardStyle,
   workoutPageBackground,
@@ -175,16 +174,11 @@ export function ExercisesPage() {
         background: workoutPageBackground(theme.palette.bg),
       }}
     >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <IconButton label={t('common.back')} onClick={() => navigate('/workouts')}>
-          <BackIcon />
-        </IconButton>
-        <Text variant="h2" bold style={{ fontSize: '20px', flex: 1 }}>
-          {categoryName || t('workout.exercises')}
-        </Text>
-        <Text variant="small" muted>{exercises.length}</Text>
-      </div>
+      <PageHeader
+        title={categoryName || t('workout.exercises')}
+        onBack={() => navigate('/workouts')}
+        right={<Text variant="small" muted>{exercises.length}</Text>}
+      />
 
       {exercises.map((ex) => {
         const isSelected = selectedIds.has(ex._id);

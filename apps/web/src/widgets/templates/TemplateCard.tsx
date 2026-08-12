@@ -1,3 +1,4 @@
+import { IconDownload } from '../../ui/navIcons';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
@@ -126,7 +127,7 @@ export function TemplateCard({ template, applying, onApply, onDelete }: Template
             fontFamily: 'inherit',
           }}
         >
-          {applying ? '…' : `📥 ${t('template.apply')}`}
+          {applying ? '…' : (<><IconDownload size={15} style={{ verticalAlign: '-3px', marginRight: '5px' }} />{t('template.apply')}</>)}
         </button>
         <button
           type="button"

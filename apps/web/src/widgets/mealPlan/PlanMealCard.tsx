@@ -1,3 +1,4 @@
+import { IconRefresh } from '../../ui/navIcons';
 import { useTheme } from '../../theme/useTheme';
 import { EmojiIcon } from '../../ui/Icon';
 import { Text } from '../../ui/Text';
@@ -77,7 +78,7 @@ export function PlanMealCard({ meal, onReplaceItem }: PlanMealCardProps) {
                 fontFamily: 'inherit',
               }}
             >
-              🔄
+              <IconRefresh size={15} style={{ verticalAlign: '-2px' }} />
             </button>
           </div>
         ))

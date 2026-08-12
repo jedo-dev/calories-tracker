@@ -1,3 +1,4 @@
+import { IconClock } from '../../ui/navIcons';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import type { LastPerformance } from './types';
@@ -28,7 +29,7 @@ export function PrevPerformanceHint({ last }: { last?: LastPerformance }) {
         marginBottom: '10px',
       }}
     >
-      <span style={{ fontSize: '12px' }}>🕘</span>
+      <span style={{ display: 'flex', color: '#7cb8ff' }}><IconClock size={13} /></span>
       <span style={{ fontSize: '12px', fontWeight: 700, color: '#7cb8ff' }}>
         {t('workout.prevTime')}: {parts.join(' ')}
       </span>

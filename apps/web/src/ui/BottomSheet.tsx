@@ -275,7 +275,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle, backgro
           left: 0,
           width: '100%',
           height: '100%',
-          zIndex: 9,
+          zIndex: 110,
           backgroundColor: 'rgba(15, 12, 12, 0.45)',
           opacity: backdropOpacity,
           transition: backdropTransition,
@@ -303,7 +303,9 @@ export function BottomSheet({ isOpen, onClose, children, header, handle, backgro
           transform: sheetTransform,
           transition: sheetTransition,
           willChange: 'transform',
-          zIndex: 10,
+          // Выше нижней панели (z-index: 100): раньше футер лежал поверх
+          // листа и перекрывал его нижние кнопки.
+          zIndex: 120,
           display: 'flex',
           flexDirection: 'column',
           overflowY: 'auto',

@@ -8,6 +8,7 @@ import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
+import { ClubHeader } from '../widgets/club/ClubHeader';
 import { LeagueMeCard } from '../widgets/league/LeagueMeCard';
 import { XpTipsCard } from '../widgets/league/XpTipsCard';
 import { LeaderboardList } from '../widgets/league/LeaderboardList';
@@ -78,9 +79,7 @@ export function LeaguePage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
-        {t('league.title')}
-      </Text>
+      <ClubHeader />
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
         {tabButton('friends', t('league.friends'))}
