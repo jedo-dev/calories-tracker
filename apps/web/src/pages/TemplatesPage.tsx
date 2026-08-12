@@ -1,3 +1,4 @@
+import { PageHeader } from '../ui/PageHeader';
 import { useEffect, useState } from 'react';
 import { pageBackground } from '../theme/styles';
 import { useNavigate } from 'react-router-dom';
@@ -85,9 +86,7 @@ export function TemplatesPage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
-        {t('template.title')}
-      </Text>
+      <PageHeader title={t('template.title')} />
 
       {!showCreate && (
         <button

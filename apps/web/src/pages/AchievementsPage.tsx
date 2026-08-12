@@ -5,7 +5,7 @@ import { apiClient } from "../api/client";
 import { t } from "../i18n";
 import { useTheme } from "../theme/useTheme";
 import Loader from "../ui/Loader";
-import { Text } from "../ui/Text";
+import { PageHeader } from "../ui/PageHeader";
 import { AchievementsGallery } from "../widgets/achievements/AchievementsGallery";
 import type { AchievementState } from "../widgets/profile/types";
 
@@ -68,48 +68,11 @@ export function AchievementsPage() {
         background: pageBackground(theme.palette.bg)
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "12px"
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate("/profile")}
-          style={{
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.05)",
-            color: theme.palette.text,
-            borderRadius: "14px",
-            padding: "10px 12px",
-            cursor: "pointer",
-            fontWeight: 700,
-            fontSize: "14px"
-          }}
-        >
-          {"<"}
-        </button>
-        <div style={{ textAlign: "right" }}>
-          <Text
-            variant="h1"
-            bold
-            style={{ display: "block", fontSize: "24px", lineHeight: "1.1" }}
-          >
-            {t("achievements.title")}
-          </Text>
-          <Text
-            variant="small"
-            muted
-            style={{ display: "block", fontSize: "12px", marginTop: "2px" }}
-          >
-            {unlockedCount}/{Math.max(achievements.length, 6)}{" "}
-            {t("achievements.progress")}
-          </Text>
-        </div>
-      </div>
+      <PageHeader
+        title={t("achievements.title")}
+        subtitle={`${unlockedCount}/${Math.max(achievements.length, 6)} ${t("achievements.progress")}`}
+        onBack={() => navigate("/profile")}
+      />
 
       {error && (
         <div

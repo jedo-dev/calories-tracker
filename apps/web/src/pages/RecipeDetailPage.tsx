@@ -1,3 +1,4 @@
+import { PageHeader } from '../ui/PageHeader';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
@@ -208,17 +209,16 @@ export function RecipeDetailPage() {
           <Text variant="h1" style={{ display: 'block', marginTop: '12px' }}>{recipe.name}</Text>
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: theme.spacing.lg }}>
-          <IconButton label={t('common.back')} onClick={() => navigate('/recipes')}>
-            <BackIcon />
-          </IconButton>
-          <Text variant="h1" style={{ flex: 1 }}>{recipe.name}</Text>
-          {isMine && (
+        <PageHeader
+          title={recipe.name}
+          onBack={() => navigate('/recipes')}
+          right={isMine ? (
             <IconButton label={t('recipes.edit')} onClick={() => navigate(`/recipes/${recipe._id}/edit`)}>
               <EditIcon />
             </IconButton>
-          )}
-        </div>
+          ) : undefined}
+          style={{ marginBottom: theme.spacing.lg }}
+        />
       )}
 
       {/* Author info for public recipes */}

@@ -1,3 +1,4 @@
+import { IconCalendar } from '../../ui/navIcons';
 import { Text } from '../../ui/Text';
 import { planCardStyle, MealPlan } from './types';
 
@@ -52,7 +53,7 @@ export function PlanHistoryList({ history, onOpen }: PlanHistoryListProps) {
                 flexShrink: 0,
               }}
             >
-              {p.mode === 'day' ? '📅' : '🗓️'}
+              <IconCalendar size={17} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text bold style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

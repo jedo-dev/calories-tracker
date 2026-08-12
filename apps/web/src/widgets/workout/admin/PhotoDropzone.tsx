@@ -1,3 +1,4 @@
+import { IconCamera } from '../../../ui/navIcons';
 import { useRef } from 'react';
 import { t } from '../../../i18n';
 import { useTheme } from '../../../theme/useTheme';
@@ -54,7 +55,7 @@ export function PhotoDropzone({ photoUrl, alt, onSelect, busy }: PhotoDropzonePr
                 fontFamily: 'inherit',
               }}
             >
-              {busy ? t('workout.uploading') : '📷 Заменить фото'}
+              {busy ? t('workout.uploading') : (<><IconCamera size={14} style={{ verticalAlign: '-2px', marginRight: '5px' }} />Заменить фото</>)}
             </button>
           </div>
         </div>

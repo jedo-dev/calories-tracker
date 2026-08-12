@@ -7,8 +7,7 @@ import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-import { IconButton } from '../ui/IconButton';
-import { BackIcon } from '../ui/icons';
+import { PageHeader } from '../ui/PageHeader';
 import { PublicProfileHeader } from '../widgets/publicProfile/PublicProfileHeader';
 import { PublicProfileStats } from '../widgets/publicProfile/PublicProfileStats';
 import { VersusCard } from '../widgets/publicProfile/VersusCard';
@@ -101,14 +100,7 @@ export function PublicProfilePage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <IconButton label={t('common.back')} onClick={() => navigate(-1)}>
-          <BackIcon />
-        </IconButton>
-        <Text variant="h2" bold style={{ fontSize: '18px', flex: 1 }}>
-          {t('publicProfile.title')}
-        </Text>
-      </div>
+      <PageHeader title={t('publicProfile.title')} onBack={() => navigate(-1)} />
 
       <PublicProfileHeader
         profile={profile}

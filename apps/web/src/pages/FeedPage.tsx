@@ -8,8 +8,8 @@ import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
 import Loader, { InlineLoader } from '../ui/Loader';
-import { Text } from '../ui/Text';
 import { showToast } from '../ui/Toast';
+import { ClubHeader } from '../widgets/club/ClubHeader';
 import { FeedEventCard, FeedItem } from '../widgets/feed/FeedEventCard';
 
 export function FeedPage() {
@@ -59,9 +59,7 @@ export function FeedPage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
-        {t('feed.title')}
-      </Text>
+      <ClubHeader />
 
       {feed.length === 0 ? (
         <EmptyState

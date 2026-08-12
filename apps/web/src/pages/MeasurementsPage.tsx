@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
+import { PageHeader } from '../ui/PageHeader';
 import { ConfirmSheet } from '../ui/ConfirmSheet';
 import { MeasurementForm } from '../widgets/measurements/MeasurementForm';
 import { CurrentMeasurementsCard } from '../widgets/measurements/CurrentMeasurementsCard';
@@ -119,9 +120,9 @@ export function MeasurementsPage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <Text variant="h2" bold style={{ fontSize: '20px' }}>Замеры тела</Text>
-        {!showForm && (
+      <PageHeader
+        title={t('measurement.title')}
+        right={!showForm ? (
           <button
             type="button"
             onClick={() => {
@@ -143,8 +144,8 @@ export function MeasurementsPage() {
           >
             + Добавить
           </button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
         {tabButton('overview', 'Обзор')}

@@ -8,12 +8,11 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
+import { PageHeader } from '../ui/PageHeader';
 import Loader from '../ui/Loader';
 import { RichTextEditor, isRichTextEmpty } from '../ui/RichTextEditor';
-import { IconButton } from '../ui/IconButton';
 import { CoverPhotoCard } from '../widgets/recipeEditor/CoverPhotoCard';
 import { Ingredient, IngredientProduct, IngredientsCard } from '../widgets/recipeEditor/IngredientsCard';
-import { BackIcon } from '../ui/icons';
 
 const cardStyle = glassCardStyle;
 
@@ -391,23 +390,15 @@ export function RecipeEditorPage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: theme.spacing.lg }}>
-        <IconButton
-          label={t('common.back')}
-          onClick={() => {
-            // beforeunload ловит только закрытие вкладки — SPA-переход
-            // назад тоже не должен молча терять несохранённое.
-            if (isDirty && !confirm(t('recipeEditor.unsavedConfirm'))) return;
-            navigate(-1);
-          }}
-        >
-          <BackIcon />
-        </IconButton>
-        <Text variant="h2" bold style={{ fontSize: '20px' }}>
-          {isEdit ? t('recipeEditor.editTitle') : t('recipeEditor.newTitle')}
-        </Text>
-      </div>
+      <PageHeader
+        title={isEdit ? t('recipeEditor.editTitle') : t('recipeEditor.newTitle')}
+        onBack={() => {
+          // beforeunload ловит только закрытие вкладки — SPA-переход
+          // назад тоже не должен молча терять несохранённое.
+          if (isDirty && !confirm(t('recipeEditor.unsavedConfirm'))) return;
+          navigate(-1);
+        }}
+      />
 
       {error && (
         <Card style={{ ...cardStyle, marginBottom: '12px', border: '1px solid rgba(255,120,120,0.35)' }}>

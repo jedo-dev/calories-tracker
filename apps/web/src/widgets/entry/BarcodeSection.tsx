@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiClient } from '../../api/client';
 import { t } from '../../i18n';
 import { glassCardStyle } from '../../theme/styles';
@@ -25,18 +25,24 @@ export interface BarcodeProduct {
 interface BarcodeSectionProps {
   /** Продукт найден по штрихкоду или создан вручную. fromOff — пришёл из Open Food Facts. */
   onProductSelected: (product: BarcodeProduct, fromOff: boolean) => void;
+  /** Диплинк /entry/new?mode=barcode: сразу открыть сканер камеры. */
+  autoOpenScanner?: boolean;
 }
 
 const EMPTY_FORM = { name: '', brand: '', kcalPer100g: '', proteinPer100g: '', fatPer100g: '', carbPer100g: '' };
 
 // Сканер штрихкода + «продукт не найден» + форма создания продукта.
 // Владеет всем штрихкод-стейтом; страница получает только выбранный продукт.
-export function BarcodeSection({ onProductSelected }: BarcodeSectionProps) {
+export function BarcodeSection({ onProductSelected, autoOpenScanner = false }: BarcodeSectionProps) {
   const theme = useTheme();
   const [searching, setSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [notFoundBarcode, setNotFoundBarcode] = useState('');
-  const [showScanner, setShowScanner] = useState(false);
+  const [showScanner, setShowScanner] = useState(autoOpenScanner);
+
+  useEffect(() => {
+    if (autoOpenScanner) setShowScanner(true);
+  }, [autoOpenScanner]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);

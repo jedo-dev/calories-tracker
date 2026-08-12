@@ -1,3 +1,4 @@
+import { IconCamera } from '../../../ui/navIcons';
 import { useRef, useState } from 'react';
 import { apiClient } from '../../../api/client';
 import { t } from '../../../i18n';
@@ -66,7 +67,7 @@ export function PhotoUploadButton({ uploadUrl, onUploaded, compact }: PhotoUploa
           flexShrink: 0,
         }}
       >
-        {busy ? t('workout.uploading') : `📷 ${t('workout.uploadPhoto')}`}
+        {busy ? t('workout.uploading') : (<><IconCamera size={14} style={{ verticalAlign: '-2px', marginRight: '5px' }} />{t('workout.uploadPhoto')}</>)}
       </button>
     </>
   );

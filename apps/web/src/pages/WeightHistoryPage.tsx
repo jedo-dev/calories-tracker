@@ -1,3 +1,4 @@
+import { PageHeader } from '../ui/PageHeader';
 import { useEffect, useState } from "react";
 import { apiClient } from "../api/client";
 import emptyWeight from "../assets/03_empty_states/empty_weight.png";
@@ -157,6 +158,8 @@ export function WeightHistoryPage() {
         background: pageBackground(theme.palette.bg)
       }}
     >
+      <PageHeader title={t("weight.title")} />
+
       {/* Stats */}
       {latest && (
         <div

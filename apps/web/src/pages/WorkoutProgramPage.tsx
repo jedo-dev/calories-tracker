@@ -1,3 +1,4 @@
+import { PageHeader } from '../ui/PageHeader';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
@@ -5,8 +6,6 @@ import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
-import { IconButton } from '../ui/IconButton';
-import { BackIcon } from '../ui/icons';
 import { workoutPageBackground, formatDate } from './workoutShared';
 import { ProgramHero } from '../widgets/workout/ProgramHero';
 import { ProgramExerciseRow } from '../widgets/workout/ProgramExerciseRow';
@@ -57,14 +56,7 @@ export function WorkoutProgramPage() {
         background: workoutPageBackground(theme.palette.bg),
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <IconButton label={t('common.back')} onClick={() => navigate('/workouts')}>
-          <BackIcon />
-        </IconButton>
-        <Text variant="h2" bold style={{ fontSize: '18px', flex: 1 }}>
-          {t('workout.title')}
-        </Text>
-      </div>
+      <PageHeader title={t('workout.title')} onBack={() => navigate('/workouts')} />
 
       <ProgramHero program={program} />
 

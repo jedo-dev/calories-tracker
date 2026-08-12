@@ -1,3 +1,4 @@
+import { IconSearch } from '../../ui/navIcons';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 
@@ -21,7 +22,7 @@ export function FriendsSearchBar({ value, onChange }: FriendsSearchBarProps) {
           opacity: 0.7,
         }}
       >
-        🔍
+        <IconSearch size={15} />
       </span>
       <input
         type="text"

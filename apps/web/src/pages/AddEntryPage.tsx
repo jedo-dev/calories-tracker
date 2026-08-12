@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { RecentProducts } from '../features/TodayComponents/RecentProducts';
 import { useDebounce } from '../hooks/useDebounce';
@@ -11,6 +11,7 @@ import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Text } from '../ui/Text';
+import { PageHeader } from '../ui/PageHeader';
 
 interface Product {
   _id: string;
@@ -75,6 +76,9 @@ export function AddEntryPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const { id } = useParams();
+  // Диплинки из листа быстрых действий: ?mode=barcode | ?mode=photo
+  const [searchParams] = useSearchParams();
+  const entryMode = searchParams.get('mode');
   const isEdit = !!id;
 
   const [date, setDate] = useState(toISODate(new Date()));
@@ -214,9 +218,10 @@ export function AddEntryPage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      <Text variant="h2" bold style={{ fontSize: '20px', display: 'block', marginBottom: '12px' }}>
-        {isEdit ? t('entry.edit') : t('entry.add')}
-      </Text>
+      <PageHeader
+        title={isEdit ? t('entry.edit') : t('entry.add')}
+        onBack={() => navigate(-1)}
+      />
 
       {error && (
         <div style={{ ...cardStyle, marginBottom: '10px', border: '1px solid rgba(255,120,120,0.35)' }}>
@@ -227,13 +232,21 @@ export function AddEntryPage() {
       )}
 
       <BarcodeSection
+        autoOpenScanner={entryMode === 'barcode'}
         onProductSelected={(product, fromOff) => {
           setFoundInOff(fromOff);
           setSelectedProduct(product);
         }}
       />
 
-      {!isEdit && <PhotoFoodSection date={date} time={time} mealType={mealType} />}
+      {!isEdit && (
+        <PhotoFoodSection
+          date={date}
+          time={time}
+          mealType={mealType}
+          autoOpenPicker={entryMode === 'photo'}
+        />
+      )}
 
       {/* Time + meal type in one row; the date is always today */}
       <div style={{ ...cardStyle, marginBottom: '10px' }}>

@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { Text } from '../ui/Text';
+import { PageHeader } from '../ui/PageHeader';
 import { showToast } from '../ui/Toast';
 import {
   CameraIcon,
@@ -84,30 +85,11 @@ export function AiLimitsPage() {
         background: pageBackground(theme.palette.bg),
       }}
     >
-      {/* Заголовок */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 4px 16px' }}>
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label={t('common.back')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: theme.palette.text,
-            opacity: 0.5,
-            fontSize: '22px',
-            cursor: 'pointer',
-            padding: '0 4px',
-            lineHeight: 1,
-          }}
-        >
-          ‹
-        </button>
-        <SparkIcon />
-        <Text bold style={{ fontSize: '19px' }}>
-          {t('aiQuota.pageTitle')}
-        </Text>
-      </div>
+      <PageHeader
+        title={t('aiQuota.pageTitle')}
+        onBack={() => navigate(-1)}
+        right={<SparkIcon />}
+      />
 
       {/* Герой: сцена с лисом + счётчик + сегменты */}
       <div style={{ ...heroCardStyle, padding: '0 0 18px' }}>

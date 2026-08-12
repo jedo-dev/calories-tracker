@@ -6,6 +6,8 @@ import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
+import { PageHeader } from '../ui/PageHeader';
+import { IconBulb, IconCalendar, IconDownload, IconHistory, IconRefresh, IconSave, IconSparkles } from '../ui/navIcons';
 import { showToast } from '../ui/Toast';
 import { PlanSettingsCard } from '../widgets/mealPlan/PlanSettingsCard';
 import { PlanDayCard } from '../widgets/mealPlan/PlanDayCard';
@@ -190,11 +192,11 @@ export function MealPlanPage() {
   if (!hasProfile) {
     return (
       <div style={pageStyle}>
-        <Text variant="h2" bold style={{ display: 'block', fontSize: '20px', marginBottom: '12px' }}>
-          План питания
-        </Text>
+        <PageHeader title={t('mealPlan.title')} />
         <div style={{ ...planCardStyle, textAlign: 'center', padding: '26px 16px' }}>
-          <div style={{ fontSize: '44px', marginBottom: '8px' }}>📋</div>
+          <div style={{ marginBottom: '8px', color: theme.palette.textMuted }}>
+            <IconCalendar size={44} />
+          </div>
           <Text variant="h2" bold style={{ display: 'block', marginBottom: '6px' }}>{t('mealPlan.profileRequired')}</Text>
           <Text variant="small" muted style={{ display: 'block', marginBottom: '16px', lineHeight: 1.5 }}>
             {t('mealPlan.profileRequiredDesc')}
@@ -211,12 +213,18 @@ export function MealPlanPage() {
 
   return (
     <div style={pageStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <Text variant="h2" bold style={{ fontSize: '20px' }}>{t('mealPlan.title')}</Text>
-        <button type="button" onClick={() => setShowHistory((v) => !v)} style={ghostBtn}>
-          {showHistory ? `← ${t('common.back')}` : `🗂 ${t('mealPlan.history')}`}
-        </button>
-      </div>
+      <PageHeader
+        title={t('mealPlan.title')}
+        right={
+          <button
+            type="button"
+            onClick={() => setShowHistory((v) => !v)}
+            style={{ ...ghostBtn, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            {showHistory ? `← ${t('common.back')}` : (<><IconHistory size={16} />{t('mealPlan.history')}</>)}
+          </button>
+        }
+      />
 
       {error && (
         <Text variant="small" style={{ display: 'block', color: '#ff8a8a', marginBottom: '10px' }}>
@@ -242,7 +250,7 @@ export function MealPlanPage() {
                   muted
                   style={{ display: 'block', lineHeight: 1.4, marginBottom: i < plan.explanation.length - 1 ? '6px' : 0 }}
                 >
-                  💡 {exp}
+                  <IconBulb size={14} style={{ verticalAlign: '-2px', marginRight: '5px' }} /> {exp}
                 </Text>
               ))}
             </div>
@@ -294,11 +302,15 @@ export function MealPlanPage() {
               disabled={plan.status === 'applied' || applying}
               style={primaryBtn(plan.status === 'applied' || applying)}
             >
-              {plan.status === 'applied' ? `✓ ${t('mealPlan.applied')}` : applying ? t('mealPlan.applying') : `📥 ${t('mealPlan.apply')}`}
+              {plan.status === 'applied'
+                ? `✓ ${t('mealPlan.applied')}`
+                : applying
+                  ? t('mealPlan.applying')
+                  : (<><IconDownload size={17} style={{ verticalAlign: '-3px', marginRight: '6px' }} />{t('mealPlan.apply')}</>)}
             </button>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button type="button" onClick={handleSaveTemplate} style={{ ...ghostBtn, flex: 1, height: '44px' }}>
-                💾 {t('mealPlan.saveTemplate')}
+                <IconSave size={16} style={{ verticalAlign: '-3px', marginRight: '6px' }} />{t('mealPlan.saveTemplate')}
               </button>
               <button
                 type="button"
@@ -306,7 +318,7 @@ export function MealPlanPage() {
                 disabled={generating}
                 style={{ ...ghostBtn, flex: 1, height: '44px', opacity: generating ? 0.6 : 1 }}
               >
-                🔄 {t('mealPlan.regenerate')}
+                <IconRefresh size={16} style={{ verticalAlign: '-3px', marginRight: '6px' }} />{t('mealPlan.regenerate')}
               </button>
             </div>
             <button
@@ -337,7 +349,9 @@ export function MealPlanPage() {
             }}
           />
           <button type="button" onClick={handleGenerate} disabled={generating} style={primaryBtn(generating)}>
-            {generating ? `⏳ ${t('mealPlan.generating')}` : `✨ ${t('mealPlan.generate')}`}
+            {generating
+              ? t('mealPlan.generating')
+              : (<><IconSparkles size={17} style={{ verticalAlign: '-3px', marginRight: '6px' }} />{t('mealPlan.generate')}</>)}
           </button>
         </>
       )}

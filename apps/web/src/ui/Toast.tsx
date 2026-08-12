@@ -54,7 +54,9 @@ export function ToastHost() {
         transform: `translateX(-50%) translateY(${visible ? 0 : 12}px)`,
         opacity: visible ? 1 : 0,
         transition: 'opacity 250ms ease, transform 250ms ease',
-        zIndex: 40,
+        // Выше нижней панели (100) и bottom-sheet'ов (120): тост о записанной
+        // воде показывается, пока лист быстрых действий ещё закрывается.
+        zIndex: 130,
         maxWidth: 'min(440px, calc(100vw - 32px))',
         padding: '11px 16px',
         borderRadius: '14px',
