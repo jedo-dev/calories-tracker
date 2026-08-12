@@ -352,6 +352,10 @@ export function Drawer({ onClick, isOpen = false }: { onClick: (boolean: boolean
       <ShareDaySheet
         isOpen={shareOpen}
         onClose={() => setShareOpen(false)}
+        onShared={() => {
+          setShareOpen(false);
+          handleClose();
+        }}
         imageBlob={shareBlob}
       />
     </BottomSheet>

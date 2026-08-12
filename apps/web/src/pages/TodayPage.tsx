@@ -270,7 +270,12 @@ export function TodayPage() {
           group={selectedGroup}
           onClose={() => setSelectedGroup(null)}
           onEditEntry={(id) => navigate(`/entry/${id}`)}
-          onDeleteEntry={(id) => setDeleteEntryId(id)}
+          onDeleteEntry={(id) => {
+            // Закрываем шит приёма пищи, чтобы подтверждение удаления
+            // не наслаивалось на него вторым модальным окном
+            setSelectedGroup(null);
+            setDeleteEntryId(id);
+          }}
         />
       )}
 

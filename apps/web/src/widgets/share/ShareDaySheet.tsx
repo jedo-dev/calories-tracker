@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '../../theme/useTheme';
-import { BottomSheet } from '../../ui/BottomSheet';
 import { Text } from '../../ui/Text';
 import { showToast } from '../../ui/Toast';
 import { hapticImpact } from '../../utils/hapticFeedback';
@@ -9,14 +8,27 @@ import { SHARE_TEXT, SHARE_URL } from './shareDayImage';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  /** Нажали «Поделиться» — закрываем и нижнюю шторку меню */
+  onShared: () => void;
   imageBlob: Blob | null;
 }
 
-// Шторка «Поделиться результатом дня»: превью картинки-отчёта, нативный
-// шаринг файлом (мобильные), ссылки на соцсети и скачивание для десктопа.
-export function ShareDaySheet({ isOpen, onClose, imageBlob }: Props) {
+// Полноэкранная модалка «Результат дня»: карточка-герой + одна pill-кнопка
+// «Поделиться» (нативный share sheet). Без рядов соцсетей — системный шер
+// сам предложит Telegram/VK/WhatsApp и «Сохранить изображение».
+export function ShareDaySheet({ isOpen, onClose, onShared, imageBlob }: Props) {
   const theme = useTheme();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      // двойной rAF, чтобы стартовое состояние успело отрисоваться до анимации
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+    } else {
+      setVisible(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!imageBlob) {
@@ -28,169 +40,154 @@ export function ShareDaySheet({ isOpen, onClose, imageBlob }: Props) {
     return () => URL.revokeObjectURL(url);
   }, [imageBlob]);
 
-  const canNativeShareFile = () => {
-    if (!imageBlob || typeof navigator.share !== 'function') return false;
-    const file = new File([imageBlob], 'flareonfit-day.png', { type: 'image/png' });
-    return typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] });
-  };
+  if (!isOpen) return null;
 
-  const handleNativeShare = async () => {
+  const handleShare = async () => {
     if (!imageBlob) return;
     hapticImpact('medium');
+    const file = new File([imageBlob], 'flareonfit-day.png', { type: 'image/png' });
+
     try {
-      const file = new File([imageBlob], 'flareonfit-day.png', { type: 'image/png' });
-      if (canNativeShareFile()) {
+      if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text: SHARE_TEXT });
       } else if (typeof navigator.share === 'function') {
         await navigator.share({ text: SHARE_TEXT, url: SHARE_URL });
+      } else if (previewUrl) {
+        // Десктоп без Web Share API — просто отдаём картинку файлом
+        const a = document.createElement('a');
+        a.href = previewUrl;
+        a.download = 'flareonfit-day.png';
+        a.click();
+        showToast('Картинка сохранена');
       }
     } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        showToast('Не удалось поделиться');
-      }
+      if (err?.name === 'AbortError') return; // юзер передумал в системном шере
+      showToast('Не удалось поделиться');
+      return;
     }
-  };
-
-  const handleDownload = () => {
-    if (!previewUrl) return;
-    hapticImpact('light');
-    const a = document.createElement('a');
-    a.href = previewUrl;
-    a.download = 'flareonfit-day.png';
-    a.click();
-  };
-
-  const handleCopyText = async () => {
-    try {
-      await navigator.clipboard.writeText(SHARE_TEXT);
-      showToast('Текст скопирован');
-    } catch {
-      showToast('Не удалось скопировать');
-    }
-  };
-
-  const encodedUrl = encodeURIComponent(SHARE_URL);
-  const encodedText = encodeURIComponent(SHARE_TEXT);
-  const socials: { label: string; icon: string; href: string; color: string }[] = [
-    { label: 'Telegram', icon: '✈️', href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`, color: '#2AABEE' },
-    { label: 'VK', icon: '🔵', href: `https://vk.com/share.php?url=${encodedUrl}&comment=${encodedText}`, color: '#4C75A3' },
-    { label: 'WhatsApp', icon: '💬', href: `https://wa.me/?text=${encodedText}`, color: '#25D366' },
-  ];
-
-  const actionButtonStyle: React.CSSProperties = {
-    minHeight: '48px',
-    borderRadius: '14px',
-    border: '1px solid rgba(160, 200, 220, 0.18)',
-    background: 'linear-gradient(180deg, rgba(17, 49, 69, 0.94), rgba(10, 32, 46, 0.94))',
-    color: theme.palette.text,
-    fontSize: '14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    outline: 'none',
-    WebkitTapHighlightColor: 'transparent',
+    onShared();
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <div style={{ padding: `0 ${theme.spacing.lg}`, paddingBottom: theme.spacing.xl }}>
-        <Text variant="h2" bold style={{ display: 'block', textAlign: 'center', marginBottom: theme.spacing.md }}>
-          Поделиться результатом дня
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 30,
+        display: 'flex',
+        flexDirection: 'column',
+        background: theme.palette.bg,
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(24px)',
+        transition: 'opacity 220ms ease, transform 260ms cubic-bezier(0.22, 0.9, 0.24, 1)',
+      }}
+    >
+      {/* Шапка: короткий тайтл слева, круглый ✕ справа */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '18px 16px 10px',
+          flexShrink: 0,
+        }}
+      >
+        <Text bold style={{ fontSize: '19px' }}>
+          Результат дня
         </Text>
-
-        {previewUrl && (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: theme.spacing.md,
-            }}
-          >
-            <img
-              src={previewUrl}
-              alt="Отчёт за день"
-              style={{
-                maxWidth: '260px',
-                width: '100%',
-                borderRadius: '18px',
-                border: '1px solid rgba(146, 188, 221, 0.22)',
-                boxShadow: '0 18px 36px rgba(0, 0, 0, 0.35)',
-              }}
-            />
-          </div>
-        )}
-
         <button
           type="button"
-          onClick={handleNativeShare}
+          onClick={onClose}
+          aria-label="Закрыть"
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            border: 'none',
+            background: 'rgba(255,255,255,0.08)',
+            color: theme.palette.text,
+            fontSize: '18px',
+            lineHeight: 1,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            flexShrink: 0,
+          }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Карточка — герой экрана: превью во всю высоту, не обрезается кнопками */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '0 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt="Отчёт за день"
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              borderRadius: '22px',
+              border: '1px solid rgba(146, 188, 221, 0.16)',
+              boxShadow: '0 18px 40px rgba(0, 0, 0, 0.35)',
+            }}
+          />
+        )}
+      </div>
+
+      {/* Единственный акцент: pill-кнопка в зоне большого пальца + подпись */}
+      <div style={{ padding: '14px 16px calc(16px + env(safe-area-inset-bottom))', flexShrink: 0 }}>
+        <button
+          type="button"
+          onClick={handleShare}
           style={{
             width: '100%',
-            minHeight: '52px',
-            borderRadius: '16px',
+            height: '60px',
+            borderRadius: '999px',
             border: 'none',
             background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
             color: '#07210f',
-            fontSize: '16px',
+            fontSize: '17px',
             fontWeight: 700,
             cursor: 'pointer',
-            boxShadow: '0 14px 26px rgba(83, 212, 107, 0.22)',
+            boxShadow: '0 14px 28px rgba(83, 212, 107, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
             outline: 'none',
             WebkitTapHighlightColor: 'transparent',
-            marginBottom: theme.spacing.sm,
           }}
         >
-          📤 Поделиться
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 16V3" />
+            <path d="M7 8l5-5 5 5" />
+            <path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
+          </svg>
+          Поделиться
         </button>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gap: theme.spacing.sm,
-            marginBottom: theme.spacing.sm,
-          }}
-        >
-          {socials.map((s) => (
-            <a
-              key={s.label}
-              href={s.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => hapticImpact('light')}
-              style={{ ...actionButtonStyle, textDecoration: 'none', borderColor: `${s.color}55` }}
-            >
-              <span>{s.icon}</span>
-              {s.label}
-            </a>
-          ))}
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: theme.spacing.sm,
-          }}
-        >
-          <button type="button" onClick={handleDownload} style={actionButtonStyle}>
-            ⬇️ Скачать картинку
-          </button>
-          <button type="button" onClick={handleCopyText} style={actionButtonStyle}>
-            📋 Скопировать текст
-          </button>
-        </div>
-
         <Text
           variant="small"
           muted
-          style={{ display: 'block', textAlign: 'center', marginTop: theme.spacing.md }}
+          style={{ display: 'block', textAlign: 'center', marginTop: '10px', fontSize: '12px', lineHeight: 1.4 }}
         >
-          В соцсети уходит ссылка с текстом, картинку приложи из скачанных
+          Откроется меню телефона: Telegram, VK, WhatsApp,
+          <br />
+          заметки, галерея — всё, что установлено
         </Text>
       </div>
-    </BottomSheet>
+    </div>
   );
 }

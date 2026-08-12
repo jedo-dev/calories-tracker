@@ -4,7 +4,7 @@ import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { Input } from '../../ui/Input';
 import { Text } from '../../ui/Text';
-import { t } from '../../i18n';
+import { formatDate, t } from '../../i18n';
 import type { ProfileData } from './types';
 
 interface ProfileBodyCardProps {
@@ -81,6 +81,28 @@ function fieldLabel(editing: boolean) {
 export function ProfileBodyCard({ formData, editing, saving, showWeightField, onSubmit, onChange }: ProfileBodyCardProps) {
   const theme = useTheme();
   const bodyFields = showWeightField ? [weightField, ...baseFields] : baseFields;
+
+  // Ячейка «Дедлайн»: в обычном режиме стоит рядом с «Пол» (на месте скрытого
+  // веса), при первичной инициализации — внизу на всю ширину.
+  const targetDateCell = (wide: boolean) => (
+    <div style={{ ...fieldShell(editing, theme), gridColumn: wide ? '1 / -1' : undefined }}>
+      <Text variant="small" muted style={fieldLabel(editing)}>
+        {t('profile.targetDate')}
+      </Text>
+      {editing ? (
+        <Input
+          type="date"
+          value={formData.targetDate || ''}
+          onChange={(e) => onChange('targetDate', e.target.value || undefined)}
+          style={{ border: 'none', background: 'transparent', padding: '4px 0 0', fontSize: '18px', fontWeight: 600 }}
+        />
+      ) : (
+        <Text bold style={{ display: 'block', fontSize: '16px', paddingTop: '0' }}>
+          {formData.targetDate ? formatDate(formData.targetDate) : '—'}
+        </Text>
+      )}
+    </div>
+  );
 
   return (
     <Card
@@ -164,6 +186,9 @@ export function ProfileBodyCard({ formData, editing, saving, showWeightField, on
               </Text>
             )}
           </div>
+
+          {/* Дедлайн занимает место скрытого поля веса рядом с полом */}
+          {!showWeightField && targetDateCell(false)}
         </div>
 
         <div style={{ marginTop: '10px' }}>
@@ -177,7 +202,14 @@ export function ProfileBodyCard({ formData, editing, saving, showWeightField, on
                 ? []
                 : [{ labelKey: 'profile.startWeightKg', value: formData.startWeightKg, field: 'startWeightKg' as const }]),
               { labelKey: 'profile.targetWeightKg', value: formData.targetWeightKg, field: 'targetWeightKg' as const },
-              { labelKey: 'profile.targetDate', value: formData.targetDate, field: 'targetDate' as const },
+              // Дедлайн внизу только на инициализации; в обычном режиме он выше, рядом с полом
+              ...(showWeightField
+                ? [{
+                    labelKey: 'profile.targetDate',
+                    value: formData.targetDate ? formatDate(formData.targetDate) : undefined,
+                    field: 'targetDate' as const,
+                  }]
+                : []),
             ].map((item) => {
               const isWide = item.field === 'targetDate';
               return (
