@@ -26,6 +26,7 @@ import { StorageModule } from './storage/storage.module';
 import { AiModule } from './ai/ai.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { FastingModule } from './fasting/fasting.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     AiModule,
     NotificationsModule,
     AnalyticsModule,
+    FastingModule,
   ],
   providers: [
     {

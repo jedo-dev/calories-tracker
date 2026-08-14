@@ -90,6 +90,14 @@ cd apps/api && npm install --package-lock-only
 - Траты идут только из `xpTotal`; недельный `xpWeek` (лидерборд) не трогается.
 - UI — `widgets/profile/StreakCard.tsx`.
 
+## Интервальное голодание
+
+- API-модуль `src/fasting`: сессии в Mongo, одна активная на пользователя
+  (endedAt == null), `POST /fasting/start|stop`, `GET /fasting/current|history`.
+  За фаст, завершённый по цели, — +5 XP через SocialService.
+- Web: страница `/fasting` (таймер, протоколы 12/16/18/20, история),
+  пункт «Голодание» в меню в группе «Питание».
+
 ## Продуктовая аналитика
 
 - Своя, без внешних сервисов. API-модуль `src/analytics`: события в Mongo

@@ -40,6 +40,7 @@ const MealPlanPage = lazy(() => import('./pages/MealPlanPage').then((m) => ({ de
 const AiLimitsPage = lazy(() => import('./pages/AiLimitsPage').then((m) => ({ default: m.AiLimitsPage })));
 const MenuPage = lazy(() => import('./pages/MenuPage').then((m) => ({ default: m.MenuPage })));
 const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage').then((m) => ({ default: m.AdminAnalyticsPage })));
+const FastingPage = lazy(() => import('./pages/FastingPage').then((m) => ({ default: m.FastingPage })));
 
 // Автотрекинг просмотров страниц: одно событие на смену маршрута,
 // динамические id в пути схлопываются в :id
@@ -117,6 +118,7 @@ function App() {
             <Route path="/recipes/:id" element={<RecipeDetailPage />} />
             <Route path="/recipes/:id/edit" element={<RecipeEditorPage />} />
             <Route path="/meal-plan" element={<MealPlanPage />} />
+            <Route path="/fasting" element={<FastingPage />} />
             <Route path="/users/:userId" element={<PublicProfilePage />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Route>

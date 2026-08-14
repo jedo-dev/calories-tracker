@@ -609,6 +609,33 @@ export const ru = {
     goToProfile: "Перейти к профилю"
   },
 
+  // Интервальное голодание
+  fasting: {
+    title: "Голодание",
+    pageTitle: "Интервальное голодание",
+    chooseProtocol: "Выберите протокол",
+    protocolHint: "Первое число — часы голодания, второе — окно питания",
+    start: "Начать фаст",
+    stop: "Завершить",
+    stopEarly: "Завершить раньше",
+    inProgress: "Фаст идёт",
+    goalReached: "Цель достигнута! Можно завершать 🎉",
+    elapsed: "Прошло",
+    remaining: "Осталось",
+    target: "Цель: {n} ч",
+    startedAt: "Начало: {time}",
+    completedResult: "Фаст завершён: {hours} ч — цель достигнута! +{xp} XP",
+    stoppedResult: "Фаст остановлен: {hours} ч из {target} ч",
+    history: "История",
+    historyEmpty: "Пока не было ни одного фаста",
+    historyCompleted: "цель достигнута",
+    historyStopped: "остановлен раньше",
+    xpHint: "+{xp} XP за фаст, завершённый по цели",
+    loadFailed: "Не удалось загрузить данные",
+    actionFailed: "Не получилось — попробуйте ещё раз",
+    hoursShort: "ч",
+  },
+
   // Челлендж первых дней (карточка на главной для новичков)
   challenge: {
     title: "Челлендж: 3 дня подряд",

@@ -10,6 +10,7 @@ import {
   IconBell,
   IconCalendar,
   IconChevronRight,
+  IconClock,
   IconClub,
   IconDish,
   IconDumbbell,
@@ -97,6 +98,7 @@ export function MenuPage() {
       rows: [
         { icon: <IconDish size={20} />, tint: TINT.nutrition, label: t('recipes.title'), path: '/recipes' },
         { icon: <IconCalendar size={20} />, tint: TINT.nutrition, label: t('mealPlan.title'), path: '/meal-plan' },
+        { icon: <IconClock size={20} />, tint: TINT.nutrition, label: t('fasting.title'), path: '/fasting' },
         { icon: <IconTemplate size={20} />, tint: TINT.nutrition, label: t('template.title'), path: '/templates' },
         { icon: <IconSearch size={20} />, tint: TINT.nutrition, label: t('products.title'), path: '/products' },
       ],
