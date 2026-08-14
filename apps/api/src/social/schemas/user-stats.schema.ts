@@ -25,6 +25,18 @@ export class UserStats {
 
   @Prop()
   lastLoggedDate?: string;
+
+  // Стрик-фризы: авто-списываются при пропуске дня, максимум 2 в запасе.
+  // Новичкам один бесплатный (дефолт), дальше — покупка за XP.
+  @Prop({ default: 1 })
+  streakFreezes: number;
+
+  // Сгоревший стрик, доступный для платного восстановления в течение 2 дней
+  @Prop({ default: 0 })
+  lostStreak: number;
+
+  @Prop()
+  lostStreakDate?: string;
 }
 
 export const UserStatsSchema = SchemaFactory.createForClass(UserStats);

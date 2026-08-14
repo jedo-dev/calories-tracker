@@ -81,6 +81,15 @@ cd apps/api && npm install --package-lock-only
   подписка — `src/utils/push.ts`, UI — `widgets/profile/NotificationsCard.tsx`.
   Разрешение браузера запрашивается только по явному действию пользователя.
 
+## Стрики
+
+- Логика в `social/social.service.ts` (`updateStreakIfFirstLogOfDay`), константы
+  экономики там же. Стрик-фризы (запас ≤ 2, новичкам 1, покупка 30 XP)
+  списываются автоматически при пропуске дней; сгоревший стрик ≥ 3 дней можно
+  восстановить за 50 XP в течение 2 дней (`lostStreak`/`lostStreakDate`).
+- Траты идут только из `xpTotal`; недельный `xpWeek` (лидерборд) не трогается.
+- UI — `widgets/profile/StreakCard.tsx`.
+
 ## Продуктовая аналитика
 
 - Своя, без внешних сервисов. API-модуль `src/analytics`: события в Mongo

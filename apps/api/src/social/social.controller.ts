@@ -1,5 +1,10 @@
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
-import { SocialService } from './social.service';
+import {
+  SocialService,
+  STREAK_FREEZE_COST,
+  STREAK_FREEZE_MAX,
+  STREAK_RESTORE_COST,
+} from './social.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { parseLimit } from '../common/utils/query';
 import { InjectModel } from '@nestjs/mongoose';
@@ -45,8 +50,26 @@ export class SocialController {
         currentStreak: stats.currentStreak,
         bestStreak: stats.bestStreak,
         lastLoggedDate: stats.lastLoggedDate,
+        streakFreezes: stats.streakFreezes ?? 1,
+        lostStreak: stats.lostStreak || 0,
+        lostStreakDate: stats.lostStreakDate,
+      },
+      streakShop: {
+        freezeCost: STREAK_FREEZE_COST,
+        freezeMax: STREAK_FREEZE_MAX,
+        restoreCost: STREAK_RESTORE_COST,
       },
     };
+  }
+
+  @Post('streak-freeze/buy')
+  async buyStreakFreeze(@Request() req: any) {
+    return this.socialService.buyStreakFreeze(req.user.id);
+  }
+
+  @Post('streak/restore')
+  async restoreStreak(@Request() req: any) {
+    return this.socialService.restoreStreak(req.user.id);
   }
 }
 

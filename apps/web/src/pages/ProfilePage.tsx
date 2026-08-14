@@ -7,6 +7,7 @@ import { useTheme } from "../theme/useTheme";
 import Loader from "../ui/Loader";
 import { AiQuotaCard } from "../widgets/profile/AiQuotaCard";
 import { NotificationsCard } from "../widgets/profile/NotificationsCard";
+import { StreakCard } from "../widgets/profile/StreakCard";
 import { ProfileAchievements } from "../widgets/profile/ProfileAchievements";
 import { ProfileBodyCard } from "../widgets/profile/ProfileBodyCard";
 import { ProfileGoalCard } from "../widgets/profile/ProfileGoalCard";
@@ -172,6 +173,8 @@ export function ProfilePage() {
           compact
         />
       )}
+
+      {!editingBody && <StreakCard />}
 
       {!editingBody && <AiQuotaCard />}
 
