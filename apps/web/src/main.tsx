@@ -8,3 +8,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 );
+
+// Сервис-воркер нужен только для пуш-уведомлений; регистрация сама по себе
+// ничего не запрашивает у пользователя (разрешение — только из настроек).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
