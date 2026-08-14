@@ -4,6 +4,7 @@ import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { glassCardStyle } from '../../theme/styles';
 import { isPushSupported, subscribeToPush, unsubscribeFromPush } from '../../utils/push';
+import { track } from '../../utils/analytics';
 
 interface NotificationSettings {
   enabled: boolean;
@@ -69,6 +70,7 @@ export function NotificationsCard() {
         if (result === 'ok') {
           setSettings({ ...settings, enabled: true });
           setJustEnabled(true);
+          track('push_enabled');
         } else {
           setMessage(t(`notifications.${result === 'denied' ? 'denied' : result === 'unsupported' ? 'unsupported' : 'error'}`));
         }

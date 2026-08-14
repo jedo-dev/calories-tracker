@@ -25,6 +25,7 @@ import { MealPlanModule } from './meal-plan/meal-plan.module';
 import { StorageModule } from './storage/storage.module';
 import { AiModule } from './ai/ai.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     AdminModule,
     AiModule,
     NotificationsModule,
+    AnalyticsModule,
   ],
   providers: [
     {

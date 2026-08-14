@@ -603,6 +603,28 @@ export const ru = {
     goToProfile: "Перейти к профилю"
   },
 
+  // Админ: продуктовая аналитика
+  analytics: {
+    title: "Аналитика",
+    loadFailed: "Не удалось загрузить аналитику (нужна роль admin)",
+    totalUsers: "Всего пользователей",
+    dauToday: "Активных сегодня",
+    wau: "За 7 дней",
+    mau: "За 30 дней",
+    dauChart: "Активные пользователи по дням",
+    registrationsChart: "Регистрации по дням",
+    retention: "Ретеншн новичков",
+    retentionD1: "Вернулись на следующий день",
+    retentionW1: "Активны в первую неделю",
+    retentionOf: "из {n} чел.",
+    noData: "Пока недостаточно данных",
+    topEvents: "Популярность фич",
+    eventsCount: "событий",
+    usersCount: "чел.",
+    period30: "30 дней",
+    period90: "90 дней",
+  },
+
   // Пуш-уведомления (карточка в профиле)
   notifications: {
     title: "Уведомления",

@@ -117,6 +117,9 @@ export function MenuPage() {
         ...(isTrainer
           ? [{ icon: <IconDumbbell size={20} />, tint: TINT.neutral, label: t('workout.adminTitle'), path: '/admin/workouts' } satisfies MenuRow]
           : []),
+        ...(user?.role === 'admin'
+          ? [{ icon: <IconStats size={20} />, tint: TINT.neutral, label: t('analytics.title'), path: '/admin/analytics' } satisfies MenuRow]
+          : []),
         {
           icon: <IconLogout size={20} />,
           tint: TINT.danger,

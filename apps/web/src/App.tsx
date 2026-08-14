@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react';
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 // Ядро первого экрана грузим сразу; остальное — лениво (code-splitting),
@@ -12,6 +12,7 @@ import { useTheme } from './theme/useTheme';
 import { Footer } from './widget/Footer/Footer';
 import Loader, { LoaderOverlayHost } from './ui/Loader';
 import { ToastHost } from './ui/Toast';
+import { normalizePath, track } from './utils/analytics';
 
 const AddEntryPage = lazy(() => import('./pages/AddEntryPage').then((m) => ({ default: m.AddEntryPage })));
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
@@ -38,6 +39,20 @@ const RecipeDetailPage = lazy(() => import('./pages/RecipeDetailPage').then((m) 
 const MealPlanPage = lazy(() => import('./pages/MealPlanPage').then((m) => ({ default: m.MealPlanPage })));
 const AiLimitsPage = lazy(() => import('./pages/AiLimitsPage').then((m) => ({ default: m.AiLimitsPage })));
 const MenuPage = lazy(() => import('./pages/MenuPage').then((m) => ({ default: m.MenuPage })));
+const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage').then((m) => ({ default: m.AdminAnalyticsPage })));
+
+// Автотрекинг просмотров страниц: одно событие на смену маршрута,
+// динамические id в пути схлопываются в :id
+function PageViewTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    track('page_view', { path: normalizePath(location.pathname) });
+  }, [location.pathname]);
+  useEffect(() => {
+    track('app_open');
+  }, []);
+  return null;
+}
 
 function AppLayout() {
   return (
@@ -68,6 +83,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <PageViewTracker />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -86,6 +102,7 @@ function App() {
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/workouts" element={<WorkoutsPage />} />
             <Route path="/admin/workouts" element={<AdminWorkoutsPage />} />
+            <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
             <Route path="/workout/program/:programId" element={<WorkoutProgramPage />} />
             <Route path="/workout/category/:categoryId" element={<ExercisesPage />} />
             <Route path="/workout/history/:sessionId" element={<WorkoutHistoryDetailPage />} />
