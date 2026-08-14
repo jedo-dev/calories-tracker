@@ -111,7 +111,7 @@ export function AiLimitsPage() {
               {quota ? quota.remaining : '·'}
             </span>
             <span style={{ fontSize: '14px', color: theme.palette.textMuted, marginBottom: '2px' }}>
-              {t('aiQuota.heroOfLine1', { limit: quota?.monthlyLimit ?? 10 })}
+              {t(quota?.premium ? 'aiQuota.heroOfLine1Premium' : 'aiQuota.heroOfLine1', { limit: quota?.monthlyLimit ?? 10 })}
               <br />
               {t('aiQuota.heroOfLine2')}
             </span>
@@ -240,7 +240,7 @@ export function AiLimitsPage() {
             <RuleCalendarIcon />
           </div>
           <p style={RULE_TEXT}>
-            <b style={{ color: '#fff', fontWeight: 600 }}>{t('aiQuota.rule1Bold', { limit: quota?.monthlyLimit ?? 10 })}</b>{' '}
+            <b style={{ color: '#fff', fontWeight: 600 }}>{t(quota?.premium ? 'aiQuota.rule1BoldPremium' : 'aiQuota.rule1Bold', { limit: quota?.monthlyLimit ?? 10 })}</b>{' '}
             {t('aiQuota.rule1Text')}
           </p>
         </div>

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { BillingModule } from '../billing/billing.module';
 import { AiQuotaService } from './ai-quota.service';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
@@ -14,6 +15,7 @@ import {
 
 @Module({
   imports: [
+    BillingModule,
     MongooseModule.forFeature([
       { name: AiQuota.name, schema: AiQuotaSchema },
       { name: AiBalance.name, schema: AiBalanceSchema },

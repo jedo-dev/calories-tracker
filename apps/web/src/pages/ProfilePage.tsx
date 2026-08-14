@@ -8,6 +8,7 @@ import Loader from "../ui/Loader";
 import { AiQuotaCard } from "../widgets/profile/AiQuotaCard";
 import { NotificationsCard } from "../widgets/profile/NotificationsCard";
 import { StreakCard } from "../widgets/profile/StreakCard";
+import { PremiumCard } from "../widgets/profile/PremiumCard";
 import { ProfileAchievements } from "../widgets/profile/ProfileAchievements";
 import { ProfileBodyCard } from "../widgets/profile/ProfileBodyCard";
 import { ProfileGoalCard } from "../widgets/profile/ProfileGoalCard";
@@ -177,6 +178,8 @@ export function ProfilePage() {
       {!editingBody && <StreakCard />}
 
       {!editingBody && <AiQuotaCard />}
+
+      {!editingBody && <PremiumCard />}
 
       {!editingBody && <NotificationsCard />}
 

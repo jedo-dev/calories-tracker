@@ -494,10 +494,12 @@ export const ru = {
     title: "AI-распознавание",
     cardOf: "из {limit} в этом месяце",
     resetChip: "обновится {date}",
+    plusChip: "Plus",
     bonusChip: "бонусных",
     details: "Подробнее",
     pageTitle: "AI-распознавание",
     heroOfLine1: "из {limit} бесплатных",
+    heroOfLine1Premium: "из {limit} по подписке Plus",
     heroOfLine2: "распознаваний в месяц",
     untilChip: "до {date}",
     recognize: "Распознать блюдо",
@@ -506,6 +508,7 @@ export const ru = {
     step2: "ИИ считает КБЖУ",
     step3: "Запись в дневнике",
     rule1Bold: "{limit} бесплатных каждый месяц.",
+    rule1BoldPremium: "{limit} распознаваний каждый месяц по Plus.",
     rule1Text: "Счётчик обнуляется 1-го числа.",
     rule2Bold: "Бонусные не сгорают.",
     rule2Text: "Тратятся после бесплатных.",
@@ -607,6 +610,25 @@ export const ru = {
     loadFailed: "Не удалось загрузить профиль",
     fillProfileBanner: "Заполните профиль для расчета нормы",
     goToProfile: "Перейти к профилю"
+  },
+
+  // Подписка FlareonFit Plus
+  premium: {
+    title: "FlareonFit Plus",
+    activeUntil: "Подписка активна до {date}",
+    benefit1: "AI-распознавание еды по фото — ×30 лимит",
+    benefit2: "Приоритет в новых функциях",
+    benefit3: "Поддержка развития приложения",
+    perMonth: "{price} ₽/мес",
+    perYear: "{price} ₽/год",
+    yearDiscount: "выгоднее на 37%",
+    buy: "Оформить",
+    buyComingSoon: "Оплата внутри приложения скоро появится. Уже сейчас Plus можно получить по коду — спросите нас!",
+    haveCode: "У меня есть код",
+    codePlaceholder: "Введите код",
+    redeem: "Активировать",
+    redeemed: "Готово! Plus активен ещё {days} дн.",
+    redeemFailed: "Не получилось активировать код",
   },
 
   // Интервальное голодание

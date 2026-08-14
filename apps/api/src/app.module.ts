@@ -27,6 +27,7 @@ import { AiModule } from './ai/ai.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { FastingModule } from './fasting/fasting.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { FastingModule } from './fasting/fasting.module';
     NotificationsModule,
     AnalyticsModule,
     FastingModule,
+    BillingModule,
   ],
   providers: [
     {

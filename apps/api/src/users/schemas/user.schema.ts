@@ -38,6 +38,10 @@ export class User {
   @Prop({ default: '🦊' })
   avatarEmoji: string;
 
+  // Подписка FlareonFit Plus активна, пока дата в будущем
+  @Prop({ type: Date })
+  premiumUntil?: Date;
+
   // Profile fields
   @Prop({
     type: {

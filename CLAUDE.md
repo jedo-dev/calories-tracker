@@ -90,6 +90,17 @@ cd apps/api && npm install --package-lock-only
 - Траты идут только из `xpTotal`; недельный `xpWeek` (лидерборд) не трогается.
 - UI — `widgets/profile/StreakCard.tsx`.
 
+## Подписка FlareonFit Plus (freemium)
+
+- API-модуль `src/billing`: `User.premiumUntil`, `GET /billing/status`,
+  активация премиум-кодов `POST /billing/redeem`; админ: `POST /billing/grant/:userId`
+  и `POST /billing/codes` (создание кодов на N дней).
+- Платёжного провайдера нет: кнопки тарифов на `PremiumCard` — fake door
+  (событие `premium_interest` в аналитике меряет спрос), выдача — коды/админ.
+- Единственный гейт сейчас — AI-лимит: `AiQuotaService.limitFor()` даёт Plus
+  расширенный лимит (env `AI_PREMIUM_MONTHLY_LIMIT`, дефолт 300 против 10).
+- UI — `widgets/profile/PremiumCard.tsx` в профиле.
+
 ## Интервальное голодание
 
 - API-модуль `src/fasting`: сессии в Mongo, одна активная на пользователя

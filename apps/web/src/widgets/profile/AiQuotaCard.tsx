@@ -10,6 +10,7 @@ export interface AiQuotaState {
   usedThisMonth: number;
   bonusTokens: number;
   remaining: number;
+  premium?: boolean;
 }
 
 // Карточка лимита AI-распознаваний в профиле (вариант B из мокапа):
@@ -62,22 +63,43 @@ export function AiQuotaCard() {
       <SegmentBar total={quota.monthlyLimit} filled={freeLeft} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '13px', flexWrap: 'wrap' }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(139,123,247,.16)',
-            border: '1px solid rgba(139,123,247,.35)',
-            color: '#C9C0FF',
-            borderRadius: '999px',
-            padding: '5px 11px',
-            fontSize: '12px',
-            fontWeight: 600,
-          }}
-        >
-          {t('aiQuota.resetChip', { date: nextResetLabel() })}
-        </span>
+        {/* Подписчику дата обнуления не важна — лимит и так «безлимитный»,
+            чип «обновится 1 сентября» только путал */}
+        {quota.premium ? (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(255,214,102,.14)',
+              border: '1px solid rgba(255,214,102,.4)',
+              color: '#FFD666',
+              borderRadius: '999px',
+              padding: '5px 11px',
+              fontSize: '12px',
+              fontWeight: 700,
+            }}
+          >
+            ✨ {t('aiQuota.plusChip')}
+          </span>
+        ) : (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(139,123,247,.16)',
+              border: '1px solid rgba(139,123,247,.35)',
+              color: '#C9C0FF',
+              borderRadius: '999px',
+              padding: '5px 11px',
+              fontSize: '12px',
+              fontWeight: 600,
+            }}
+          >
+            {t('aiQuota.resetChip', { date: nextResetLabel() })}
+          </span>
+        )}
         {quota.bonusTokens > 0 && (
           <span
             style={{
@@ -96,6 +118,7 @@ export function AiQuotaCard() {
             +{quota.bonusTokens} {t('aiQuota.bonusChip')}
           </span>
         )}
+        {!quota.premium && (
         <button
           type="button"
           onClick={() => navigate('/ai-limits')}
@@ -116,6 +139,7 @@ export function AiQuotaCard() {
         >
           {t('aiQuota.details')}
         </button>
+        )}
       </div>
     </div>
   );

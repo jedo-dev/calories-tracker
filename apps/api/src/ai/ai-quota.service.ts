@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { PremiumService } from '../billing/premium.service';
 import {
   AiBalance,
   AiBalanceDocument,
@@ -21,6 +22,8 @@ export interface QuotaState {
   usedThisMonth: number;
   bonusTokens: number;
   remaining: number;
+  // Флаг Plus: UI показывает подписчику другой лейбл вместо «бесплатных»
+  premium: boolean;
 }
 
 @Injectable()
@@ -30,6 +33,7 @@ export class AiQuotaService {
     @InjectModel(AiBalance.name) private balanceModel: Model<AiBalanceDocument>,
     @InjectModel(AiPromoCode.name) private promoModel: Model<AiPromoCodeDocument>,
     private readonly config: ConfigService,
+    private readonly premiumService: PremiumService,
   ) {}
 
   private get monthlyLimit(): number {
@@ -37,23 +41,37 @@ export class AiQuotaService {
     return Number.isFinite(raw) && raw > 0 ? raw : 10;
   }
 
+  private get premiumMonthlyLimit(): number {
+    const raw = Number(this.config.get<string>('AI_PREMIUM_MONTHLY_LIMIT'));
+    return Number.isFinite(raw) && raw > 0 ? raw : 300;
+  }
+
+  // Месячный лимит зависит от подписки: Plus получает расширенный
+  private async limitFor(userId: string): Promise<number> {
+    return (await this.premiumService.isPremium(userId))
+      ? this.premiumMonthlyLimit
+      : this.monthlyLimit;
+  }
+
   private currentMonth(): string {
     return new Date().toISOString().slice(0, 7); // YYYY-MM
   }
 
   async getQuota(userId: string): Promise<QuotaState> {
-    const [quota, balance] = await Promise.all([
+    const [quota, balance, premium] = await Promise.all([
       this.quotaModel.findOne({ userId, month: this.currentMonth() }).lean(),
       this.balanceModel.findOne({ userId }).lean(),
+      this.premiumService.isPremium(userId),
     ]);
     const used = quota?.used ?? 0;
     const bonus = balance?.bonusTokens ?? 0;
-    const limit = this.monthlyLimit;
+    const limit = premium ? this.premiumMonthlyLimit : this.monthlyLimit;
     return {
       monthlyLimit: limit,
       usedThisMonth: used,
       bonusTokens: bonus,
       remaining: Math.max(0, limit - used) + bonus,
+      premium,
     };
   }
 
@@ -61,7 +79,7 @@ export class AiQuotaService {
   // Возвращает источник списания (для возврата при сбое), бросает 403, если пусто.
   async consumeOne(userId: string): Promise<'free' | 'bonus'> {
     const month = this.currentMonth();
-    const limit = this.monthlyLimit;
+    const limit = await this.limitFor(userId);
 
     // Атомарный инкремент в пределах бесплатного лимита
     const fromFree = await this.quotaModel.findOneAndUpdate(
