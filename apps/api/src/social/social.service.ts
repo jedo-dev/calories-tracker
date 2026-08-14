@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Entry, EntryDocument } from '../entries/schemas/entry.schema';
+import { AchievementsService } from './achievements.service';
 import { ActivityEvent, ActivityEventDocument } from './schemas/activity-event.schema';
 import { UserStats, UserStatsDocument } from './schemas/user-stats.schema';
 
@@ -21,7 +22,16 @@ export class SocialService {
     @InjectModel(UserStats.name) private userStatsModel: Model<UserStatsDocument>,
     @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
     @InjectModel(Entry.name) private entryModel: Model<EntryDocument>,
+    private achievementsService: AchievementsService,
   ) {}
+
+  /**
+   * Фоновая проверка достижений после начисления XP/обновления стрика.
+   * Fire-and-forget: не удлиняет запрос пользователя и не роняет его при сбое.
+   */
+  private checkAchievementsInBackground(userId: string): void {
+    this.achievementsService.checkAndUnlock(userId).catch(() => {});
+  }
 
   getWeekKey(date: Date = new Date()): string {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -115,11 +125,13 @@ export class SocialService {
   /** +5 XP за завершённую тренировку (событие ленты создаёт workout-сервис). */
   async grantXpForWorkout(userId: string): Promise<void> {
     await this.addXp(userId, 5);
+    this.checkAchievementsInBackground(userId);
   }
 
   /** +3 XP за закрытую норму воды (событие ленты создаёт water-сервис). */
   async grantXpForWaterGoal(userId: string): Promise<void> {
     await this.addXp(userId, 3);
+    this.checkAchievementsInBackground(userId);
   }
 
   async updateStreakIfFirstLogOfDay(userId: string, date: string): Promise<void> {
@@ -340,5 +352,9 @@ export class SocialService {
         payload: { xp: xpToGrant },
       });
     }
+
+    // Достижения раньше проверялись только по POST /achievements/check,
+    // который никто не вызывал — теперь проверка идёт после каждой записи
+    this.checkAchievementsInBackground(userId);
   }
 }

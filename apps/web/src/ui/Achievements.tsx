@@ -5,12 +5,16 @@ import badgeFirstWorkout from '../assets/07_achievements/badge_first_workout.jpg
 import badgeCalorieMaster from '../assets/07_achievements/badge_calorie_master.jpg';
 import badgeHydrationHero from '../assets/07_achievements/badge_hydration_hero.jpg';
 import badgeSocialButterfly from '../assets/07_achievements/badge_social_butterfly.jpg';
+import badgeFirstLog from '../assets/09_onboarding/onboarding_2_tracking.jpg';
+import badgeThreeDayStreak from '../assets/07_achievements/rank_bronze.jpg';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
 import { Card } from './Card';
 import { Text } from './Text';
 
 const BADGE_IMAGES: Record<string, string> = {
+  badge_first_log: badgeFirstLog,
+  badge_3day_streak: badgeThreeDayStreak,
   badge_7day_streak: badge7DayStreak,
   badge_first_workout: badgeFirstWorkout,
   badge_calorie_master: badgeCalorieMaster,

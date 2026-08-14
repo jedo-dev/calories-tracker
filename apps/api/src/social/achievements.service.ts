@@ -6,6 +6,10 @@ import { UserStats, UserStatsDocument } from './schemas/user-stats.schema';
 import { ActivityEvent, ActivityEventDocument } from './schemas/activity-event.schema';
 
 const ACHIEVEMENT_DEFS = [
+  // Онбординговые: лёгкие победы в первые дни резко поднимают ретеншн,
+  // поэтому идут первыми и в списке, и по сложности
+  { key: 'first_log', imageKey: 'badge_first_log' },
+  { key: '3day_streak', imageKey: 'badge_3day_streak' },
   { key: '7day_streak', imageKey: 'badge_7day_streak' },
   { key: 'first_workout', imageKey: 'badge_first_workout' },
   { key: 'calorie_master', imageKey: 'badge_calorie_master' },
@@ -49,6 +53,19 @@ export class AchievementsService {
     const existingSet = new Set(existing);
 
     if (stats) {
+      // Первая запись еды — «достижение первого дня»
+      if (stats.lastLoggedDate && !existingSet.has('first_log')) {
+        await this.unlock(userId, 'first_log');
+        newlyUnlocked.push('first_log');
+      }
+
+      // По bestStreak, а не currentStreak: выполненный челлендж не должен
+      // «пропадать» из-за последующего сброса серии
+      if (stats.bestStreak >= 3 && !existingSet.has('3day_streak')) {
+        await this.unlock(userId, '3day_streak');
+        newlyUnlocked.push('3day_streak');
+      }
+
       if (stats.currentStreak >= 7 && !existingSet.has('7day_streak')) {
         await this.unlock(userId, '7day_streak');
         newlyUnlocked.push('7day_streak');

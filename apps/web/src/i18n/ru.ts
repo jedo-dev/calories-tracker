@@ -289,6 +289,12 @@ export const ru = {
     hydration_hero_short: "-10 кг",
     social_butterfly_short: "Тренировки\n10 раз",
     marathoner_short: "Марафонец",
+    first_log_name: "Первая запись",
+    first_log_desc: "Запишите первое блюдо в дневник",
+    first_log_short: "Старт",
+    "3day_streak_name": "3 дня подряд",
+    "3day_streak_desc": "Ведите дневник 3 дня подряд",
+    "3day_streak_short": "3 дня",
     "7day_streak_name": "7 дней подряд",
     "7day_streak_desc": "Залогируйте 7 дней подряд",
     first_workout_name: "Первая тренировка",
@@ -601,6 +607,15 @@ export const ru = {
     loadFailed: "Не удалось загрузить профиль",
     fillProfileBanner: "Заполните профиль для расчета нормы",
     goToProfile: "Перейти к профилю"
+  },
+
+  // Челлендж первых дней (карточка на главной для новичков)
+  challenge: {
+    title: "Челлендж: 3 дня подряд",
+    desc: "Записывайте еду каждый день — и получите награду",
+    progress: "{n} из 3",
+    doneToday: "Сегодня записано ✓",
+    todoToday: "Сегодня ещё нет записей",
   },
 
   // Стрик: фризы и восстановление

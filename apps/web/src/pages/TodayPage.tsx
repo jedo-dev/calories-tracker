@@ -15,6 +15,7 @@ import { showToast } from "../ui/Toast";
 import { DashboardSlider, DashboardData } from "../widgets/today/DashboardSlider";
 import { MealGroupSheet } from "../widgets/today/MealGroupSheet";
 import { WaterCard } from "../widgets/water/WaterCard";
+import { OnboardingChallengeCard } from "../widgets/today/OnboardingChallengeCard";
 import { calcWaterGoalMl } from "../widgets/water/waterGoal";
 
 export interface Entry {
@@ -38,6 +39,10 @@ interface SocialStats {
     displayName: string;
     avatarEmoji: string;
     createdAt: Date;
+  };
+  stats?: {
+    currentStreak: number;
+    bestStreak: number;
   };
 }
 
@@ -171,6 +176,15 @@ export function TodayPage() {
         date={date}
         registrationDate={socialStats?.user.createdAt}
       />
+
+      {/* Челлендж новичка показываем только на сегодняшнем дне */}
+      {socialStats?.stats && date === toISODate(new Date()) && (
+        <OnboardingChallengeCard
+          currentStreak={socialStats.stats.currentStreak}
+          bestStreak={socialStats.stats.bestStreak}
+          hasEntriesToday={entries.length > 0}
+        />
+      )}
 
       {dashboard?.targets && dashboard.progress && (
         <Card
