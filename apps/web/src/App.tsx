@@ -40,6 +40,7 @@ const MealPlanPage = lazy(() => import('./pages/MealPlanPage').then((m) => ({ de
 const AiLimitsPage = lazy(() => import('./pages/AiLimitsPage').then((m) => ({ default: m.AiLimitsPage })));
 const MenuPage = lazy(() => import('./pages/MenuPage').then((m) => ({ default: m.MenuPage })));
 const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage').then((m) => ({ default: m.AdminAnalyticsPage })));
+const RunPage = lazy(() => import('./pages/RunPage').then((m) => ({ default: m.RunPage })));
 const FastingPage = lazy(() => import('./pages/FastingPage').then((m) => ({ default: m.FastingPage })));
 
 // Автотрекинг просмотров страниц: одно событие на смену маршрута,
@@ -102,6 +103,7 @@ function App() {
             <Route path="/friends" element={<FriendsPage />} />
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/workouts" element={<WorkoutsPage />} />
+            <Route path="/run" element={<RunPage />} />
             <Route path="/admin/workouts" element={<AdminWorkoutsPage />} />
             <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
             <Route path="/workout/program/:programId" element={<WorkoutProgramPage />} />

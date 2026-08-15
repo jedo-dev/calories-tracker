@@ -9,6 +9,7 @@ import { WorkoutProgram, WorkoutProgramDocument, WorkoutProgramItem } from './sc
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity-event.schema';
 import { SocialService } from '../social/social.service';
+import { requireIsoDate } from '../common/utils/query';
 import { CreateWorkoutSessionDto } from './dto/create-workout-session.dto';
 import { AddExerciseToSessionDto } from './dto/add-exercise.dto';
 import { StartProgramDto } from './dto/start-program.dto';
@@ -412,6 +413,55 @@ export class WorkoutService {
     });
 
     return session.save();
+  }
+
+  /**
+   * Сохранение пробежки из бегового режима PWA: сессия приходит уже
+   * завершённой (таймер и шаги считал клиент). Числа зажимаются в разумные
+   * рамки — датчикам клиента доверять полностью нельзя.
+   */
+  async saveRun(userId: string, body: any) {
+    const durationSec = Math.round(Number(body?.durationSec));
+    if (!Number.isFinite(durationSec) || durationSec < 30 || durationSec > 12 * 3600) {
+      throw new BadRequestException('Слишком короткая или длинная пробежка');
+    }
+    const clamp = (v: any, max: number) =>
+      Number.isFinite(Number(v)) ? Math.min(max, Math.max(0, Math.round(Number(v)))) : 0;
+    const steps = clamp(body?.steps, 200_000);
+    const distanceM = clamp(body?.distanceM, 200_000);
+    const caloriesBurned = clamp(body?.caloriesBurned, 5000);
+    const date = requireIsoDate(body?.date);
+
+    const now = new Date();
+    const session = await new this.sessionModel({
+      userId: new Types.ObjectId(userId),
+      date,
+      name: 'Бег',
+      totalCaloriesBurned: caloriesBurned,
+      totalDurationSec: durationSec,
+      exerciseCount: 0,
+      startedAt: new Date(now.getTime() - durationSec * 1000),
+      finishedAt: now,
+      run: { steps, distanceM },
+    }).save();
+
+    await this.activityEventModel.create({
+      userId: new Types.ObjectId(userId),
+      type: 'workout_completed',
+      date,
+      payload: {
+        workoutName: 'Бег',
+        caloriesBurned,
+        durationSec,
+        exerciseCount: 0,
+        steps,
+        distanceM,
+        xp: 5,
+      },
+    });
+    await this.socialService.grantXpForWorkout(userId);
+
+    return session;
   }
 
   async getSessionById(sessionId: string, userId: string): Promise<WorkoutSessionDocument> {

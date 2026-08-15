@@ -189,6 +189,12 @@ export class WorkoutController {
     return this.workoutService.createSession(dto, req.user.id);
   }
 
+  // Беговой режим PWA: сессия сохраняется уже завершённой одним запросом
+  @Post('runs')
+  async saveRun(@Body() body: any, @Request() req: any) {
+    return this.workoutService.saveRun(req.user.id, body);
+  }
+
   @Get('sessions')
   async getSessionsByDate(@Query('date') date: string, @Request() req: any) {
     return this.workoutService.getSessionsByDate(date, req.user.id);

@@ -40,6 +40,10 @@ export class WorkoutSession {
 
   @Prop({ type: Date })
   finishedAt?: Date;
+
+  // Данные бегового режима (шагомер в PWA); у обычных тренировок отсутствуют
+  @Prop({ type: { steps: Number, distanceM: Number }, _id: false })
+  run?: { steps: number; distanceM: number };
 }
 
 export const WorkoutSessionSchema = SchemaFactory.createForClass(WorkoutSession);
