@@ -1,4 +1,7 @@
 export * from './ReportsCaloriesChart';
+export * from './ReportsGoalDaysStrip';
+export * from './ReportsMacrosChart';
+export * from './ReportsWaterChart';
 export * from './ReportsKpiGrid';
 export * from './ReportsPeriodNavigator';
 export * from './ReportsPeriodSwitcher';

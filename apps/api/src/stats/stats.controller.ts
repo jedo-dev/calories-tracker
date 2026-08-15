@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Entry, EntryDocument } from '../entries/schemas/entry.schema';
 import { WorkoutSession, WorkoutSessionDocument } from '../workouts/schemas/workout-session.schema';
 import { WeightLog, WeightLogDocument } from '../weight/schemas/weight-log.schema';
+import { WaterLog, WaterLogDocument } from '../water/schemas/water-log.schema';
 import { QueryStatsDto } from './dto/query-stats.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
@@ -14,6 +15,7 @@ export class StatsController {
     @InjectModel(Entry.name) private entryModel: Model<EntryDocument>,
     @InjectModel(WorkoutSession.name) private sessionModel: Model<WorkoutSessionDocument>,
     @InjectModel(WeightLog.name) private weightModel: Model<WeightLogDocument>,
+    @InjectModel(WaterLog.name) private waterModel: Model<WaterLogDocument>,
   ) {}
 
   private round(value: number): number {
@@ -66,10 +68,11 @@ export class StatsController {
       allDates.push(d.toISOString().split('T')[0]);
     }
 
-    const [entries, workouts, weightLogs] = await Promise.all([
+    const [entries, workouts, weightLogs, waterLogs] = await Promise.all([
       this.entryModel.find({ userId, date: { $in: allDates } }).exec(),
       this.sessionModel.find({ userId, date: { $in: allDates }, finishedAt: { $ne: null } }).exec(),
       this.weightModel.find({ userId, date: { $in: allDates } }).exec(),
+      this.waterModel.find({ userId, date: { $in: allDates } }).exec(),
     ]);
 
     const entriesByDate = new Map<string, EntryDocument[]>();
@@ -89,6 +92,11 @@ export class StatsController {
     const weightByDate = new Map<string, number>();
     for (const log of weightLogs) {
       weightByDate.set(log.date, log.weightKg);
+    }
+
+    const waterByDate = new Map<string, number>();
+    for (const log of waterLogs) {
+      waterByDate.set(log.date, (waterByDate.get(log.date) || 0) + log.amountMl);
     }
 
     return allDates.map((date) => {
@@ -114,6 +122,7 @@ export class StatsController {
           exerciseCount: w.exerciseCount,
         })),
         weight: weightByDate.get(date) || null,
+        waterMl: waterByDate.get(date) || 0,
       };
     });
   }

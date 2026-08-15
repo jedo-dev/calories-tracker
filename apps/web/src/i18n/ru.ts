@@ -557,6 +557,13 @@ export const ru = {
     workouts: "Тренировки",
     days: "дней",
     noData: "Нет данных за период",
+    goalDaysTitle: "Дни в цели",
+    goalDaysOf: "{n} из {m}",
+    macrosTitle: "БЖУ по дням",
+    macrosAvg: "в среднем за день",
+    waterTitle: "Вода по дням",
+    waterGoal: "норма",
+    grams: "г",
   },
   // Measurements
   measurement: {

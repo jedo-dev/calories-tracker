@@ -2,6 +2,9 @@ export type ReportPeriod = 'week' | 'month';
 
 export interface ReportEntry {
   kcal?: number;
+  protein?: number;
+  fat?: number;
+  carb?: number;
 }
 
 export interface ReportWorkout {
@@ -13,4 +16,5 @@ export interface ReportDay {
   entries: ReportEntry[];
   workouts: ReportWorkout[];
   weight: number | null;
+  waterMl?: number;
 }

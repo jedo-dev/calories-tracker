@@ -6,7 +6,7 @@ import emptyReports from '../assets/03_empty_states/empty_reports.png';
 import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
-import { ReportsCaloriesChart, ReportsKpiGrid, ReportsPeriodNavigator, ReportsPeriodSwitcher, ReportsWeightChart } from '../widgets/reports';
+import { ReportsCaloriesChart, ReportsGoalDaysStrip, ReportsKpiGrid, ReportsMacrosChart, ReportsPeriodNavigator, ReportsPeriodSwitcher, ReportsWaterChart, ReportsWeightChart } from '../widgets/reports';
 import type { ReportDay, ReportPeriod } from '../widgets/reports';
 import { formatDateInput, getPeriodBounds, getPeriodLabel, round1 } from '../widgets/reports';
 
@@ -110,7 +110,9 @@ export function ReportsPage() {
         minHeight: '100vh',
         maxWidth: '520px',
         margin: '0 auto',
-        padding: '14px 14px 1px',
+        // Нижний отступ — под плавающую нижнюю навигацию (как на остальных
+        // страницах), иначе она перекрывает последний график
+        padding: '14px 14px 110px',
         background: `
           radial-gradient(circle at 50% 0%, rgba(83, 212, 107, 0.12), transparent 28%),
           radial-gradient(circle at 18% 18%, rgba(56, 104, 152, 0.18), transparent 24%),
@@ -175,11 +177,23 @@ export function ReportsPage() {
           </div>
 
           <div style={{ marginBottom: '8px' }}>
+            <ReportsGoalDaysStrip days={data} goal={kcalGoal} />
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
             <ReportsWeightChart days={data} />
           </div>
 
           <div style={{ marginBottom: '8px' }}>
             <ReportsCaloriesChart days={data} goal={kcalGoal} />
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <ReportsMacrosChart days={data} />
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <ReportsWaterChart days={data} />
           </div>
         </>
       )}
