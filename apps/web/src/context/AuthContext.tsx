@@ -7,6 +7,7 @@ interface User {
   username?: string;
   tgUserId?: number;
   role?: string;
+  emailVerified?: boolean;
 }
 
 interface AuthContextType {

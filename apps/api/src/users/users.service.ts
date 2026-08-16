@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, ForbiddenException, OnModuleInit } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Injectable, NotFoundException, ForbiddenException, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcryptjs';
+import { Connection, Model, Types } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { UserStats, UserStatsDocument } from '../social/schemas/user-stats.schema';
 import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity-event.schema';
@@ -13,9 +14,16 @@ export class UsersService implements OnModuleInit {
     @InjectModel(UserStats.name) private userStatsModel: Model<UserStatsDocument>,
     @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
     @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
+    @InjectConnection() private connection: Connection,
   ) {}
 
   async onModuleInit() {
+    // Аккаунты, созданные до появления подтверждения почты, считаем
+    // подтверждёнными — иначе все старые пользователи увидят баннер.
+    await this.userModel
+      .updateMany({ emailVerified: null }, { $set: { emailVerified: true } })
+      .exec();
+
     await this.userModel
       .updateMany({ tgUserId: null }, { $unset: { tgUserId: '' } })
       .exec();
@@ -80,6 +88,56 @@ export class UsersService implements OnModuleInit {
 
   async findById(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id).exec();
+  }
+
+  async findByVerifyTokenHash(hash: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ verifyTokenHash: hash }).exec();
+  }
+
+  /**
+   * Полное удаление аккаунта и всех данных пользователя (право на удаление
+   * персональных данных). Работает по сырым коллекциям: при добавлении новой
+   * коллекции с userId — дописать её сюда.
+   */
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('Пользователь не найден');
+    const valid = await bcrypt.compare(password || '', user.password);
+    if (!valid) throw new UnauthorizedException('Неверный пароль');
+
+    const oid = new Types.ObjectId(userId);
+    // В большинстве схем userId — ObjectId, в ai-квотах — строка
+    const userIdFilter = { userId: { $in: [oid, userId] as any[] } };
+
+    const collections = [
+      'entries',
+      'waterlogs',
+      'weightlogs',
+      'workoutsessions',
+      'workoutlogs',
+      'bodymeasurements',
+      'mealplans',
+      'mealtemplates',
+      'fastingsessions',
+      'recipes',
+      'achievements',
+      'activityevents',
+      'userstats',
+      'pushsubscriptions',
+      'notificationsettings',
+      'analyticsevents',
+      'aiquotas',
+      'aibalances',
+    ];
+    const db = this.connection.db!;
+    await Promise.all(collections.map((name) => db.collection(name).deleteMany(userIdFilter)));
+
+    // Подписки в обе стороны и следы активаций промокодов
+    await db.collection('follows').deleteMany({ $or: [{ followerId: oid }, { followingId: oid }] });
+    await db.collection('aipromocodes').updateMany({}, { $pull: { usedBy: userId } } as any);
+    await db.collection('premiumcodes').updateMany({}, { $pull: { usedBy: userId } } as any);
+
+    await this.userModel.deleteOne({ _id: oid }).exec();
   }
 
   private getLeague(xpTotal: number): { name: string; color: string; minXP: number; maxXP: number } {

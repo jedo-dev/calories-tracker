@@ -123,6 +123,7 @@ export function MenuPage() {
         ...(user?.role === 'admin'
           ? [{ icon: <IconStats size={20} />, tint: TINT.neutral, label: t('analytics.title'), path: '/admin/analytics' } satisfies MenuRow]
           : []),
+        { icon: <IconSettings size={20} />, tint: TINT.neutral, label: t('legal.privacyTitle'), path: '/privacy' },
         {
           icon: <IconLogout size={20} />,
           tint: TINT.danger,

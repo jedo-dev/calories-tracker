@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, Request, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Query, Request, UseGuards, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { FriendsService } from '../friends/friends.service';
 import { UsersService } from './users.service';
@@ -13,6 +13,13 @@ export class UsersController {
     private friendsService: FriendsService,
     private recipesService: RecipesService,
   ) {}
+
+  // Полное удаление аккаунта; пароль — подтверждение владельца
+  @Delete('me')
+  async deleteMe(@Body() body: any, @Request() req: any) {
+    await this.usersService.deleteAccount(req.user.id, body?.password);
+    return { ok: true };
+  }
 
   @Get('search')
   async search(@Query('query') query: string, @Query('limit') limit: string, @Request() req: any) {

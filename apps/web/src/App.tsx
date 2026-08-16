@@ -41,6 +41,8 @@ const AiLimitsPage = lazy(() => import('./pages/AiLimitsPage').then((m) => ({ de
 const MenuPage = lazy(() => import('./pages/MenuPage').then((m) => ({ default: m.MenuPage })));
 const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage').then((m) => ({ default: m.AdminAnalyticsPage })));
 const RunPage = lazy(() => import('./pages/RunPage').then((m) => ({ default: m.RunPage })));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then((m) => ({ default: m.VerifyEmailPage })));
 const FastingPage = lazy(() => import('./pages/FastingPage').then((m) => ({ default: m.FastingPage })));
 
 // Автотрекинг просмотров страниц: одно событие на смену маршрута,
@@ -89,6 +91,22 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/privacy"
+            element={
+              <Suspense fallback={<Loader />}>
+                <PrivacyPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/verify-email"
+            element={
+              <Suspense fallback={<Loader />}>
+                <VerifyEmailPage />
+              </Suspense>
+            }
+          />
           <Route path="/" element={<EntryPage />} />
           <Route element={<AppLayout />}>
             <Route path="/today" element={<TodayPage />} />

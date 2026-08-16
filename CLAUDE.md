@@ -128,6 +128,20 @@ cd apps/api && npm install --package-lock-only
   id в путях схлопываются в `:id`). Дашборд — `/admin/analytics` (пункт
   «Аналитика» в меню у роли admin).
 
+## Почта и аккаунт
+
+- `src/mail` — глобальный MailService (nodemailer, env `SMTP_*`, `MAIL_FROM`,
+  `APP_URL`). Без `SMTP_HOST` письма не шлются, а почта новых пользователей
+  считается подтверждённой сразу (dev-режим).
+- Подтверждение регистрации: токен активации (SHA-256 хеш в `User`),
+  `POST /auth/verify-email`, `POST /auth/resend-verification`; web-страница
+  `/verify-email`, баннер — `widgets/profile/VerifyEmailBanner.tsx`.
+- Удаление аккаунта: `DELETE /users/me` (подтверждение паролем) чистит ВСЕ
+  коллекции с userId по сырым именам — новую коллекцию с данными пользователя
+  обязательно дописать в список в `users.service.deleteAccount`.
+- Политика конфиденциальности: `/privacy` (текст прямо в `PrivacyPage.tsx`,
+  сознательно не в i18n), ссылка при регистрации и в меню.
+
 ## Деплой
 
 Push в `main` → GitHub Actions (`.github/workflows/main.yml`, self-hosted
@@ -141,4 +155,5 @@ Secrets через env шага в `docker-compose.yml`. Новая env-пере
 - Верификация — только `tsc --noEmit` в обоих приложениях; билд и UI
   пользователь проверяет сам, браузерная верификация не нужна.
 - Markdown-файлы в корне (CHUNK_*.md, *_REVIEW.md и т.п.) — исторические
-  ТЗ/отчёты, не актуальная документация.
+  ТЗ/отчёты, не актуальная документация. Исключение — `LAUNCH_CHECKLIST.md`:
+  живой чеклист подготовки к проду, при выполнении пунктов отмечать.

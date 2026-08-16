@@ -101,6 +101,15 @@ export function RegisterPage() {
           </Button>
         </form>
 
+        <div style={{ textAlign: 'center', marginTop: theme.spacing.sm }}>
+          <Text muted style={{ fontSize: '12px' }}>
+            {t('legal.registerConsent')}{' '}
+            <Link to="/privacy" style={{ color: theme.palette.primary, textDecoration: 'none' }}>
+              {t('legal.privacyLink')}
+            </Link>
+          </Text>
+        </div>
+
         <div style={{ textAlign: 'center', marginTop: theme.spacing.lg }}>
           <Text muted>
             {t('auth.hasAccount')}{' '}

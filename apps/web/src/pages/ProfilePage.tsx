@@ -9,6 +9,8 @@ import { AiQuotaCard } from "../widgets/profile/AiQuotaCard";
 import { NotificationsCard } from "../widgets/profile/NotificationsCard";
 import { StreakCard } from "../widgets/profile/StreakCard";
 import { PremiumCard } from "../widgets/profile/PremiumCard";
+import { DangerZoneCard } from "../widgets/profile/DangerZoneCard";
+import { VerifyEmailBanner } from "../widgets/profile/VerifyEmailBanner";
 import { ProfileAchievements } from "../widgets/profile/ProfileAchievements";
 import { ProfileBodyCard } from "../widgets/profile/ProfileBodyCard";
 import { ProfileGoalCard } from "../widgets/profile/ProfileGoalCard";
@@ -166,6 +168,8 @@ export function ProfilePage() {
         </div>
       )}
 
+      {!editingBody && <VerifyEmailBanner />}
+
       {!editingBody && (
         <ProfileAchievements
           achievements={achievements}
@@ -199,6 +203,8 @@ export function ProfilePage() {
         onSubmit={handleSubmit}
         onChange={handleChange}
       />
+
+      {!editingBody && <DangerZoneCard />}
     </div>
   );
 }

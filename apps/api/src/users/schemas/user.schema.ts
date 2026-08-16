@@ -42,6 +42,16 @@ export class User {
   @Prop({ type: Date })
   premiumUntil?: Date;
 
+  // Подтверждение почты: храним только SHA-256 хеш токена активации
+  @Prop({ default: false })
+  emailVerified: boolean;
+
+  @Prop()
+  verifyTokenHash?: string;
+
+  @Prop({ type: Date })
+  verifyTokenExpires?: Date;
+
   // Profile fields
   @Prop({
     type: {

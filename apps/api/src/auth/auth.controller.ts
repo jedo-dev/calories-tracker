@@ -108,4 +108,16 @@ export class AuthController {
   async getMe(@Request() req: any) {
     return req.user;
   }
+
+  @Public()
+  @Post('verify-email')
+  async verifyEmail(@Body() body: any) {
+    return this.authService.verifyEmail(body?.token);
+  }
+
+  @Post('resend-verification')
+  @UseGuards(JwtAuthGuard)
+  async resendVerification(@Request() req: any) {
+    return this.authService.resendVerification(req.user.id);
+  }
 }

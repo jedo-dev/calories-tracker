@@ -28,6 +28,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { FastingModule } from './fasting/fasting.module';
 import { BillingModule } from './billing/billing.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { BillingModule } from './billing/billing.module';
     AnalyticsModule,
     FastingModule,
     BillingModule,
+    MailModule,
   ],
   providers: [
     {
