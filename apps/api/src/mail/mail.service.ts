@@ -37,7 +37,11 @@ export class MailService {
   }
 
   private get from(): string {
-    return this.configService.get<string>('MAIL_FROM') || 'FlareonFit <no-reply@flareonfit.app>';
+    const raw = this.configService.get<string>('MAIL_FROM') || 'FlareonFit <no-reply@flareonfit.app>';
+    // В GitHub Secrets значение приходит буквально: обёрточные кавычки и
+    // случайный \r\n из вставки ломают SMTP-команду MAIL FROM (555 5.5.2).
+    // dotenv локально кавычки снимает сам, поэтому локально это не всплывает.
+    return raw.replace(/[\r\n]/g, '').trim().replace(/^"(.*)"$/, '$1');
   }
 
   private get supportEmail(): string {
