@@ -13,6 +13,7 @@ import { Footer } from './widget/Footer/Footer';
 import Loader, { LoaderOverlayHost } from './ui/Loader';
 import { ToastHost } from './ui/Toast';
 import { normalizePath, track } from './utils/analytics';
+import { InstallGuide } from './widgets/pwa/InstallGuide';
 
 const AddEntryPage = lazy(() => import('./pages/AddEntryPage').then((m) => ({ default: m.AddEntryPage })));
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
@@ -71,6 +72,7 @@ function AppLayout() {
           <Outlet />
         </Suspense>
         <Footer />
+        <InstallGuide />
       </div>
     </ProtectedRoute>
   );
