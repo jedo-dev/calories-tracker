@@ -62,6 +62,40 @@ services:
       SUPPORT_EMAIL: ${SUPPORT_EMAIL}
       APP_URL: ${APP_URL}
 
+  # Ежедневный дамп Mongo в отдельный volume (ротация 14 дней).
+  # ВАЖНО: volume лежит на том же хосте — дампы нужно дополнительно
+  # копировать наружу (см. LAUNCH_CHECKLIST.md).
+  mongo-backup:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - mongo_backups:/backups
+      - ./scripts/mongo-backup.sh:/backup.sh:ro
+    entrypoint: ["sh", "/backup.sh"]
+
+  # Офсайт-копия дампов в Яндекс Object Storage (S3). Без BACKUP_S3_BUCKET
+  # сервис спит и ничего не делает.
+  backup-sync:
+    image: rclone/rclone:latest
+    restart: unless-stopped
+    depends_on:
+      - mongo-backup
+    environment:
+      RCLONE_CONFIG_YC_TYPE: s3
+      RCLONE_CONFIG_YC_PROVIDER: Other
+      RCLONE_CONFIG_YC_ENDPOINT: storage.yandexcloud.net
+      RCLONE_CONFIG_YC_REGION: ru-central1
+      RCLONE_CONFIG_YC_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY}
+      RCLONE_CONFIG_YC_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_KEY}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
+    volumes:
+      - mongo_backups:/backups:ro
+      - ./scripts/backup-sync.sh:/sync.sh:ro
+    entrypoint: ["sh", "/sync.sh"]
+
   web:
     image: calories-tracker-web:latest
     build:
@@ -77,3 +111,4 @@ services:
 
 volumes:
   minio_data:
+  mongo_backups:

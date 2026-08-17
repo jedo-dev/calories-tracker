@@ -6,9 +6,19 @@
 
 ## 🔴 Блокеры (данные и безопасность)
 
-- [ ] **Бэкапы MongoDB.** Cron с `mongodump` → MinIO/S3, ротация 14 дней,
-      один проверенный восстановленный дамп. Сейчас сбой диска = потеря всех
-      дневников.
+- [x] **Бэкапы MongoDB (ступень 1: на хосте).** Сервис `mongo-backup` в
+      docker-compose: ежедневный `mongodump --gzip` в volume `mongo_backups`,
+      ротация 14 дней (`scripts/mongo-backup.sh`).
+      Проверка после деплоя: `docker-compose logs mongo-backup`.
+      Восстановление: `docker-compose exec -T mongo-backup mongorestore
+      --uri="$MONGO_URI" --archive --gzip --drop < дамп` — прогнать один раз
+      на тестовой базе, непроверенный бэкап = нет бэкапа.
+- [x] **Бэкапы MongoDB (ступень 2: офсайт).** Сервис `backup-sync`
+      (rclone → Яндекс Object Storage) зеркалит дампы раз в сутки
+      (`scripts/backup-sync.sh`). Осталось руками: создать бакет и
+      сервисный аккаунт в Яндекс Облаке, добавить секреты
+      `BACKUP_S3_BUCKET` / `BACKUP_S3_ACCESS_KEY` / `BACKUP_S3_SECRET_KEY`
+      в GitHub. Проверка: `docker-compose logs backup-sync`.
 - [ ] **Rate limiting.** `@nestjs/throttler`: жёсткий лимит на `/auth/*`
       (брутфорс) и `/ai/*` (платные токены), мягкий на остальное API.
 - [ ] **Убрать дефолтные секреты из compose.** `S3_ACCESS_KEY:-minioadmin` —
