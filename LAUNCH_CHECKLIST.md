@@ -13,12 +13,11 @@
       Восстановление: `docker-compose exec -T mongo-backup mongorestore
       --uri="$MONGO_URI" --archive --gzip --drop < дамп` — прогнать один раз
       на тестовой базе, непроверенный бэкап = нет бэкапа.
-- [x] **Бэкапы MongoDB (ступень 2: офсайт).** Сервис `backup-sync`
-      (rclone → Яндекс Object Storage) зеркалит дампы раз в сутки
-      (`scripts/backup-sync.sh`). Осталось руками: создать бакет и
-      сервисный аккаунт в Яндекс Облаке, добавить секреты
-      `BACKUP_S3_BUCKET` / `BACKUP_S3_ACCESS_KEY` / `BACKUP_S3_SECRET_KEY`
-      в GitHub. Проверка: `docker-compose logs backup-sync`.
+- [x] **Бэкапы MongoDB (ступень 2: офсайт).** Тот же сервис `mongo-backup`
+      после дампа зеркалит папку в Яндекс Object Storage (rclone sync).
+      Осталось руками: создать бакет и сервисный аккаунт в Яндекс Облаке,
+      добавить секреты `BACKUP_S3_BUCKET` / `BACKUP_S3_ACCESS_KEY` /
+      `BACKUP_S3_SECRET_KEY` в GitHub.
 - [ ] **Rate limiting.** `@nestjs/throttler`: жёсткий лимит на `/auth/*`
       (брутфорс) и `/ai/*` (платные токены), мягкий на остальное API.
 - [ ] **Убрать дефолтные секреты из compose.** `S3_ACCESS_KEY:-minioadmin` —

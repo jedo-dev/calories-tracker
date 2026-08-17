@@ -68,3 +68,6 @@ jobs:
         run: |
           echo "Compose Started..."
           docker-compose up -d
+          # Каждый деплой собирает новые образы — без чистки старые слои
+          # копятся и съедают диск. Удаляем только «висячие» (без тега).
+          docker image prune -f
