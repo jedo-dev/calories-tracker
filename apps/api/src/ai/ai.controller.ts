@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Request, ValidationPipe } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AiQuotaService } from './ai-quota.service';
 import { AiService } from './ai.service';
 import { FoodPhotoDto } from './dto/food-photo.dto';
@@ -11,6 +12,9 @@ export class AiController {
     private readonly quotaService: AiQuotaService,
   ) {}
 
+  // Токены AI-провайдера платные: даже в рамках квоты не даём дёргать
+  // распознавание в цикле
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @Post('food-photo')
   async recognizeFoodPhoto(@Body(ValidationPipe) dto: FoodPhotoDto, @Request() req: any) {
     // Сначала списываем лимит: не даём бесплатно жечь токены провайдера.
@@ -29,6 +33,8 @@ export class AiController {
     return this.quotaService.getQuota(req.user.id);
   }
 
+  // Промокоды не должны перебираться брутфорсом
+  @Throttle({ default: { ttl: 15 * 60_000, limit: 10 } })
   @Post('promo')
   async redeemPromo(@Body(ValidationPipe) dto: RedeemPromoDto, @Request() req: any) {
     return this.quotaService.redeemPromo(req.user.id, dto.code);

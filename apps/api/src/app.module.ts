@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AdminModule } from './admin/admin.module';
@@ -36,6 +37,9 @@ import { MailModule } from './mail/mail.module';
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),
+    // Мягкий глобальный rate limit по IP; жёсткие лимиты на /auth и /ai —
+    // декораторами @Throttle в контроллерах
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -69,6 +73,10 @@ import { MailModule } from './mail/mail.module';
     MailModule,
   ],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

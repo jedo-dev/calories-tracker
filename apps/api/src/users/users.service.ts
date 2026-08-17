@@ -94,6 +94,10 @@ export class UsersService implements OnModuleInit {
     return this.userModel.findOne({ verifyTokenHash: hash }).exec();
   }
 
+  async findByResetTokenHash(hash: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ resetTokenHash: hash }).exec();
+  }
+
   /**
    * Полное удаление аккаунта и всех данных пользователя (право на удаление
    * персональных данных). Работает по сырым коллекциям: при добавлении новой

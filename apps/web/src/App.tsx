@@ -44,6 +44,8 @@ const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage').then(
 const RunPage = lazy(() => import('./pages/RunPage').then((m) => ({ default: m.RunPage })));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then((m) => ({ default: m.VerifyEmailPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
 const FastingPage = lazy(() => import('./pages/FastingPage').then((m) => ({ default: m.FastingPage })));
 
 // Автотрекинг просмотров страниц: одно событие на смену маршрута,
@@ -106,6 +108,22 @@ function App() {
             element={
               <Suspense fallback={<Loader />}>
                 <VerifyEmailPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <Suspense fallback={<Loader />}>
+                <ForgotPasswordPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <Suspense fallback={<Loader />}>
+                <ResetPasswordPage />
               </Suspense>
             }
           />

@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Ip,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -37,6 +38,23 @@ class RegisterDto {
   @IsString()
   @MaxLength(64)
   username?: string;
+}
+
+class ForgotPasswordDto {
+  @IsEmail()
+  @MaxLength(254)
+  email: string;
+}
+
+class ResetPasswordDto {
+  @IsString()
+  @MaxLength(128)
+  token: string;
+
+  @IsString()
+  @MinLength(6)
+  @MaxLength(128)
+  password: string;
 }
 
 class LoginDto {
@@ -74,6 +92,10 @@ function recordFailure(key: string): void {
   failedAttempts.set(key, attempts);
 }
 
+// Жёсткий лимит на весь auth: 30 запросов с IP за 15 минут. Дополняет
+// точечный in-memory лимит логина по ip+email ниже (тот считает только
+// неудачные попытки, этот — вообще все запросы к /auth/*).
+@Throttle({ default: { ttl: 15 * 60_000, limit: 30 } })
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -107,6 +129,20 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getMe(@Request() req: any) {
     return req.user;
+  }
+
+  // Ещё жёстче общего лимита /auth: каждое письмо — работа SMTP
+  @Throttle({ default: { ttl: 15 * 60_000, limit: 5 } })
+  @Public()
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(body.token, body.password);
   }
 
   @Public()

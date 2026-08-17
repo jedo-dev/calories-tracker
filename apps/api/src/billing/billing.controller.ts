@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -14,6 +15,8 @@ export class BillingController {
     return this.premiumService.getStatus(req.user.id);
   }
 
+  // Премиум-коды не должны перебираться брутфорсом
+  @Throttle({ default: { ttl: 15 * 60_000, limit: 10 } })
   @Post('redeem')
   redeem(@Body() body: any, @Request() req: any) {
     return this.premiumService.redeemCode(req.user.id, body?.code);

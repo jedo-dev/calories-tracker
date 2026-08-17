@@ -136,6 +136,9 @@ cd apps/api && npm install --package-lock-only
 - Подтверждение регистрации: токен активации (SHA-256 хеш в `User`),
   `POST /auth/verify-email`, `POST /auth/resend-verification`; web-страница
   `/verify-email`, баннер — `widgets/profile/VerifyEmailBanner.tsx`.
+- Сброс пароля: `POST /auth/forgot-password` (всегда ok, без user
+  enumeration) + `POST /auth/reset-password`; страницы `/forgot-password`
+  и `/reset-password`. Шаблоны писем — TS-константы в `mail/templates/`.
 - Удаление аккаунта: `DELETE /users/me` (подтверждение паролем) чистит ВСЕ
   коллекции с userId по сырым именам — новую коллекцию с данными пользователя
   обязательно дописать в список в `users.service.deleteAccount`.

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { CONFIRM_ACCOUNT_HTML, CONFIRM_ACCOUNT_TEXT } from './templates/confirm-account';
+import { RESET_PASSWORD_HTML, RESET_PASSWORD_TEXT } from './templates/reset-password';
 
 // Подстановка {{KEY}} → значение по всему шаблону
 function render(template: string, vars: Record<string, string>): string {
@@ -72,6 +73,29 @@ export class MailService {
         subject: 'Аккаунт FlareonFit почти готов',
         text: render(CONFIRM_ACCOUNT_TEXT, vars),
         html: render(CONFIRM_ACCOUNT_HTML, vars),
+      });
+      return true;
+    } catch (err: any) {
+      this.logger.warn(`Не удалось отправить письмо на ${to}: ${err?.message}`);
+      return false;
+    }
+  }
+
+  async sendPasswordResetEmail(to: string, link: string, userName?: string): Promise<boolean> {
+    if (!this.transporter) return false;
+    const vars = {
+      USER_NAME: userName || 'друг',
+      RESET_URL: link,
+      SUPPORT_EMAIL: this.supportEmail,
+    };
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to,
+        replyTo: this.supportEmail,
+        subject: 'Сброс пароля — FlareonFit',
+        text: render(RESET_PASSWORD_TEXT, vars),
+        html: render(RESET_PASSWORD_HTML, vars),
       });
       return true;
     } catch (err: any) {

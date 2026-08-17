@@ -6,8 +6,10 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+      # Без :-дефолтов: забытый секрет должен ронять деплой, а не поднимать
+      # хранилище с паролем minioadmin
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?S3_ACCESS_KEY secret is required}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?S3_SECRET_KEY secret is required}
     volumes:
       - minio_data:/data
 
@@ -16,8 +18,8 @@ services:
     depends_on:
       - minio
     environment:
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY secret is required}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY secret is required}
     entrypoint: >
       /bin/sh -c "
       until mc alias set local http://minio:9000 $${S3_ACCESS_KEY} $${S3_SECRET_KEY}; do sleep 1; done;
@@ -44,8 +46,8 @@ services:
       # Public base URL for stored photo links, e.g. https://example.com/s3 (nginx proxies /s3/ to minio)
       S3_PUBLIC_URL: ${S3_PUBLIC_URL}
       S3_BUCKET: ${S3_BUCKET:-recipes}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY secret is required}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY secret is required}
       # AI-распознавание еды по фото (Polza.ai, OpenAI-совместимый API)
       AI_API_KEY: ${AI_API_KEY}
       AI_MODEL: ${AI_MODEL:-anthropic/claude-sonnet-4.5}

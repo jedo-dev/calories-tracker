@@ -75,6 +75,46 @@ export class AuthService {
     return { ok: true };
   }
 
+  /**
+   * Запрос сброса пароля. Всегда отвечает ok — по ответу нельзя выяснить,
+   * зарегистрирован ли email (user enumeration).
+   */
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (user && this.mailService.isConfigured) {
+      const token = crypto.randomBytes(32).toString('hex');
+      user.resetTokenHash = this.hashToken(token);
+      user.resetTokenExpires = new Date(Date.now() + 60 * 60_000);
+      await user.save();
+
+      const appUrl = (this.configService.get<string>('APP_URL') || 'http://localhost:5173').replace(/\/$/, '');
+      const link = `${appUrl}/reset-password?token=${token}`;
+      void this.mailService.sendPasswordResetEmail(
+        user.email,
+        link,
+        user.displayName || user.username,
+      );
+    }
+    return { ok: true };
+  }
+
+  async resetPassword(token: string, password: string) {
+    if (!token || typeof token !== 'string' || token.length > 128) {
+      throw new BadRequestException('Некорректная ссылка сброса');
+    }
+    const user = await this.usersService.findByResetTokenHash(this.hashToken(token));
+    if (!user || !user.resetTokenExpires || user.resetTokenExpires < new Date()) {
+      throw new BadRequestException('Ссылка сброса недействительна или устарела');
+    }
+    user.password = await bcrypt.hash(password, 10);
+    user.resetTokenHash = undefined;
+    user.resetTokenExpires = undefined;
+    // Пароль сменён по ссылке из письма — значит, почта подтверждена
+    user.emailVerified = true;
+    await user.save();
+    return { ok: true };
+  }
+
   async resendVerification(userId: string) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new UnauthorizedException();

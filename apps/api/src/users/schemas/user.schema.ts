@@ -52,6 +52,13 @@ export class User {
   @Prop({ type: Date })
   verifyTokenExpires?: Date;
 
+  // Сброс пароля: SHA-256 хеш одноразового токена из письма
+  @Prop()
+  resetTokenHash?: string;
+
+  @Prop({ type: Date })
+  resetTokenExpires?: Date;
+
   // Profile fields
   @Prop({
     type: {

@@ -96,6 +96,15 @@ export function LoginPage() {
           </Button>
         </form>
 
+        <div style={{ textAlign: 'center', marginTop: theme.spacing.sm }}>
+          <Link
+            to="/forgot-password"
+            style={{ color: theme.palette.textMuted, textDecoration: 'none', fontSize: '13px' }}
+          >
+            {t('resetPassword.forgotLink')}
+          </Link>
+        </div>
+
         <div style={{ textAlign: 'center', marginTop: theme.spacing.lg }}>
           <Text muted>
             {t('auth.noAccount')}{' '}

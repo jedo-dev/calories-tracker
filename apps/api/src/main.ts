@@ -9,6 +9,10 @@ async function bootstrap() {
   // Фото для AI-распознавания приходит base64 в JSON — дефолтных 100kb мало
   app.use(json({ limit: '4mb' }));
 
+  // API живёт за nginx: без trust proxy rate limiter видел бы у всех
+  // пользователей один IP прокси и банил бы всех разом
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   // Глобальная валидация: неизвестные поля вырезаются из тела запроса
   // (защита от mass-assignment), декорированные DTO валидируются везде.
   app.useGlobalPipes(
