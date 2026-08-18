@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 // чтобы 27 страниц (включая админку) не ехали одним бандлом.
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { LandingPage } from './pages/LandingPage';
 import { EntryPage } from './pages/EntryPage';
 import { TodayPage } from './pages/TodayPage';
 import { useTheme } from './theme/useTheme';
@@ -127,7 +128,9 @@ function App() {
               </Suspense>
             }
           />
-          <Route path="/" element={<EntryPage />} />
+          <Route path="/" element={<LandingPage />} />
+          {/* Прежний онбординг-слайдер оставлен на /welcome */}
+          <Route path="/welcome" element={<EntryPage />} />
           <Route element={<AppLayout />}>
             <Route path="/today" element={<TodayPage />} />
             <Route path="/profile" element={<ProfilePage />} />
