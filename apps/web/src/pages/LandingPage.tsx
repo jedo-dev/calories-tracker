@@ -26,6 +26,7 @@ import icoNote from '../assets/pack/png/note_128.png';
 // серым) — играет везде, включая iPhone; прозрачность склеивает WebGL-канвас.
 // При любом сбое (нет WebGL, автоплей заблокирован) — статичный слоёный лис.
 import foxHeroStacked from '../assets/08_mascot/wave/fox_hero_stacked.mp4';
+import foxPullupStacked from '../assets/08_mascot/wave/fox_pullup_stacked.mp4';
 // Скриншоты приложения для слайдера (пережаты в 520px WebP из assets/mockups)
 import mockGraph from '../assets/mockups/opt/graph-mock.webp';
 import mockLeaders from '../assets/mockups/opt/leaders-mock.webp';
@@ -37,7 +38,17 @@ import mockWeight from '../assets/mockups/opt/weight-mock.webp';
 
 // Рендерер прозрачного видео-маскота: скрытый <video> со стековым mp4 +
 // WebGL-канвас, где шейдер берёт цвет из верхней панели и альфу из нижней.
-function HeroFoxCanvas({ onFail }: { onFail: () => void }) {
+function HeroFoxCanvas({
+  src,
+  onFail,
+  className = 'lp-hero-video',
+  ariaLabel,
+}: {
+  src: string;
+  onFail: () => void;
+  className?: string;
+  ariaLabel: string;
+}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -126,7 +137,7 @@ function HeroFoxCanvas({ onFail }: { onFail: () => void }) {
     <>
       <video
         ref={videoRef}
-        src={foxHeroStacked}
+        src={src}
         muted
         loop
         playsInline
@@ -138,11 +149,11 @@ function HeroFoxCanvas({ onFail }: { onFail: () => void }) {
       />
       <canvas
         ref={canvasRef}
-        className="lp-hero-video"
+        className={className}
         width={640}
         height={640}
         role="img"
-        aria-label="Лис FlareonFit фотографирует салат на телефон"
+        aria-label={ariaLabel}
       />
     </>
   );
@@ -186,6 +197,11 @@ export function LandingPage() {
     () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
   const videoFail = useCallback(() => setUseVideo(false), []);
+  // Подтягивающийся лис в финальном CTA; при сбое возвращаем статичного
+  const [usePullup, setUsePullup] = useState(
+    () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  const pullupFail = useCallback(() => setUsePullup(false), []);
 
   useEffect(() => {
     if (!loading && user) navigate('/today');
@@ -388,7 +404,11 @@ export function LandingPage() {
           <div className="lp-scene-ring" aria-hidden />
           {useVideo ? (
             <div className="lp-mascot lp-mascot--video lp-float">
-              <HeroFoxCanvas onFail={videoFail} />
+              <HeroFoxCanvas
+                src={foxHeroStacked}
+                onFail={videoFail}
+                ariaLabel="Лис FlareonFit фотографирует салат на телефон"
+              />
             </div>
           ) : (
             <div className="lp-mascot lp-float">
@@ -619,13 +639,27 @@ export function LandingPage() {
       {/* ── Финальный CTA ── */}
       <section className="lp-final">
         <div className="lp-container lp-final-in lp-stagger">
-          <img src={mascotCelebrate} alt="" width={1024} height={1024} loading="lazy" decoding="async" />
+          {!usePullup && (
+            <img src={mascotCelebrate} alt="" width={380} height={380} loading="lazy" decoding="async" />
+          )}
           <h2>
             Первая запись — <span className="lp-grad">сегодня вечером</span>
           </h2>
-          <Link to="/register" className="lp-btn lp-btn-lg lp-btn-pulse">
-            Начать бесплатно
-          </Link>
+          {/* Лис подтягивается на CTA-кнопке: канвас за кнопкой, «турник»
+              (прозрачная прорезь в видео) совмещён с её верхней кромкой */}
+          <div className="lp-final-hang">
+            {usePullup && (
+              <HeroFoxCanvas
+                src={foxPullupStacked}
+                onFail={pullupFail}
+                className="lp-pullup-canvas"
+                ariaLabel="Лис FlareonFit подтягивается на кнопке"
+              />
+            )}
+            <Link to="/register" className="lp-btn lp-btn-lg lp-btn-pulse">
+              Начать бесплатно
+            </Link>
+          </div>
           <div className="lp-hero-note">Дневник, тренировки и лига — бесплатно навсегда</div>
         </div>
       </section>
@@ -897,10 +931,19 @@ html{scroll-behavior:smooth}
 .lp-screen figcaption{margin-top:12px;font-size:13.5px;font-weight:700;color:var(--muted)}
 
 /* Финал */
-.lp-final{padding:100px 0;position:relative;text-align:center;background:
-  radial-gradient(circle at 50% 20%,rgba(76,181,88,.14),transparent 50%)}
+/* Свечение затухает ДО границ секции (центр в глубине, эллипс не достаёт
+   до краёв) — иначе на стыке с соседним блоком виден резкий шов градиента */
+.lp-final{padding:120px 0 100px;position:relative;text-align:center;background:
+  radial-gradient(ellipse 70% 52% at 50% 55%,rgba(76,181,88,.13),transparent 74%)}
 .lp-final-in{display:flex;flex-direction:column;align-items:center;gap:24px}
 .lp-final img{width:190px;height:auto;filter:drop-shadow(0 20px 40px rgba(0,0,0,.4))}
+/* Подтягивающийся лис за CTA-кнопкой. Перекладина в кадре на ~33% высоты:
+   при канвасе 240px это 79px от верха — совмещаем с верхом кнопки */
+.lp-final-hang{position:relative;margin-top:30px;margin-bottom:86px}
+.lp-final-hang .lp-btn{position:relative;z-index:1}
+.lp-pullup-canvas{position:absolute;left:50%;transform:translateX(-50%);top:-79px;
+  width:240px;height:240px;z-index:0;pointer-events:none;
+  filter:drop-shadow(0 16px 30px rgba(0,0,0,.4))}
 .lp-final h2{font-size:46px;max-width:700px}
 
 /* Футер */
