@@ -1,50 +1,76 @@
-import { useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import mascotCelebrate from '../assets/08_mascot/mascot_fox_celebrate_sm.png';
+import logoMark from '../assets/01_brand/logo_mark.webp';
+// Маскоты бенто-карточек (сгенерированы по референсу, фон выбит скриптом)
+import foxRun from '../assets/08_mascot/cards/fox_run.webp';
+import foxFasting from '../assets/08_mascot/cards/fox_fasting.webp';
+import foxRecipes from '../assets/08_mascot/cards/fox_recipes.webp';
+import foxWater from '../assets/08_mascot/cards/fox_water.webp';
+import foxStats from '../assets/08_mascot/cards/fox_stats.webp';
+// Иконки бегущей строки — фирменный пак вместо дефолтных эмодзи
+import icoWeight from '../assets/pack/png/weight_128.png';
+import icoMuscle from '../assets/pack/png/muscle_128.png';
+import icoMeal from '../assets/pack/png/meal_128.png';
+import icoStreak from '../assets/pack/png/streak_128.png';
+import icoWater from '../assets/pack/png/water_128.png';
+import icoTarget from '../assets/pack/png/target_128.png';
+import icoSteps from '../assets/pack/png/steps_128.png';
+import icoTrophy from '../assets/pack/png/trophy_128.png';
+import icoNote from '../assets/pack/png/note_128.png';
 // Машущий маскот: тело и лапа — отдельные слои (нарезаны из mascot_fox_main
 // скриптом PIL), лапа вращается CSS-ом вокруг плеча
-import foxWaveBody from '../assets/08_mascot/wave/fox_wave_body.png';
-import foxWaveArm from '../assets/08_mascot/wave/fox_wave_arm.png';
-// Анимированный маскот героя (image-to-video из сгенерированной иллюстрации).
-// webm — с настоящим альфа-каналом (фон выбит хромакей-скриптом), mp4 —
-// фолбэк с запечённым фоном для Safari, прячется виньеткой
-import foxHeroVideo from '../assets/08_mascot/wave/fox_hero.mp4';
+
+// Анимированный маскот героя: webm с альфа-каналом (фон выбит скриптом).
+// При ошибке декодирования onError переключает на статичного слоёного лиса.
 import foxHeroAlpha from '../assets/08_mascot/wave/fox_hero_alpha.webm';
+// Скриншоты приложения для слайдера (пережаты в 520px WebP из assets/mockups)
+import mockGraph from '../assets/mockups/opt/graph-mock.webp';
+import mockLeaders from '../assets/mockups/opt/leaders-mock.webp';
+import mockPlan from '../assets/mockups/opt/plan-mock.webp';
+import mockProfile from '../assets/mockups/opt/profile-mock.webp';
+import mockRecipe from '../assets/mockups/opt/recipe-mock.webp';
+import mockTrain from '../assets/mockups/opt/train-mock.webp';
+import mockWeight from '../assets/mockups/opt/weight-mock.webp';
 
 // Продажный лендинг на корне сайта. Тексты сознательно не в i18n — это
 // маркетинговая страница одной локали, правится целиком (как PrivacyPage).
 // Секция отзывов намеренно отсутствует: выдуманные истории убивают доверие —
 // добавить её, когда появятся реальные отзывы первых пользователей.
 
+const SCREENS = [
+  { src: mockGraph, caption: 'Отчёты и графики' },
+  { src: mockLeaders, caption: 'Лига друзей' },
+  { src: mockPlan, caption: 'План питания' },
+  { src: mockProfile, caption: 'Профиль и достижения' },
+  { src: mockRecipe, caption: 'Рецепты' },
+  { src: mockTrain, caption: 'Тренировки' },
+  { src: mockWeight, caption: 'Динамика веса' },
+];
+
 const MARQUEE = [
-  '⚖️ Похудеть',
-  '💪 Набрать мышцы',
-  '📸 Считать калории по фото',
-  '🔥 Держать серию',
-  '💧 Пить больше воды',
-  '⏱ Интервальное голодание',
-  '🏃 Бегать с шагомером',
-  '🏆 Соревноваться с друзьями',
-  '📊 Видеть честный прогресс',
+  { icon: icoWeight, label: 'Похудеть' },
+  { icon: icoMuscle, label: 'Набрать мышцы' },
+  { icon: icoMeal, label: 'Считать калории по фото' },
+  { icon: icoStreak, label: 'Держать серию' },
+  { icon: icoWater, label: 'Пить больше воды' },
+  { icon: icoTarget, label: 'Интервальное голодание' },
+  { icon: icoSteps, label: 'Бегать с шагомером' },
+  { icon: icoTrophy, label: 'Соревноваться с друзьями' },
+  { icon: icoNote, label: 'Видеть честный прогресс' },
 ];
 
 export function LandingPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const heroRef = useRef<HTMLElement | null>(null);
+  const screensRef = useRef<HTMLDivElement | null>(null);
   // Видео-маскот: при reduced-motion или ошибке загрузки — статичный
   // послойный лис (тело + машущая лапа)
   const [useVideo, setUseVideo] = useState(
     () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
-  // Прозрачный VP9-webm умеют Chromium и Firefox; Safari декодирует VP9 без
-  // альфы (получил бы синий прямоугольник) — ему отдаём mp4 с виньеткой
-  const [alphaOk] = useState(() => {
-    const probe = document.createElement('video');
-    const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
-    return !isSafari && probe.canPlayType('video/webm; codecs="vp9"') !== '';
-  });
 
   useEffect(() => {
     if (!loading && user) navigate('/today');
@@ -139,12 +165,38 @@ export function LandingPage() {
     const cards = document.querySelectorAll<HTMLElement>('.lp-glow');
     cards.forEach((c) => c.addEventListener('mousemove', onCardMove));
 
+    // ── Слайдер экранов: drag-скролл мышью (на таче работает нативно) ──
+    const track = screensRef.current;
+    let dragging = false;
+    let dragStartX = 0;
+    let dragStartScroll = 0;
+    const onDragStart = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || !track) return;
+      dragging = true;
+      dragStartX = e.clientX;
+      dragStartScroll = track.scrollLeft;
+      track.classList.add('lp-dragging');
+    };
+    const onDragMove = (e: PointerEvent) => {
+      if (dragging && track) track.scrollLeft = dragStartScroll - (e.clientX - dragStartX);
+    };
+    const onDragEnd = () => {
+      dragging = false;
+      track?.classList.remove('lp-dragging');
+    };
+    track?.addEventListener('pointerdown', onDragStart);
+    window.addEventListener('pointermove', onDragMove, { passive: true });
+    window.addEventListener('pointerup', onDragEnd);
+
     return () => {
       observer.disconnect();
       counterObserver.disconnect();
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', onMove);
       cards.forEach((c) => c.removeEventListener('mousemove', onCardMove));
+      track?.removeEventListener('pointerdown', onDragStart);
+      window.removeEventListener('pointermove', onDragMove);
+      window.removeEventListener('pointerup', onDragEnd);
     };
   }, []);
 
@@ -156,6 +208,7 @@ export function LandingPage() {
       <header className="lp-header">
         <div className="lp-pill">
           <span className="lp-logo">
+            <img src={logoMark} alt="" width={40} height={40} decoding="async" />
             Flareon<span>Fit</span>
           </span>
           <nav className="lp-nav">
@@ -221,8 +274,8 @@ export function LandingPage() {
           {useVideo ? (
             <div className="lp-mascot lp-mascot--video lp-float">
               <video
-                className={alphaOk ? 'lp-hero-video lp-hero-video--alpha' : 'lp-hero-video'}
-                src={alphaOk ? foxHeroAlpha : foxHeroVideo}
+                className="lp-hero-video"
+                src={foxHeroAlpha}
                 autoPlay
                 muted
                 loop
@@ -234,8 +287,8 @@ export function LandingPage() {
             </div>
           ) : (
             <div className="lp-mascot lp-float">
-              <img src={foxWaveBody} alt="Лис FlareonFit приветственно машет лапой" width={680} height={680} decoding="async" />
-              <img className="lp-wave-arm" src={foxWaveArm} alt="" width={680} height={680} decoding="async" />
+              <img src={''} alt="Лис FlareonFit приветственно машет лапой" width={680} height={680} decoding="async" />
+              <img className="lp-wave-arm" src={''} alt="" width={680} height={680} decoding="async" />
             </div>
           )}
 
@@ -264,7 +317,8 @@ export function LandingPage() {
         <div className="lp-marquee-track">
           {[...MARQUEE, ...MARQUEE].map((item, i) => (
             <span key={i} className="lp-marquee-chip">
-              {item}
+              <img src={item.icon} alt="" width={22} height={22} loading="lazy" decoding="async" />
+              {item.label}
             </span>
           ))}
         </div>
@@ -281,27 +335,29 @@ export function LandingPage() {
                   <span>Сегодня</span>
                   <span className="lp-ps-streak">🔥 21</span>
                 </div>
+                {/* Кольцо и полоски оживают при появлении телефона во вьюпорте:
+                    в разметке — финальные значения (для скринридеров и reduced-motion) */}
                 <div className="lp-ring">
-                  <span>75%</span>
+                  <span data-count="75" data-suffix="%">75%</span>
                 </div>
                 <div className="lp-ps-kcal">1 802 / 2 402 ккал</div>
                 <div className="lp-macro">
                   <div className="lp-macro-row">
                     <span>Белки</span>
                     <div className="lp-macro-bar">
-                      <i style={{ width: '72%', background: '#6FB5FF' }} />
+                      <i style={{ '--w': '72%', background: '#6FB5FF' } as CSSProperties} />
                     </div>
                   </div>
                   <div className="lp-macro-row">
                     <span>Жиры</span>
                     <div className="lp-macro-bar">
-                      <i style={{ width: '54%', background: '#FFD666' }} />
+                      <i style={{ '--w': '54%', background: '#FFD666' } as CSSProperties} />
                     </div>
                   </div>
                   <div className="lp-macro-row">
                     <span>Углеводы</span>
                     <div className="lp-macro-bar">
-                      <i style={{ width: '63%', background: '#7BD98A' }} />
+                      <i style={{ '--w': '63%', background: '#7BD98A' } as CSSProperties} />
                     </div>
                   </div>
                 </div>
@@ -374,27 +430,27 @@ export function LandingPage() {
               </p>
             </div>
             <div className="lp-card lp-glow">
-              <div className="lp-card-icon">⏱</div>
+              <img className="lp-card-mascot" src={foxFasting} alt="" width={234} height={240} loading="lazy" decoding="async" />
               <h3>Голодание</h3>
               <p>Таймер и протоколы 12/12 – 20/4. XP за завершённый фаст.</p>
             </div>
             <div className="lp-card lp-glow">
-              <div className="lp-card-icon">🏃</div>
+              <img className="lp-card-mascot" src={foxRun} alt="" width={238} height={240} loading="lazy" decoding="async" />
               <h3>Беговой режим</h3>
               <p>Шагомер прямо в телефоне: шаги, дистанция, каденс, калории.</p>
             </div>
             <div className="lp-card lp-glow">
-              <div className="lp-card-icon">🍲</div>
+              <img className="lp-card-mascot" src={foxRecipes} alt="" width={226} height={240} loading="lazy" decoding="async" />
               <h3>Рецепты и планы</h3>
               <p>Свои рецепты, рецепты сообщества и план питания под калораж.</p>
             </div>
             <div className="lp-card lp-glow">
-              <div className="lp-card-icon">💧</div>
+              <img className="lp-card-mascot" src={foxWater} alt="" width={236} height={240} loading="lazy" decoding="async" />
               <h3>Вода и вес</h3>
               <p>Норма воды от веса, графики динамики и «дни в цели».</p>
             </div>
             <div className="lp-card lp-glow lp-card-wide">
-              <div className="lp-card-icon">📊</div>
+              <img className="lp-card-mascot" src={foxStats} alt="" width={259} height={240} loading="lazy" decoding="async" />
               <h3>Честная статистика</h3>
               <p>
                 Вес со сглаживанием, БЖУ по дням, вода, «дни в цели» — видно не только среднее,
@@ -435,6 +491,26 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* ── Слайдер экранов приложения ── */}
+      <section className="lp-screens" id="screens">
+        <div className="lp-container">
+          <h2 className="lp-reveal">
+            Загляните <span className="lp-grad">внутрь</span>
+          </h2>
+          <p className="lp-screens-hint lp-reveal">Листайте — это реальные экраны приложения</p>
+        </div>
+        <div className="lp-screens-track lp-stagger" ref={screensRef}>
+          {SCREENS.map((screen) => (
+            <figure key={screen.caption} className="lp-screen">
+              <div className="lp-screen-frame">
+                <img src={screen.src} alt={`Экран приложения: ${screen.caption}`} width={520} height={1091} loading="lazy" decoding="async" draggable={false} />
+              </div>
+              <figcaption>{screen.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+
       {/* ── Финальный CTA ── */}
       <section className="lp-final">
         <div className="lp-container lp-final-in lp-stagger">
@@ -453,6 +529,7 @@ export function LandingPage() {
       <footer className="lp-footer">
         <div className="lp-container lp-footer-in">
           <span className="lp-logo">
+            <img src={logoMark} alt="" width={40} height={40} loading="lazy" decoding="async" />
             Flareon<span>Fit</span>
           </span>
           <nav>
@@ -522,8 +599,11 @@ html{scroll-behavior:smooth}
   border-radius:999px;box-shadow:0 18px 44px rgba(0,0,0,.4)}
 /* backdrop-blur на sticky-элементе дорог при скролле — оставляем только десктопу */
 @media (min-width:961px){.lp-pill{background:rgba(10,24,38,.85);backdrop-filter:blur(14px)}}
-.lp-logo{font-size:20px;font-weight:800;color:var(--cream);white-space:nowrap}
+.lp-logo{font-size:20px;font-weight:800;color:var(--cream);white-space:nowrap;
+  display:inline-flex;align-items:center;gap:10px}
 .lp-logo span{color:var(--green)}
+.lp-logo img{display:block;width:40px;height:40px;border-radius:12px;
+  border:1px solid rgba(160,200,220,.18)}
 .lp-nav{display:flex;gap:4px;align-items:center;position:absolute;left:50%;transform:translateX(-50%)}
 .lp-nav > a,.lp-dd > button{display:inline-block;color:#CBD9E4;font-size:15px;font-weight:700;padding:11px 18px;
   border-radius:999px;border:1px solid transparent;transition:border-color .12s,background .12s,color .12s;
@@ -577,10 +657,6 @@ html{scroll-behavior:smooth}
    растворяющая запечённый фон ролика в ауре страницы */
 .lp-mascot--video{width:min(430px,78vw)}
 .lp-hero-video{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;
-  -webkit-mask-image:radial-gradient(ellipse 72% 72% at 50% 50%,#000 58%,transparent 94%);
-  mask-image:radial-gradient(ellipse 72% 72% at 50% 50%,#000 58%,transparent 94%)}
-/* С альфа-каналом виньетка не нужна, а тень по контуру наконец работает */
-.lp-hero-video--alpha{-webkit-mask-image:none;mask-image:none;
   filter:drop-shadow(0 30px 60px rgba(0,0,0,.5))}
 .lp-wave-arm{position:absolute;inset:0;transform-origin:38.1% 48.8%;animation:lpWave 4.6s ease-in-out .9s infinite}
 @keyframes lpWave{0%{transform:rotate(0)}7%{transform:rotate(-9deg)}14%{transform:rotate(-3deg)}21%{transform:rotate(-8deg)}30%{transform:rotate(0)}100%{transform:rotate(0)}}
@@ -610,8 +686,10 @@ html{scroll-behavior:smooth}
 .lp-marquee-track{display:flex;gap:12px;width:max-content;animation:lpMarquee 30s linear infinite}
 .lp-marquee:hover .lp-marquee-track{animation-play-state:paused}
 @keyframes lpMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.lp-marquee-chip{flex:none;background:rgba(160,200,220,.07);border:1px solid rgba(160,200,220,.16);
-  border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;color:#CBD9E4}
+.lp-marquee-chip{flex:none;display:inline-flex;align-items:center;gap:9px;
+  background:rgba(160,200,220,.07);border:1px solid rgba(160,200,220,.16);
+  border-radius:999px;padding:9px 18px 9px 14px;font-size:14px;font-weight:600;color:#CBD9E4}
+.lp-marquee-chip img{display:block;width:22px;height:22px}
 
 /* Секция приложения: 3D-телефон */
 .lp-app{padding:96px 0}
@@ -630,14 +708,27 @@ html{scroll-behavior:smooth}
   border:1px solid rgba(160,200,220,.12);border-radius:12px;padding:10px 12px;font-size:13px}
 .lp-ps-meal b{color:var(--green-l)}
 .lp-ps-scan{justify-content:center;color:var(--blue);border-style:dashed}
+/* Кольцо заполняется по часовой при появлении телефона: угол conic-градиента
+   анимируется через зарегистрированное CSS-свойство. Браузеры без @property
+   просто покажут финальные 270deg без анимации */
+@property --lp-ring{syntax:'<angle>';inherits:false;initial-value:270deg}
 .lp-ring{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;
-  background:conic-gradient(var(--green) 0 270deg,rgba(160,200,220,.14) 270deg 360deg)}
-.lp-ring span{width:78px;height:78px;border-radius:50%;background:#0A1929;display:grid;place-items:center;font-size:19px;font-weight:800}
+  --lp-ring:0deg;
+  background:conic-gradient(var(--green) 0 var(--lp-ring),rgba(160,200,220,.14) var(--lp-ring) 360deg);
+  transition:--lp-ring 1.3s cubic-bezier(.22,.61,.36,1) .25s}
+.lp-phone-wrap.lp-in .lp-ring{--lp-ring:270deg}
+.lp-ring span{width:78px;height:78px;border-radius:50%;background:#0A1929;display:grid;place-items:center;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
 .lp-macro{width:100%;display:flex;flex-direction:column;gap:8px}
 .lp-macro-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted)}
 .lp-macro-row span{flex:0 0 62px;text-align:left}
 .lp-macro-bar{flex:1;height:7px;border-radius:4px;background:rgba(160,200,220,.13);overflow:hidden}
-.lp-macro-bar i{display:block;height:100%;border-radius:4px}
+/* Полоски БЖУ выезжают каскадом до своих --w после появления телефона */
+.lp-macro-bar i{display:block;height:100%;border-radius:4px;width:var(--w,0%);
+  transition:width .9s cubic-bezier(.22,.61,.36,1)}
+.lp-phone-wrap:not(.lp-in) .lp-macro-bar i{width:0}
+.lp-macro-row:nth-child(1) .lp-macro-bar i{transition-delay:.35s}
+.lp-macro-row:nth-child(2) .lp-macro-bar i{transition-delay:.5s}
+.lp-macro-row:nth-child(3) .lp-macro-bar i{transition-delay:.65s}
 
 .lp-app-text h2{text-align:left;margin-bottom:30px}
 .lp-app-points{display:flex;flex-direction:column;gap:22px}
@@ -658,6 +749,8 @@ html{scroll-behavior:smooth}
 .lp-card h3{font-size:19px;margin:14px 0 8px}
 .lp-card p{font-size:14px;line-height:1.6;color:var(--muted)}
 .lp-card-icon{font-size:34px}
+.lp-card-mascot{display:block;width:auto;height:112px;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.35))}
 /* Свечение за курсором */
 .lp-glow::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s;pointer-events:none;
   background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(123,217,138,.14),transparent 55%)}
@@ -678,6 +771,25 @@ html{scroll-behavior:smooth}
 .lp-band-in{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center}
 .lp-band-num{font-size:46px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
 .lp-band-cap{margin-top:8px;font-size:13.5px;font-weight:700}
+
+/* Слайдер экранов приложения */
+.lp-screens{padding:90px 0 30px;overflow:hidden}
+.lp-screens-hint{margin-top:12px;text-align:center;font-size:14px;color:var(--dim)}
+.lp-screens-track{display:flex;gap:22px;margin-top:40px;padding:6px max(calc((100vw - 1140px)/2 + 20px),20px) 18px;
+  overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;cursor:grab;
+  /* края растворяются, намекая на продолжение ленты */
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.lp-screens-track::-webkit-scrollbar{display:none}
+.lp-screens-track.lp-dragging{cursor:grabbing;scroll-snap-type:none}
+.lp-screen{flex:0 0 auto;margin:0;scroll-snap-align:center;text-align:center}
+.lp-screen-frame{width:238px;border-radius:30px;padding:9px;
+  background:linear-gradient(160deg,#1a3850,#0b1d2c);border:1px solid rgba(160,200,220,.25);
+  box-shadow:0 24px 48px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);
+  transition:translate .25s,border-color .25s}
+.lp-screen:hover .lp-screen-frame{translate:0 -6px;border-color:rgba(123,217,138,.35)}
+.lp-screen-frame img{display:block;width:100%;height:auto;border-radius:22px;user-select:none;-webkit-user-drag:none}
+.lp-screen figcaption{margin-top:12px;font-size:13.5px;font-weight:700;color:var(--muted)}
 
 /* Финал */
 .lp-final{padding:100px 0;position:relative;text-align:center;background:
