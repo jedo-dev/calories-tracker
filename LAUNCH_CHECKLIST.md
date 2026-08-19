@@ -73,7 +73,15 @@
       публикации. SEO (meta/OG/sitemap) — отдельная задача.
 
 ### Стабильность и наблюдаемость
-- [ ] **Sentry** (или аналог) на API и web — сейчас ошибки прода невидимы.
+- [x] **Фидбек-кнопка.** Плавающая полупрозрачная кнопка 💬 → модалка с
+      textarea → письмо на `SUPPORT_EMAIL` (модуль `src/feedback`, лимит
+      5 за 15 мин). К письму прикладывается буфер последних 20 ошибок фронта
+      (`utils/errorLog.ts`: window.onerror + unhandledrejection + упавшие
+      API-запросы из интерсептора). Без SMTP фидбек падает в лог API.
+      События: `feedback_opened` / `feedback_sent`.
+- [ ] **Sentry / GlitchTip / Bugsink** на API и web — фидбек-кнопка закрывает
+      «юзер заметил и написал», но не «упало молча». Селф-хостед вариант —
+      Bugsink (один контейнер, Sentry-совместимый SDK).
 - [ ] **Healthcheck-и в docker-compose** (`GET /health` уже есть) +
       `depends_on: condition: service_healthy` для web.
 - [ ] **Node 20 → 22** в Dockerfile (sanitize-html уже требует ≥22.12,

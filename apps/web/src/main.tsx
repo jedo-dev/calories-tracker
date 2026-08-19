@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 // Side-effect: ловит beforeinstallprompt до того, как он отстреляет
 import './utils/installPrompt';
+import './utils/errorLog';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

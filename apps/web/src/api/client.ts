@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logApiError } from '../utils/errorLog';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:3000');
 
@@ -30,6 +31,13 @@ apiClient.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
     const url: string = error.config?.url || '';
+    // В буфер фидбека: что именно упало (текст ошибки сервера, если есть)
+    logApiError(
+      error.config?.method || '?',
+      url,
+      status || 'network',
+      error.response?.data?.message || error.message || '',
+    );
     const isAuthRequest = url.includes('/auth/');
     const onLoginPage =
       window.location.pathname === '/login' || window.location.pathname === '/register';

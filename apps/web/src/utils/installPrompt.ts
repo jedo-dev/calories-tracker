@@ -41,6 +41,17 @@ export function isIOSSafari(): boolean {
   return isIOS() && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/.test(ua);
 }
 
+/** iOS: встроенный webview мессенджера/соцсети (Telegram, Instagram и т.п.) */
+export function isIOSInAppBrowser(): boolean {
+  if (!isIOS()) return false;
+  const ua = navigator.userAgent;
+  // Явные маркеры популярных приложений
+  if (/Telegram|Instagram|FBAN|FBAV|VKApp|OKApp|Snapchat/i.test(ua)) return true;
+  // WKWebView не добавляет токен Safari в UA, а сторонние браузеры
+  // (Chrome, Firefox и т.д.) помечают себя своими маркерами
+  return !/Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/.test(ua);
+}
+
 export function hasNativeInstall(): boolean {
   return deferredPrompt !== null;
 }

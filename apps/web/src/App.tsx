@@ -14,6 +14,7 @@ import { Footer } from './widget/Footer/Footer';
 import Loader, { LoaderOverlayHost } from './ui/Loader';
 import { ToastHost } from './ui/Toast';
 import { normalizePath, track } from './utils/analytics';
+import { FeedbackButton } from './widgets/feedback/FeedbackButton';
 import { InstallGuide } from './widgets/pwa/InstallGuide';
 
 const AddEntryPage = lazy(() => import('./pages/AddEntryPage').then((m) => ({ default: m.AddEntryPage })));
@@ -76,6 +77,7 @@ function AppLayout() {
         </Suspense>
         <Footer />
         <InstallGuide />
+        <FeedbackButton />
       </div>
     </ProtectedRoute>
   );

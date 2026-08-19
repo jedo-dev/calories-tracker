@@ -6,6 +6,7 @@ import {
   hasNativeInstall,
   isAndroid,
   isIOS,
+  isIOSInAppBrowser,
   isIOSSafari,
   isStandalone,
   promptNativeInstall,
@@ -38,7 +39,10 @@ export function InstallGuide() {
     // Не встречать пользователя попапом: даём осмотреться
     const timer = window.setTimeout(() => {
       setVisible(true);
-      track('pwa_guide_shown', { platform: isIOS() ? 'ios' : 'android' });
+      track('pwa_guide_shown', {
+        platform: isIOS() ? 'ios' : 'android',
+        inApp: isIOSInAppBrowser(),
+      });
     }, 6000);
     return () => window.clearTimeout(timer);
   }, []);
@@ -67,7 +71,10 @@ export function InstallGuide() {
   };
 
   const ios = isIOS();
-  const iosWrongBrowser = ios && !isIOSSafari();
+  // Внутри webview Telegram/Instagram и т.п. Safari-меню недоступно вовсе —
+  // ведём пользователя через «Открыть в Safari» в меню самого приложения
+  const iosInApp = ios && isIOSInAppBrowser();
+  const iosWrongBrowser = ios && !iosInApp && !isIOSSafari();
 
   const step = (n: string, text: string, icon?: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 0' }}>
@@ -118,7 +125,7 @@ export function InstallGuide() {
           border: '1px solid rgba(160, 200, 220, 0.22)',
           padding: '18px 18px 14px',
           // На iOS оставляем место стрелке, указывающей на «Поделиться» внизу
-          marginBottom: ios && !iosWrongBrowser ? '54px' : '16px',
+          marginBottom: ios && !iosWrongBrowser && !iosInApp ? '54px' : '16px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
@@ -136,6 +143,12 @@ export function InstallGuide() {
         {done ? (
           <div style={{ fontSize: '15px', color: '#7BD98A', fontWeight: 700, padding: '12px 0' }}>
             {t('install.installed')}
+          </div>
+        ) : iosInApp ? (
+          <div style={{ padding: '4px 0' }}>
+            {step('1', t('install.iosInAppStep1'))}
+            {step('2', t('install.iosInAppStep2'), '🧭')}
+            {step('3', t('install.iosInAppStep3'), '⬆️')}
           </div>
         ) : iosWrongBrowser ? (
           <div style={{ fontSize: '14px', color: theme.palette.text, padding: '8px 0', lineHeight: 1.5 }}>
@@ -209,7 +222,7 @@ export function InstallGuide() {
       </div>
 
       {/* Стрелка на кнопку «Поделиться» в нижней панели Safari */}
-      {ios && !iosWrongBrowser && !done && (
+      {ios && !iosWrongBrowser && !iosInApp && !done && (
         <div
           style={{
             position: 'absolute',

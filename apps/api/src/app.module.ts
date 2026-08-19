@@ -30,6 +30,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { FastingModule } from './fasting/fasting.module';
 import { BillingModule } from './billing/billing.module';
 import { MailModule } from './mail/mail.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { MailModule } from './mail/mail.module';
     FastingModule,
     BillingModule,
     MailModule,
+    FeedbackModule,
   ],
   providers: [
     {

@@ -81,6 +81,31 @@ export class MailService {
     }
   }
 
+  /** Письмо фидбека от пользователя на почту поддержки (SUPPORT_EMAIL) */
+  async sendFeedbackEmail(
+    user: { id: string; email?: string; name?: string },
+    message: string,
+    diagnostics: string,
+  ): Promise<boolean> {
+    if (!this.transporter) return false;
+    // Имя идёт в заголовок письма — переводы строк там запрещены SMTP
+    const who = (user.name || user.email || user.id).replace(/[\r\n]/g, ' ').slice(0, 80);
+    console.log(`Отправка фидбека от ${who} на ${this.supportEmail}:\n${message}\n--- Диагностика ---\n${diagnostics}`);
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to: this.supportEmail,
+        replyTo: user.email || undefined,
+        subject: `FlareonFit: фидбек от ${who}`,
+        text: `${message}\n\n--- Диагностика ---\nuserId: ${user.id}\nemail: ${user.email || '—'}\n${diagnostics}`,
+      });
+      return true;
+    } catch (err: any) {
+      this.logger.warn(`Не удалось отправить фидбек: ${err?.message}`);
+      return false;
+    }
+  }
+
   async sendPasswordResetEmail(to: string, link: string, userName?: string): Promise<boolean> {
     if (!this.transporter) return false;
     const vars = {

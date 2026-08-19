@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
+import { pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -40,7 +41,7 @@ export function LoginPage() {
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: theme.palette.bg,
+        background: pageBackground(theme.palette.bg),
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -52,9 +53,26 @@ export function LoginPage() {
       }}
     >
       <div style={{ maxWidth: '400px', margin: '0 auto', width: '100%' }}>
-        <Text variant="h1" style={{ textAlign: 'center', marginBottom: theme.spacing.xl }}>
-          {t('auth.loginTitle')}
-        </Text>
+        <div style={{ textAlign: 'center', marginBottom: theme.spacing.xl }}>
+          <img
+            src="/icon-192.png"
+            alt=""
+            width={72}
+            height={72}
+            style={{
+              display: 'block',
+              margin: `0 auto ${theme.spacing.md}`,
+              borderRadius: '20px',
+              boxShadow: '0 0 44px rgba(83, 212, 107, 0.35)',
+            }}
+          />
+          <Text variant="h1" style={{ display: 'block' }}>
+            {t('auth.loginTitle')}
+          </Text>
+          <Text muted style={{ display: 'block', marginTop: '6px', fontSize: '14px' }}>
+            {t('auth.loginSubtitle')}
+          </Text>
+        </div>
 
         {error && (
           <div
