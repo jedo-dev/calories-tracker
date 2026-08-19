@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
-import { glassCardStyle, pageBackground } from '../theme/styles';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Text } from '../ui/Text';
+import { AuthLayout } from '../widgets/auth/AuthLayout';
 
 // Запрос ссылки сброса пароля. Ответ всегда одинаковый — по нему нельзя
 // понять, зарегистрирован ли email.
@@ -28,79 +31,50 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: '16px',
-        paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))',
-        background: pageBackground(theme.palette.bg),
-      }}
-    >
-      <div style={{ ...glassCardStyle, maxWidth: '380px', width: '100%', padding: '24px 20px' }}>
-        <div style={{ fontSize: '20px', fontWeight: 800, color: theme.palette.text, marginBottom: '6px' }}>
-          🔑 {t('resetPassword.title')}
-        </div>
-
-        {sent ? (
-          <div style={{ fontSize: '14px', color: '#7BD98A', lineHeight: 1.55 }}>
-            {t('resetPassword.sent')}
-          </div>
-        ) : (
-          <>
-            <div style={{ fontSize: '13px', color: theme.palette.textMuted, marginBottom: '14px' }}>
-              {t('resetPassword.desc')}
-            </div>
-            <form onSubmit={submit}>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('resetPassword.emailPlaceholder')}
-                required
-                autoComplete="email"
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  background: 'rgba(160, 200, 220, 0.1)',
-                  border: '1px solid rgba(160, 200, 220, 0.3)',
-                  borderRadius: '12px',
-                  color: theme.palette.text,
-                  padding: '12px 14px',
-                  fontSize: '15px',
-                  outline: 'none',
-                  marginBottom: '12px',
-                }}
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  background: 'rgba(83, 212, 107, 0.85)',
-                  border: 'none',
-                  color: '#06210C',
-                  borderRadius: '14px',
-                  padding: '13px',
-                  fontSize: '15px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  opacity: loading ? 0.6 : 1,
-                }}
-              >
-                {t('resetPassword.send')}
-              </button>
-            </form>
-          </>
-        )}
-
-        <div style={{ textAlign: 'center', marginTop: '16px' }}>
-          <Link to="/login" style={{ color: theme.palette.textMuted, fontSize: '13px', textDecoration: 'none' }}>
+    <AuthLayout
+      title={t('resetPassword.title')}
+      // После отправки инструкция «укажите email» противоречила бы «письмо уже в пути»
+      subtitle={sent ? undefined : t('resetPassword.desc')}
+      footer={
+        <div style={{ textAlign: 'center', marginTop: theme.spacing.lg }}>
+          <Link
+            to="/login"
+            style={{ color: theme.palette.textMuted, fontSize: '13px', textDecoration: 'none' }}
+          >
             ← {t('resetPassword.toLogin')}
           </Link>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {sent ? (
+        <Text
+          style={{
+            display: 'block',
+            fontSize: '14px',
+            color: '#7BD98A',
+            lineHeight: 1.55,
+            textAlign: 'center',
+          }}
+        >
+          {t('resetPassword.sent')}
+        </Text>
+      ) : (
+        <form onSubmit={submit}>
+          <div style={{ marginBottom: theme.spacing.lg }}>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t('resetPassword.emailPlaceholder')}
+              required
+              autoComplete="email"
+            />
+          </div>
+          <Button type="submit" disabled={loading} size="lg">
+            {t('resetPassword.send')}
+          </Button>
+        </form>
+      )}
+    </AuthLayout>
   );
 }

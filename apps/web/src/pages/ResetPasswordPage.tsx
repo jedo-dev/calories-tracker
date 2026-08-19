@@ -3,7 +3,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { t } from '../i18n';
 import { useTheme } from '../theme/useTheme';
-import { glassCardStyle, pageBackground } from '../theme/styles';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Text } from '../ui/Text';
+import { AuthLayout } from '../widgets/auth/AuthLayout';
 
 // Страница из письма сброса: /reset-password?token=...
 export function ResetPasswordPage() {
@@ -35,32 +38,45 @@ export function ResetPasswordPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: '16px',
-        paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))',
-        background: pageBackground(theme.palette.bg),
-      }}
-    >
-      <div style={{ ...glassCardStyle, maxWidth: '380px', width: '100%', padding: '24px 20px' }}>
-        <div style={{ fontSize: '20px', fontWeight: 800, color: theme.palette.text, marginBottom: '6px' }}>
-          🔐 {t('resetPassword.newTitle')}
+    <AuthLayout
+      title={t('resetPassword.newTitle')}
+      // После успеха «придумайте пароль» противоречило бы «пароль изменён»
+      subtitle={done ? undefined : t('resetPassword.newDesc')}
+      footer={
+        <div style={{ textAlign: 'center', marginTop: theme.spacing.lg }}>
+          <Link
+            to="/login"
+            style={{ color: theme.palette.textMuted, textDecoration: 'none', fontSize: '13px' }}
+          >
+            ← {t('resetPassword.toLogin')}
+          </Link>
         </div>
-
-        {done ? (
-          <div style={{ fontSize: '14px', color: '#7BD98A', lineHeight: 1.55 }}>
-            {t('resetPassword.success')}
-          </div>
-        ) : (
-          <>
-            <div style={{ fontSize: '13px', color: theme.palette.textMuted, marginBottom: '14px' }}>
-              {t('resetPassword.newDesc')}
+      }
+    >
+      {done ? (
+        <Text style={{ display: 'block', color: '#7BD98A', lineHeight: 1.55, textAlign: 'center' }}>
+          {t('resetPassword.success')}
+        </Text>
+      ) : (
+        <>
+          {error && (
+            <div
+              style={{
+                backgroundColor: theme.palette.danger,
+                color: theme.palette.dangerText,
+                padding: theme.spacing.md,
+                borderRadius: theme.radius.md,
+                marginBottom: theme.spacing.md,
+                textAlign: 'center',
+              }}
+            >
+              <Text style={{ color: theme.palette.dangerText }}>{error}</Text>
             </div>
-            <form onSubmit={submit}>
-              <input
+          )}
+
+          <form onSubmit={submit}>
+            <div style={{ marginBottom: theme.spacing.lg }}>
+              <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -68,50 +84,14 @@ export function ResetPasswordPage() {
                 required
                 minLength={6}
                 autoComplete="new-password"
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  background: 'rgba(160, 200, 220, 0.1)',
-                  border: '1px solid rgba(160, 200, 220, 0.3)',
-                  borderRadius: '12px',
-                  color: theme.palette.text,
-                  padding: '12px 14px',
-                  fontSize: '15px',
-                  outline: 'none',
-                  marginBottom: '12px',
-                }}
               />
-              {error && (
-                <div style={{ fontSize: '13px', color: '#ff8a8a', marginBottom: '10px' }}>{error}</div>
-              )}
-              <button
-                type="submit"
-                disabled={loading || password.length < 6}
-                style={{
-                  width: '100%',
-                  background: 'rgba(83, 212, 107, 0.85)',
-                  border: 'none',
-                  color: '#06210C',
-                  borderRadius: '14px',
-                  padding: '13px',
-                  fontSize: '15px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  opacity: loading || password.length < 6 ? 0.6 : 1,
-                }}
-              >
-                {t('resetPassword.save')}
-              </button>
-            </form>
-          </>
-        )}
-
-        <div style={{ textAlign: 'center', marginTop: '16px' }}>
-          <Link to="/login" style={{ color: theme.palette.textMuted, fontSize: '13px', textDecoration: 'none' }}>
-            ← {t('resetPassword.toLogin')}
-          </Link>
-        </div>
-      </div>
-    </div>
+            </div>
+            <Button type="submit" disabled={loading || password.length < 6} size="lg">
+              {t('resetPassword.save')}
+            </Button>
+          </form>
+        </>
+      )}
+    </AuthLayout>
   );
 }
