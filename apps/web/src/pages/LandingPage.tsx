@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import mascotCelebrate from '../assets/08_mascot/mascot_fox_celebrate_sm.png';
@@ -22,9 +22,10 @@ import icoNote from '../assets/pack/png/note_128.png';
 // Машущий маскот: тело и лапа — отдельные слои (нарезаны из mascot_fox_main
 // скриптом PIL), лапа вращается CSS-ом вокруг плеча
 
-// Анимированный маскот героя: webm с альфа-каналом (фон выбит скриптом).
-// При ошибке декодирования onError переключает на статичного слоёного лиса.
-import foxHeroAlpha from '../assets/08_mascot/wave/fox_hero_alpha.webm';
+// Анимированный маскот героя: «стековый» H.264 (сверху цвет, снизу альфа-маска
+// серым) — играет везде, включая iPhone; прозрачность склеивает WebGL-канвас.
+// При любом сбое (нет WebGL, автоплей заблокирован) — статичный слоёный лис.
+import foxHeroStacked from '../assets/08_mascot/wave/fox_hero_stacked.mp4';
 // Скриншоты приложения для слайдера (пережаты в 520px WebP из assets/mockups)
 import mockGraph from '../assets/mockups/opt/graph-mock.webp';
 import mockLeaders from '../assets/mockups/opt/leaders-mock.webp';
@@ -33,6 +34,119 @@ import mockProfile from '../assets/mockups/opt/profile-mock.webp';
 import mockRecipe from '../assets/mockups/opt/recipe-mock.webp';
 import mockTrain from '../assets/mockups/opt/train-mock.webp';
 import mockWeight from '../assets/mockups/opt/weight-mock.webp';
+
+// Рендерер прозрачного видео-маскота: скрытый <video> со стековым mp4 +
+// WebGL-канвас, где шейдер берёт цвет из верхней панели и альфу из нижней.
+function HeroFoxCanvas({ onFail }: { onFail: () => void }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true });
+    if (!gl) {
+      onFail();
+      return;
+    }
+
+    const compile = (type: number, src: string) => {
+      const shader = gl.createShader(type)!;
+      gl.shaderSource(shader, src);
+      gl.compileShader(shader);
+      return shader;
+    };
+    const program = gl.createProgram()!;
+    gl.attachShader(program, compile(gl.VERTEX_SHADER,
+      'attribute vec2 p;varying vec2 v;void main(){v=p*0.5+0.5;gl_Position=vec4(p,0.,1.);}'));
+    gl.attachShader(program, compile(gl.FRAGMENT_SHADER,
+      'precision mediump float;varying vec2 v;uniform sampler2D t;' +
+      'void main(){' +
+      // с FLIP_Y цветовая панель занимает v 0.5..1, маска — 0..0.5
+      'vec3 c=texture2D(t,vec2(v.x,0.5+v.y*0.5)).rgb;' +
+      'float a=texture2D(t,vec2(v.x,v.y*0.5)).r;' +
+      'gl_FragColor=vec4(c,a);}'));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      onFail();
+      return;
+    }
+    gl.useProgram(program);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(program, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+
+    let raf = 0;
+    const draw = () => {
+      raf = requestAnimationFrame(draw);
+      if (video.readyState < 2) return;
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+    raf = requestAnimationFrame(draw);
+
+    // В фоновой вкладке браузер отклоняет play() у видео без звука — это не
+    // фатально: пробуем снова, когда вкладка станет видимой. Фолбэк — только
+    // если автоплей не удаётся на видимой странице (low-power iOS и т.п.)
+    const tryPlay = () => {
+      video.play().catch(() => {
+        if (document.visibilityState === 'visible') onFail();
+      });
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && video.paused) tryPlay();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    tryPlay();
+    const guard = window.setTimeout(() => {
+      if (video.paused && document.visibilityState === 'visible') onFail();
+    }, 2500);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(guard);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [onFail]);
+
+  return (
+    <>
+      <video
+        ref={videoRef}
+        src={foxHeroStacked}
+        muted
+        loop
+        playsInline
+        autoPlay
+        preload="auto"
+        aria-hidden
+        onError={onFail}
+        style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+      />
+      <canvas
+        ref={canvasRef}
+        className="lp-hero-video"
+        width={640}
+        height={640}
+        role="img"
+        aria-label="Лис FlareonFit фотографирует салат на телефон"
+      />
+    </>
+  );
+}
 
 // Продажный лендинг на корне сайта. Тексты сознательно не в i18n — это
 // маркетинговая страница одной локали, правится целиком (как PrivacyPage).
@@ -71,6 +185,7 @@ export function LandingPage() {
   const [useVideo, setUseVideo] = useState(
     () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
+  const videoFail = useCallback(() => setUseVideo(false), []);
 
   useEffect(() => {
     if (!loading && user) navigate('/today');
@@ -273,17 +388,7 @@ export function LandingPage() {
           <div className="lp-scene-ring" aria-hidden />
           {useVideo ? (
             <div className="lp-mascot lp-mascot--video lp-float">
-              <video
-                className="lp-hero-video"
-                src={foxHeroAlpha}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                aria-label="Лис FlareonFit фотографирует салат на телефон"
-                onError={() => setUseVideo(false)}
-              />
+              <HeroFoxCanvas onFail={videoFail} />
             </div>
           ) : (
             <div className="lp-mascot lp-float">
