@@ -3,6 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import mascotCelebrate from '../assets/08_mascot/mascot_fox_celebrate_sm.png';
 import logoMark from '../assets/01_brand/logo_mark.webp';
+// Маскоты бенто-карточек (сгенерированы по референсу, фон выбит скриптом)
+import foxRun from '../assets/08_mascot/cards/fox_run.webp';
+import foxFasting from '../assets/08_mascot/cards/fox_fasting.webp';
+import foxRecipes from '../assets/08_mascot/cards/fox_recipes.webp';
+import foxWater from '../assets/08_mascot/cards/fox_water.webp';
+import foxStats from '../assets/08_mascot/cards/fox_stats.webp';
 // Иконки бегущей строки — фирменный пак вместо дефолтных эмодзи
 import icoWeight from '../assets/pack/png/weight_128.png';
 import icoMuscle from '../assets/pack/png/muscle_128.png';
@@ -15,8 +21,7 @@ import icoTrophy from '../assets/pack/png/trophy_128.png';
 import icoNote from '../assets/pack/png/note_128.png';
 // Машущий маскот: тело и лапа — отдельные слои (нарезаны из mascot_fox_main
 // скриптом PIL), лапа вращается CSS-ом вокруг плеча
-import foxWaveBody from '../assets/08_mascot/wave/fox_wave_body.png';
-import foxWaveArm from '../assets/08_mascot/wave/fox_wave_arm.png';
+
 // Анимированный маскот героя: webm с альфа-каналом (фон выбит скриптом).
 // При ошибке декодирования onError переключает на статичного слоёного лиса.
 import foxHeroAlpha from '../assets/08_mascot/wave/fox_hero_alpha.webm';
@@ -282,8 +287,8 @@ export function LandingPage() {
             </div>
           ) : (
             <div className="lp-mascot lp-float">
-              <img src={foxWaveBody} alt="Лис FlareonFit приветственно машет лапой" width={680} height={680} decoding="async" />
-              <img className="lp-wave-arm" src={foxWaveArm} alt="" width={680} height={680} decoding="async" />
+              <img src={''} alt="Лис FlareonFit приветственно машет лапой" width={680} height={680} decoding="async" />
+              <img className="lp-wave-arm" src={''} alt="" width={680} height={680} decoding="async" />
             </div>
           )}
 
@@ -312,7 +317,8 @@ export function LandingPage() {
         <div className="lp-marquee-track">
           {[...MARQUEE, ...MARQUEE].map((item, i) => (
             <span key={i} className="lp-marquee-chip">
-              {item}
+              <img src={item.icon} alt="" width={22} height={22} loading="lazy" decoding="async" />
+              {item.label}
             </span>
           ))}
         </div>
@@ -424,27 +430,27 @@ export function LandingPage() {
               </p>
             </div>
             <div className="lp-card lp-glow">
-              <div className="lp-card-icon">⏱</div>
+              <img className="lp-card-mascot" src={foxFasting} alt="" width={234} height={240} loading="lazy" decoding="async" />
               <h3>Голодание</h3>
               <p>Таймер и протоколы 12/12 – 20/4. XP за завершённый фаст.</p>
             </div>
             <div className="lp-card lp-glow">
-              <div className="lp-card-icon">🏃</div>
+              <img className="lp-card-mascot" src={foxRun} alt="" width={238} height={240} loading="lazy" decoding="async" />
               <h3>Беговой режим</h3>
               <p>Шагомер прямо в телефоне: шаги, дистанция, каденс, калории.</p>
             </div>
             <div className="lp-card lp-glow">
-              <div className="lp-card-icon">🍲</div>
+              <img className="lp-card-mascot" src={foxRecipes} alt="" width={226} height={240} loading="lazy" decoding="async" />
               <h3>Рецепты и планы</h3>
               <p>Свои рецепты, рецепты сообщества и план питания под калораж.</p>
             </div>
             <div className="lp-card lp-glow">
-              <div className="lp-card-icon">💧</div>
+              <img className="lp-card-mascot" src={foxWater} alt="" width={236} height={240} loading="lazy" decoding="async" />
               <h3>Вода и вес</h3>
               <p>Норма воды от веса, графики динамики и «дни в цели».</p>
             </div>
             <div className="lp-card lp-glow lp-card-wide">
-              <div className="lp-card-icon">📊</div>
+              <img className="lp-card-mascot" src={foxStats} alt="" width={259} height={240} loading="lazy" decoding="async" />
               <h3>Честная статистика</h3>
               <p>
                 Вес со сглаживанием, БЖУ по дням, вода, «дни в цели» — видно не только среднее,
@@ -680,8 +686,10 @@ html{scroll-behavior:smooth}
 .lp-marquee-track{display:flex;gap:12px;width:max-content;animation:lpMarquee 30s linear infinite}
 .lp-marquee:hover .lp-marquee-track{animation-play-state:paused}
 @keyframes lpMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.lp-marquee-chip{flex:none;background:rgba(160,200,220,.07);border:1px solid rgba(160,200,220,.16);
-  border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;color:#CBD9E4}
+.lp-marquee-chip{flex:none;display:inline-flex;align-items:center;gap:9px;
+  background:rgba(160,200,220,.07);border:1px solid rgba(160,200,220,.16);
+  border-radius:999px;padding:9px 18px 9px 14px;font-size:14px;font-weight:600;color:#CBD9E4}
+.lp-marquee-chip img{display:block;width:22px;height:22px}
 
 /* Секция приложения: 3D-телефон */
 .lp-app{padding:96px 0}
@@ -741,6 +749,8 @@ html{scroll-behavior:smooth}
 .lp-card h3{font-size:19px;margin:14px 0 8px}
 .lp-card p{font-size:14px;line-height:1.6;color:var(--muted)}
 .lp-card-icon{font-size:34px}
+.lp-card-mascot{display:block;width:auto;height:112px;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.35))}
 /* Свечение за курсором */
 .lp-glow::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s;pointer-events:none;
   background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(123,217,138,.14),transparent 55%)}
