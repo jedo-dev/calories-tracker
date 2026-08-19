@@ -42,6 +42,7 @@ export function RegisterPage() {
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
         padding: theme.spacing.xl,
+        paddingTop: `calc(${theme.spacing.xl} + env(safe-area-inset-top, 0px))`,
         paddingBottom: `calc(${theme.spacing.xl} + env(safe-area-inset-bottom, 0px))`,
       }}
     >

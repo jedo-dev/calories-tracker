@@ -65,6 +65,7 @@ export function AchievementsPage() {
         maxWidth: "520px",
         margin: "0 auto",
         padding: "12px 12px 96px",
+        paddingTop: "calc(12px + env(safe-area-inset-top, 0px))",
         background: pageBackground(theme.palette.bg)
       }}
     >

@@ -157,6 +157,7 @@ export function TodayPage() {
       style={{
         minHeight: "100dvh",
         padding: theme.spacing.lg,
+        paddingTop: `calc(${theme.spacing.lg} + env(safe-area-inset-top, 0px))`,
         maxWidth: "600px",
         margin: "0 auto",
         paddingBottom: "120px",

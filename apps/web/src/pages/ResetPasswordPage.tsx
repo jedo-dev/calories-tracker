@@ -41,6 +41,7 @@ export function ResetPasswordPage() {
         display: 'grid',
         placeItems: 'center',
         padding: '16px',
+        paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))',
         background: pageBackground(theme.palette.bg),
       }}
     >

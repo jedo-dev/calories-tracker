@@ -353,6 +353,7 @@ export function RecipeEditorPage() {
       <div
         style={{
           padding: '12px',
+          paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
           maxWidth: '520px',
           margin: '0 auto',
           minHeight: '100vh',
@@ -383,6 +384,7 @@ export function RecipeEditorPage() {
     <div
       style={{
         padding: '12px',
+        paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
         maxWidth: '520px',
         margin: '0 auto',
         paddingBottom: '100px',

@@ -113,6 +113,7 @@ export function ReportsPage() {
         // Нижний отступ — под плавающую нижнюю навигацию (как на остальных
         // страницах), иначе она перекрывает последний график
         padding: '14px 14px 110px',
+        paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))',
         background: `
           radial-gradient(circle at 50% 0%, rgba(83, 212, 107, 0.12), transparent 28%),
           radial-gradient(circle at 18% 18%, rgba(56, 104, 152, 0.18), transparent 24%),

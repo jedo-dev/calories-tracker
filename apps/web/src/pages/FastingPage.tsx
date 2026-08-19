@@ -150,6 +150,7 @@ export function FastingPage() {
         maxWidth: '520px',
         margin: '0 auto',
         padding: '12px',
+        paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
         paddingBottom: '100px',
         background: pageBackground(theme.palette.bg),
       }}

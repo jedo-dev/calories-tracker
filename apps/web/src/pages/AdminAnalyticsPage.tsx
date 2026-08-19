@@ -76,7 +76,7 @@ export function AdminAnalyticsPage() {
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', padding: '16px', background: pageBackground(theme.palette.bg) }}>
+      <div style={{ minHeight: '100vh', padding: '16px', paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))', background: pageBackground(theme.palette.bg) }}>
         <div style={{ ...glassCardStyle, color: '#ff8a8a', fontSize: '14px' }}>
           {t('analytics.loadFailed')}
         </div>
@@ -99,6 +99,7 @@ export function AdminAnalyticsPage() {
         maxWidth: '520px',
         margin: '0 auto',
         padding: '12px',
+        paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
         paddingBottom: '100px',
         background: pageBackground(theme.palette.bg),
       }}

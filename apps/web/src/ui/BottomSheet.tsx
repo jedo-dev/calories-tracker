@@ -11,6 +11,11 @@ interface BottomSheetProps {
   background?: string;
 }
 
+// Открытый лист приподнят над нижней панелью: 80px — её базовая высота,
+// env(safe-area-inset-bottom) — home-индикатор iPhone, иначе низ листа
+// ложится поверх панели и обрезает иконки.
+const SHEET_LIFT = 'calc(-80px - env(safe-area-inset-bottom, 0px))';
+
 export function BottomSheet({ isOpen, onClose, children, header, handle, background }: BottomSheetProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -128,7 +133,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle, backgro
       dragCurrentY.current = deltaY;
 
       // Update sheet position
-      sheetRef.current.style.transform = `translateY(${deltaY}px)`;
+      sheetRef.current.style.transform = `translateY(calc(${deltaY}px + ${SHEET_LIFT}))`;
 
       // Update backdrop opacity (fade out as we drag down)
       const opacity = Math.max(0, 0.45 * (1 - deltaY / 300));
@@ -157,7 +162,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle, backgro
     } else {
       // Snap back
       sheetRef.current.style.transition = 'transform 200ms ease-out';
-      sheetRef.current.style.transform = 'translateY(0)';
+      sheetRef.current.style.transform = `translateY(${SHEET_LIFT})`;
 
       backdropRef.current.style.transition = 'opacity 200ms ease-out';
       backdropRef.current.style.opacity = '0.45';
@@ -192,7 +197,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle, backgro
 
     if (deltaY > 0) {
       dragCurrentY.current = deltaY;
-      sheetRef.current.style.transform = `translateY(${deltaY}px)`;
+      sheetRef.current.style.transform = `translateY(calc(${deltaY}px + ${SHEET_LIFT}))`;
 
       const opacity = Math.max(0, 0.45 * (1 - deltaY / 300));
       backdropRef.current.style.opacity = String(opacity);
@@ -216,7 +221,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle, backgro
       handleClose();
     } else {
       sheetRef.current.style.transition = 'transform 200ms ease-out';
-      sheetRef.current.style.transform = 'translateY(0)';
+      sheetRef.current.style.transform = `translateY(${SHEET_LIFT})`;
 
       backdropRef.current.style.transition = 'opacity 200ms ease-out';
       backdropRef.current.style.opacity = '0.45';
@@ -244,7 +249,7 @@ export function BottomSheet({ isOpen, onClose, children, header, handle, backgro
   }
 
   const sheetTransform = isAnimating && !isDragging
-    ? 'translate3d(0, -80px, 0)'
+    ? `translate3d(0, ${SHEET_LIFT}, 0)`
     : isDragging
       ? undefined
       : 'translate3d(0, 100%, 0)';

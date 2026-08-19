@@ -110,7 +110,7 @@ export function ProductsPage() {
   };
 
   return (
-    <div style={{ padding: theme.spacing.lg, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
+    <div style={{ padding: theme.spacing.lg, paddingTop: `calc(${theme.spacing.lg} + env(safe-area-inset-top, 0px))`, maxWidth: '600px', margin: '0 auto', minHeight: '100vh', backgroundColor: theme.palette.bg, paddingBottom: '100px' }}>
       <PageHeader title={t('products.title')} />
 
       <Input

@@ -85,6 +85,7 @@ export function EntryPage() {
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
         paddingBottom: `calc(${theme.spacing.lg} + env(safe-area-inset-bottom, 0px))`,
+        paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
     >
       {/* Slides */}

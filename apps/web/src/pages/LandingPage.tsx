@@ -732,7 +732,7 @@ html{scroll-behavior:smooth}
 .lp-btn-outline:hover{border-color:rgba(160,200,220,.6);background:rgba(160,200,220,.06)}
 
 /* Шапка */
-.lp-header{position:sticky;top:14px;z-index:50;display:flex;justify-content:center;padding:0 16px}
+.lp-header{position:sticky;top:calc(14px + env(safe-area-inset-top, 0px));z-index:50;display:flex;justify-content:center;padding:0 16px}
 .lp-pill{position:relative;display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;max-width:1080px;height:66px;padding:0 12px 0 24px;
   background:rgba(10,24,38,.96);border:1px solid rgba(160,200,220,.16);
   border-radius:999px;box-shadow:0 18px 44px rgba(0,0,0,.4)}

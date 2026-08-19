@@ -75,6 +75,7 @@ export function PrivacyPage() {
         maxWidth: '640px',
         margin: '0 auto',
         padding: '16px 16px 60px',
+        paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))',
         background: pageBackground(theme.palette.bg),
       }}
     >
