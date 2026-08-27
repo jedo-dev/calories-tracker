@@ -27,12 +27,29 @@ export function FinishSummaryCard({ summary }: { summary: FinishSummary }) {
 
   return (
     <div style={{ ...workoutCardStyle, marginBottom: '12px', padding: '18px 14px' }}>
-      <div style={{ textAlign: 'center', marginBottom: '14px' }}>
-            <img
-            src={finishSummaryImage}
-            alt=""
-            style={{ width: '240px', height: '240px', objectFit: 'contain', marginBottom: '12px', opacity: 0.8, borderRadius: '20px' }}
-          />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          marginBottom: '14px',
+        }}
+      >
+        <img
+          src={finishSummaryImage}
+          alt=""
+          style={{
+            width: '240px',
+            maxWidth: '100%',
+            height: 'auto',
+            aspectRatio: '1',
+            objectFit: 'contain',
+            marginBottom: '12px',
+            opacity: 0.8,
+            borderRadius: '20px',
+          }}
+        />
         <Text variant="h2" bold style={{ fontSize: '20px' }}>{t('workout.finishTitle')}</Text>
       </div>
 

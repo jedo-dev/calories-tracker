@@ -99,6 +99,11 @@ export function BottomSheet({ isOpen, onClose, children, header, handle, backgro
   // Check if drag starts on header/handle area
   const isDragTarget = (target: EventTarget | null): boolean => {
     if (!target || !(target instanceof Node)) return false;
+    // Кнопки в шапке (крестик и т.п.) должны получать обычный клик,
+    // иначе тап по ним запускает drag и клик не срабатывает.
+    if (target instanceof Element && target.closest('button, a, input, select, textarea, [role="button"]')) {
+      return false;
+    }
     return (
       headerRef.current?.contains(target) ||
       handleRef.current?.contains(target) ||

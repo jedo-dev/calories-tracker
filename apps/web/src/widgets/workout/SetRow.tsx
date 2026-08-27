@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
+import { playTimerFinishSound, unlockTimerSound } from '../../utils/timerSound';
 import type { SetDetail } from './types';
 
 interface SetRowProps {
@@ -106,6 +107,7 @@ export function SetRow({ set, isDurationBased, onChange, onToggleDone }: SetRowP
         clearInterval(interval);
         setTimerRunning(false);
         setRemainingSec(null);
+        playTimerFinishSound();
         // finished — mark the set done as if ✓ was pressed
         doneRef.current();
       }
@@ -232,6 +234,8 @@ export function SetRow({ set, isDurationBased, onChange, onToggleDone }: SetRowP
               setTimerRunning(false);
               setRemainingSec(null);
             } else {
+              // клик — единственный момент, когда браузер разрешит звук
+              unlockTimerSound();
               setTimerRunning(true);
             }
           }}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { hapticNotification } from '../../utils/hapticFeedback';
+import { playTimerFinishSound } from '../../utils/timerSound';
 
 interface RestTimerBarProps {
   // Changing this key restarts the timer (e.g. `${logId}-${setNumber}`)
@@ -30,6 +31,7 @@ export function RestTimerBar({ timerKey, restSec, onFinish }: RestTimerBarProps)
       if (left <= 0 && !finishedRef.current) {
         finishedRef.current = true;
         hapticNotification('success');
+        playTimerFinishSound();
         onFinish();
       }
     }, 250);

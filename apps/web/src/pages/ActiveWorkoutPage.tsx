@@ -8,6 +8,8 @@ import Loader from '../ui/Loader';
 import { Text } from '../ui/Text';
 import { BottomSheet } from '../ui/BottomSheet';
 import { hapticImpact } from '../utils/hapticFeedback';
+import { unlockTimerSound } from '../utils/timerSound';
+import { useWakeLock } from '../hooks/useWakeLock';
 import { workoutPageBackground } from './workoutShared';
 import { ExerciseSlide } from '../widgets/workout/ExerciseSlide';
 import { RestTimerBar } from '../widgets/workout/RestTimerBar';
@@ -65,6 +67,9 @@ export function ActiveWorkoutPage() {
   const [pickerSearch, setPickerSearch] = useState('');
 
   const patchTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  // Экран не должен гаснуть посреди тренировки (таймеры отдыха/упражнений)
+  useWakeLock(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -172,6 +177,8 @@ export function ActiveWorkoutPage() {
 
     if (nowDone) {
       hapticImpact('medium');
+      // тап по ✓ — жест, разблокируем звук для бипа в конце отдыха
+      unlockTimerSound();
       const isLastSetOfLog = log.setsDetail.every((s, i) => (i === setIndex ? true : s.done));
       const isLastLog = logIndex === logs.length - 1;
       if (!(isLastSetOfLog && isLastLog)) {
