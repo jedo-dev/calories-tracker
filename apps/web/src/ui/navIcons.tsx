@@ -99,6 +99,14 @@ export const IconCamera = makeIcon(
   </>,
 );
 
+export const IconMic = makeIcon(
+  <>
+    <rect x="9" y="3.5" width="6" height="11" rx="3" />
+    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" />
+    <path d="M12 18v2.5M9 20.5h6" />
+  </>,
+);
+
 export const IconDumbbell = makeIcon(
   <>
     <path d="M8 12h8" />

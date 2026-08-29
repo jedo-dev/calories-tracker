@@ -80,9 +80,11 @@ interface WaterCardProps {
   totalMl: number;
   goal?: number;
   onAdd: (amountMl: number) => void;
+  /** Просмотр прошлых дней: воду задним числом не доливаем */
+  readOnly?: boolean;
 }
 
-export function WaterCard({ totalMl, goal = 2000, onAdd }: WaterCardProps) {
+export function WaterCard({ totalMl, goal = 2000, onAdd, readOnly = false }: WaterCardProps) {
   const theme = useTheme();
   const [splash, setSplash] = useState(false);
   const splashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -144,7 +146,7 @@ export function WaterCard({ totalMl, goal = 2000, onAdd }: WaterCardProps) {
           ))}
         </div>
 
-        {reached ? (
+        {readOnly ? null : reached ? (
           <div
             style={{
               display: "flex",

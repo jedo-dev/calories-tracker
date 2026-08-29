@@ -11,6 +11,8 @@ interface MealGroupSheetProps {
   onClose: () => void;
   onEditEntry: (entryId: string) => void;
   onDeleteEntry: (entryId: string) => void;
+  /** Просмотр прошлых дней: записи не редактируются и не удаляются */
+  readOnly?: boolean;
 }
 
 const MEAL_LABELS: Record<string, string> = {
@@ -22,7 +24,7 @@ const MEAL_LABELS: Record<string, string> = {
 };
 
 // Модалка приёма пищи: список записей с редактированием/удалением.
-export function MealGroupSheet({ group, onClose, onEditEntry, onDeleteEntry }: MealGroupSheetProps) {
+export function MealGroupSheet({ group, onClose, onEditEntry, onDeleteEntry, readOnly = false }: MealGroupSheetProps) {
   const theme = useTheme();
 
   return (
@@ -135,6 +137,7 @@ export function MealGroupSheet({ group, onClose, onEditEntry, onDeleteEntry }: M
                   </Text>
                 </div>
 
+                {!readOnly && (
                 <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                   <Button
                     variant="ghost"
@@ -165,6 +168,7 @@ export function MealGroupSheet({ group, onClose, onEditEntry, onDeleteEntry }: M
                     <DeleteIcon />
                   </Button>
                 </div>
+                )}
               </div>
             </div>
           ))}

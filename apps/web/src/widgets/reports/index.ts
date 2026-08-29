@@ -4,6 +4,7 @@ export * from './ReportsMacrosChart';
 export * from './ReportsWaterChart';
 export * from './ReportsKpiGrid';
 export * from './ReportsPeriodNavigator';
+export * from './ReportsProductsDonut';
 export * from './ReportsPeriodSwitcher';
 export * from './ReportsWeightChart';
 export * from './types';

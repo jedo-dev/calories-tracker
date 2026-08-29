@@ -25,12 +25,24 @@ const TIMEOUT_MS = 60_000;
 
 // Короткие ключи в JSON ответа модели — экономия выходных токенов
 // (их цена в ~5 раз выше входных).
-const SYSTEM_PROMPT =
-  'Ты определяешь еду на фото для дневника калорий. Отвечай ТОЛЬКО компактным JSON без markdown и пояснений: ' +
+const RESPONSE_FORMAT =
+  'Отвечай ТОЛЬКО компактным JSON без markdown и пояснений: ' +
   '{"items":[{"n":"название по-русски","g":вес порции в граммах,"k":ккал на 100г,"p":белки,"f":жиры,"c":углеводы,"cf":"h|m|l"}],"meal":"breakfast|lunch|dinner|snack"} ' +
-  'p/f/c — граммы на 100г. cf — уверенность в оценке веса. ' +
+  'p/f/c — граммы на 100г. cf — уверенность в оценке веса. ';
+
+const PHOTO_SYSTEM_PROMPT =
+  'Ты определяешь еду на фото для дневника калорий. ' +
+  RESPONSE_FORMAT +
   'Вес оценивай по видимым ориентирам (тарелка ~24 см, приборы, руки). ' +
   'Если еды на фото нет: {"items":[],"meal":null}';
+
+const TEXT_SYSTEM_PROMPT =
+  'Ты превращаешь описание съеденного (обычно надиктованное голосом) в записи дневника калорий. ' +
+  RESPONSE_FORMAT +
+  'Распознавание речи искажает слова — восстанавливай названия блюд по смыслу. ' +
+  'Если вес или объём порции назван — используй его (стакан ~250 мл, ложка ~15 г, кусок хлеба ~30 г), ' +
+  'иначе бери типичную порцию и ставь cf:"l". ' +
+  'Если еды в тексте нет: {"items":[],"meal":null}';
 
 @Injectable()
 export class AiService {
@@ -39,6 +51,20 @@ export class AiService {
   constructor(private readonly config: ConfigService) {}
 
   async recognizeFoodPhoto(imageBase64: string, mediaType = 'image/jpeg'): Promise<FoodPhotoResult> {
+    return this.requestRecognition(PHOTO_SYSTEM_PROMPT, [
+      {
+        type: 'image_url',
+        image_url: { url: `data:${mediaType};base64,${imageBase64}` },
+      },
+      { type: 'text', text: 'Что на фото?' },
+    ]);
+  }
+
+  async recognizeFoodText(text: string): Promise<FoodPhotoResult> {
+    return this.requestRecognition(TEXT_SYSTEM_PROMPT, [{ type: 'text', text }]);
+  }
+
+  private async requestRecognition(systemPrompt: string, userContent: unknown[]): Promise<FoodPhotoResult> {
     const apiKey = this.config.get<string>('AI_API_KEY');
     if (!apiKey) {
       throw new ServiceUnavailableException('AI recognition is not configured');
@@ -60,17 +86,8 @@ export class AiService {
           model,
           max_tokens: 700,
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'image_url',
-                  image_url: { url: `data:${mediaType};base64,${imageBase64}` },
-                },
-                { type: 'text', text: 'Что на фото?' },
-              ],
-            },
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userContent },
           ],
         }),
       });

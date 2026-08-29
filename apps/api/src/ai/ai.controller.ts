@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import { AiQuotaService } from './ai-quota.service';
 import { AiService } from './ai.service';
 import { FoodPhotoDto } from './dto/food-photo.dto';
+import { FoodTextDto } from './dto/food-text.dto';
 import { RedeemPromoDto } from './dto/redeem-promo.dto';
 
 @Controller('ai')
@@ -22,6 +23,20 @@ export class AiController {
     const source = await this.quotaService.consumeOne(req.user.id);
     try {
       return await this.aiService.recognizeFoodPhoto(dto.imageBase64, dto.mediaType);
+    } catch (err) {
+      await this.refundSilently(req.user.id, source);
+      throw err;
+    }
+  }
+
+  // Распознавание еды из текста (обычно — надиктованного голосом на клиенте).
+  // Квота общая с фото: и то и другое жжёт токены провайдера.
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  @Post('food-text')
+  async recognizeFoodText(@Body(ValidationPipe) dto: FoodTextDto, @Request() req: any) {
+    const source = await this.quotaService.consumeOne(req.user.id);
+    try {
+      return await this.aiService.recognizeFoodText(dto.text);
     } catch (err) {
       await this.refundSilently(req.user.id, source);
       throw err;

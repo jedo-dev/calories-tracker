@@ -16,6 +16,7 @@ import { renderDayReport } from '../widgets/share/shareDayImage';
 import {
   IconBarcode,
   IconCamera,
+  IconMic,
   IconDumbbell,
   IconRuler,
   IconScale,
@@ -302,6 +303,7 @@ export function QuickActionsSheet({ onClick, isOpen = false }: { onClick: (open:
         >
           <ActionTile icon={<IconBarcode size={22} />} label={t('quickActions.barcode')} onClick={() => handleNavigate('/entry/new?mode=barcode')} />
           <ActionTile icon={<IconCamera size={22} />} label={t('quickActions.photo')} onClick={() => handleNavigate('/entry/new?mode=photo')} />
+          <ActionTile icon={<IconMic size={22} />} label={t('quickActions.voice')} onClick={() => handleNavigate('/entry/new?mode=voice')} />
           <ActionTile icon={<IconDumbbell size={22} />} label={t('quickActions.workout')} onClick={() => handleNavigate('/workouts')} />
           <ActionTile icon={<IconRuler size={22} />} label={t('measurement.title')} onClick={() => handleNavigate('/measurements')} />
           <ActionTile icon={<IconScale size={22} />} label={t('quickActions.weight')} onClick={() => handleNavigate('/weight')} />

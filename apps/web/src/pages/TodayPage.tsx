@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { pageBackground } from '../theme/styles';
+import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api/client";
 import DayChanger from "../features/TodayComponents/DayChanger";
@@ -141,6 +141,10 @@ export function TodayPage() {
     }
   };
 
+  // Прошлые (и любые не сегодняшние) дни — только просмотр: без добавления
+  // записей, воды и редактирования
+  const isToday = date === toISODate(new Date());
+
   if (loading) return <Loader />;
   if (error) {
     return (
@@ -179,7 +183,7 @@ export function TodayPage() {
       />
 
       {/* Челлендж новичка показываем только на сегодняшнем дне */}
-      {socialStats?.stats && date === toISODate(new Date()) && (
+      {socialStats?.stats && isToday && (
         <OnboardingChallengeCard
           currentStreak={socialStats.stats.currentStreak}
           bestStreak={socialStats.stats.bestStreak}
@@ -217,30 +221,36 @@ export function TodayPage() {
         </Card>
       )}
 
-      <WaterCard totalMl={water.totalMl} goal={waterGoal} onAdd={handleAddWater} />
+      <WaterCard totalMl={water.totalMl} goal={waterGoal} onAdd={handleAddWater} readOnly={!isToday} />
 
-      <Button
+      {/* Стиль главной CTA — как у «+ Еда» в листе быстрых действий */}
+      {isToday && (
+      <button
+        type="button"
         onClick={() => navigate("/entry/new")}
         style={{
-          marginBottom: theme.spacing.md,
-          minHeight: "58px",
-          borderRadius: "18px",
-          fontSize: "18px",
-          boxShadow: "0 14px 28px rgba(81, 210, 105, 0.18)"
+          width: "100%",
+          minHeight: "54px",
+          borderRadius: "16px",
+          border: "none",
+          background: "linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))",
+          color: "#07210f",
+          fontSize: "15px",
+          fontWeight: 700,
+          cursor: "pointer",
+          boxShadow: "0 14px 26px rgba(83, 212, 107, 0.22)",
+          outline: "none",
+          WebkitTapHighlightColor: "transparent",
+          marginBottom: theme.spacing.md
         }}
       >
         {t("today.addEntry")}
-      </Button>
+      </button>
+      )}
 
       {!dashboard?.targets && (
-        <Card
-          style={{
-            marginBottom: theme.spacing.md,
-            backgroundColor: theme.palette.primary + "18",
-            border: `1px solid ${theme.palette.primary}`
-          }}
-        >
-          <Text variant="h2" style={{ marginBottom: theme.spacing.sm }}>
+        <Card style={{ ...glassCardStyle, marginBottom: theme.spacing.md }}>
+          <Text variant="h2" bold style={{ marginBottom: theme.spacing.sm }}>
             {t("dashboard.fillProfile")}
           </Text>
           <Text
@@ -251,27 +261,19 @@ export function TodayPage() {
             {t("dashboard.fillProfileDesc")}
           </Text>
           <Button
+            variant="ghost"
+            size="sm"
             onClick={() => navigate("/profile")}
-            style={{ width: "auto", minWidth: "180px" }}
+            style={{
+              width: "auto",
+              minWidth: "180px",
+              borderColor: "rgba(88, 212, 93, 0.8)",
+              color: theme.palette.primary,
+              backgroundColor: "rgba(88, 212, 93, 0.06)"
+            }}
           >
             {t("dashboard.openProfile")}
           </Button>
-        </Card>
-      )}
-
-      {dashboard && !dashboard.targets && (
-        <Card style={{ marginBottom: theme.spacing.md }}>
-          <Text variant="h2" bold style={{ marginBottom: theme.spacing.sm }}>
-            {t("totals.kcal", { value: dashboard.consumed.kcal.toFixed(0) })}
-          </Text>
-          <Text muted>
-            {t("totals.macros", {
-              protein: dashboard.consumed.protein.toFixed(1),
-              fat: dashboard.consumed.fat.toFixed(1),
-              carb: dashboard.consumed.carb.toFixed(1),
-              kcal: dashboard.consumed.kcal.toFixed(0)
-            })}
-          </Text>
         </Card>
       )}
 
@@ -283,6 +285,7 @@ export function TodayPage() {
       {selectedGroup && (
         <MealGroupSheet
           group={selectedGroup}
+          readOnly={!isToday}
           onClose={() => setSelectedGroup(null)}
           onEditEntry={(id) => navigate(`/entry/${id}`)}
           onDeleteEntry={(id) => {

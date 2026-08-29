@@ -1,6 +1,8 @@
 export type ReportPeriod = 'week' | 'month';
 
 export interface ReportEntry {
+  productName?: string;
+  grams?: number;
   kcal?: number;
   protein?: number;
   fat?: number;

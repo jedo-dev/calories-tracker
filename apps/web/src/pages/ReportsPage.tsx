@@ -6,7 +6,7 @@ import emptyReports from '../assets/03_empty_states/empty_reports.png';
 import { useTheme } from '../theme/useTheme';
 import { EmptyState } from '../ui/EmptyState';
 import Loader from '../ui/Loader';
-import { ReportsCaloriesChart, ReportsGoalDaysStrip, ReportsKpiGrid, ReportsMacrosChart, ReportsPeriodNavigator, ReportsPeriodSwitcher, ReportsWaterChart, ReportsWeightChart } from '../widgets/reports';
+import { ReportsCaloriesChart, ReportsGoalDaysStrip, ReportsKpiGrid, ReportsMacrosChart, ReportsPeriodNavigator, ReportsPeriodSwitcher, ReportsProductsDonut, ReportsWaterChart, ReportsWeightChart } from '../widgets/reports';
 import type { ReportDay, ReportPeriod } from '../widgets/reports';
 import { formatDateInput, getPeriodBounds, getPeriodLabel, round1 } from '../widgets/reports';
 
@@ -191,6 +191,10 @@ export function ReportsPage() {
 
           <div style={{ marginBottom: '8px' }}>
             <ReportsMacrosChart days={data} />
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <ReportsProductsDonut days={data} />
           </div>
 
           <div style={{ marginBottom: '8px' }}>

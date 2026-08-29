@@ -7,6 +7,7 @@ import { t, toISODate } from '../i18n';
 import { showToast } from '../ui/Toast';
 import { BarcodeSection } from '../widgets/entry/BarcodeSection';
 import { PhotoFoodSection } from '../widgets/entry/PhotoFoodSection';
+import { VoiceFoodSection } from '../widgets/entry/VoiceFoodSection';
 import { glassCardStyle, pageBackground } from '../theme/styles';
 import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
@@ -76,7 +77,7 @@ export function AddEntryPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const { id } = useParams();
-  // Диплинки из листа быстрых действий: ?mode=barcode | ?mode=photo
+  // Диплинки из листа быстрых действий: ?mode=barcode | ?mode=photo | ?mode=voice
   const [searchParams] = useSearchParams();
   const entryMode = searchParams.get('mode');
   const isEdit = !!id;
@@ -241,12 +242,20 @@ export function AddEntryPage() {
       />
 
       {!isEdit && (
-        <PhotoFoodSection
-          date={date}
-          time={time}
-          mealType={mealType}
-          autoOpenPicker={entryMode === 'photo'}
-        />
+        <>
+          <PhotoFoodSection
+            date={date}
+            time={time}
+            mealType={mealType}
+            autoOpenPicker={entryMode === 'photo'}
+          />
+          <VoiceFoodSection
+            date={date}
+            time={time}
+            mealType={mealType}
+            autoStart={entryMode === 'voice'}
+          />
+        </>
       )}
 
       {/* Time + meal type in one row; the date is always today */}
