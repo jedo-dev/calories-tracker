@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiClient } from '../api/client';
 import { t, toISODate } from '../i18n';
 import { glassCardStyle, pageBackground } from '../theme/styles';
@@ -8,7 +8,7 @@ import { PageHeader } from '../ui/PageHeader';
 import { Text } from '../ui/Text';
 import { BodyGender, BodyMap, BodyView } from '../widgets/muscles/BodyMap';
 import { MuscleSlug, normalizeMuscles } from '../widgets/muscles/muscleData';
-import { MuscleExercise, MuscleSheet } from '../widgets/muscles/MuscleSheet';
+import { MuscleTooltip, TooltipAnchor } from '../widgets/muscles/MuscleTooltip';
 
 interface MuscleStatRow {
   muscle: string;
@@ -16,7 +16,10 @@ interface MuscleStatRow {
   sets: number;
 }
 
-interface CatalogExercise extends MuscleExercise {
+interface CatalogExercise {
+  _id: string;
+  name: string;
+  categoryId?: string;
   muscleGroups?: string[];
 }
 
@@ -32,6 +35,8 @@ export function MusclesPage() {
   const [view, setView] = useState<BodyView>('front');
   const [gender, setGender] = useState<BodyGender>('male');
   const [selected, setSelected] = useState<MuscleSlug | null>(null);
+  const [anchor, setAnchor] = useState<TooltipAnchor | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [stats, setStats] = useState<MuscleStatRow[]>([]);
   const [exercises, setExercises] = useState<CatalogExercise[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,10 +83,49 @@ export function MusclesPage() {
     return result;
   }, [daysBySlug]);
 
-  const selectedExercises = useMemo(() => {
-    if (!selected) return [];
-    return exercises.filter((ex) => normalizeMuscles(ex.muscleGroups).includes(selected));
+  // Куда вести «схожие упражнения»: категория, чаще всего встречающаяся
+  // среди упражнений выбранной мышцы
+  const selectedCategoryId = useMemo(() => {
+    if (!selected) return null;
+    const counts = new Map<string, number>();
+    for (const ex of exercises) {
+      if (!ex.categoryId) continue;
+      if (!normalizeMuscles(ex.muscleGroups).includes(selected)) continue;
+      counts.set(ex.categoryId, (counts.get(ex.categoryId) || 0) + 1);
+    }
+    let best: string | null = null;
+    let bestCount = 0;
+    counts.forEach((count, id) => {
+      if (count > bestCount) {
+        best = id;
+        bestCount = count;
+      }
+    });
+    return best;
   }, [selected, exercises]);
+
+  const closeTooltip = () => {
+    setSelected(null);
+    setAnchor(null);
+  };
+
+  // Позиция тултипа — над нажатой мышцей, в координатах карточки с картой
+  const handleSelect = (slug: MuscleSlug, rect: DOMRect) => {
+    if (selected === slug) {
+      closeTooltip();
+      return;
+    }
+    const card = cardRef.current?.getBoundingClientRect();
+    if (card) {
+      setAnchor({
+        x: rect.left + rect.width / 2 - card.left,
+        top: rect.top - card.top,
+        bottom: rect.bottom - card.top,
+        containerWidth: card.width,
+      });
+    }
+    setSelected(slug);
+  };
 
   if (loading) return <Loader />;
 
@@ -109,7 +153,10 @@ export function MusclesPage() {
             <button
               key={v}
               type="button"
-              onClick={() => setView(v)}
+              onClick={() => {
+                setView(v);
+                closeTooltip();
+              }}
               style={{
                 flex: 1,
                 height: '40px',
@@ -129,8 +176,25 @@ export function MusclesPage() {
         })}
       </div>
 
-      <div style={{ ...glassCardStyle, padding: '18px 14px 12px' }}>
-        <BodyMap view={view} gender={gender} intensity={intensity} selected={selected} onSelect={setSelected} />
+      <div ref={cardRef} style={{ ...glassCardStyle, padding: '18px 14px 12px', position: 'relative' }}>
+        <BodyMap
+          view={view}
+          gender={gender}
+          intensity={intensity}
+          selected={selected}
+          onSelect={handleSelect}
+        />
+
+        {/* Тултип поверх карты, прямо над нажатой мышцей — layout не двигается */}
+        {selected && anchor && (
+          <MuscleTooltip
+            slug={selected}
+            trainedDays={[...(daysBySlug.get(selected) || [])]}
+            categoryId={selectedCategoryId}
+            anchor={anchor}
+            onClose={closeTooltip}
+          />
+        )}
 
         {/* Легенда интенсивности за неделю */}
         <div
@@ -163,16 +227,11 @@ export function MusclesPage() {
         </div>
       </div>
 
-      <Text variant="small" muted style={{ display: 'block', marginTop: '10px', textAlign: 'center' }}>
-        {t('muscles.hint')}
-      </Text>
-
-      <MuscleSheet
-        slug={selected}
-        trainedDays={selected ? [...(daysBySlug.get(selected) || [])] : []}
-        exercises={selectedExercises}
-        onClose={() => setSelected(null)}
-      />
+      {!selected && (
+        <Text variant="small" muted style={{ display: 'block', marginTop: '10px', textAlign: 'center' }}>
+          {t('muscles.hint')}
+        </Text>
+      )}
     </div>
   );
 }

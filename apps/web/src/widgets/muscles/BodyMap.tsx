@@ -11,7 +11,8 @@ interface BodyMapProps {
   /** Интенсивность 0–3 по слагам (дней тренировок за период) */
   intensity: Partial<Record<MuscleSlug, number>>;
   selected: MuscleSlug | null;
-  onSelect: (slug: MuscleSlug) => void;
+  /** rect — положение нажатой мышцы на экране, для позиционирования тултипа */
+  onSelect: (slug: MuscleSlug, rect: DOMRect) => void;
 }
 
 const INACTIVE_FILL = 'rgba(148, 190, 214, 0.13)';
@@ -29,7 +30,18 @@ export function BodyMap({ view, gender, intensity, selected, onSelect }: BodyMap
   const model = BODY_MODELS[gender][view];
 
   return (
-    <svg viewBox={model.viewBox} width="100%" style={{ display: 'block', maxWidth: '270px', margin: '0 auto' }}>
+    <svg
+      viewBox={model.viewBox}
+      width="100%"
+      style={{
+        display: 'block',
+        maxWidth: '270px',
+        margin: '0 auto',
+        // Убираем системную синюю подсветку тапа на мобильных
+        WebkitTapHighlightColor: 'transparent',
+        userSelect: 'none',
+      }}
+    >
       <path
         d={model.outline}
         fill="none"
@@ -52,15 +64,23 @@ export function BodyMap({ view, gender, intensity, selected, onSelect }: BodyMap
 
         const level = Math.max(0, Math.min(3, intensity[region.slug] || 0));
         const isSelected = selected === region.slug;
+        // При выбранной мышце остальные приглушаем, чтобы она читалась
+        const dimmed = selected !== null && !isSelected;
         const fill = level > 0 ? theme.palette.primary + ALPHA[level] : INACTIVE_FILL;
         return (
           <g
             key={index}
             fill={fill}
+            opacity={dimmed ? 0.3 : 1}
             stroke={isSelected ? 'rgba(255,255,255,0.9)' : SEPARATOR}
             strokeWidth={isSelected ? 2.5 : 1}
-            onClick={() => onSelect(region.slug as MuscleSlug)}
-            style={{ cursor: 'pointer', transition: 'fill 0.25s' }}
+            onClick={(e) => onSelect(region.slug as MuscleSlug, (e.currentTarget as SVGGElement).getBoundingClientRect())}
+            style={{
+              cursor: 'pointer',
+              transition: 'fill 0.25s, opacity 0.25s',
+              WebkitTapHighlightColor: 'transparent',
+              outline: 'none',
+            }}
           >
             {region.paths.map((d, i) => (
               <path key={i} d={d} />
