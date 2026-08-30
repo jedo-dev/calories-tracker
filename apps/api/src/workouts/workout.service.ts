@@ -367,6 +367,50 @@ export class WorkoutService {
     return { session: freshSession, logs };
   }
 
+  // Статистика по мышцам для карты тела: по каждой сырой строке из
+  // Exercise.muscleGroups — уникальные дни тренировок и суммарные подходы
+  // за период. Дни берём из даты сессии (а не createdAt лога), чтобы
+  // тренировки задним числом попадали в свой день.
+  async getMuscleStats(
+    userId: string,
+    days: number,
+  ): Promise<{ muscle: string; days: string[]; sets: number }[]> {
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    from.setHours(0, 0, 0, 0);
+
+    return this.logModel.aggregate([
+      { $match: { userId: new Types.ObjectId(userId), createdAt: { $gte: from } } },
+      {
+        $lookup: {
+          from: this.exerciseModel.collection.name,
+          localField: 'exerciseId',
+          foreignField: '_id',
+          as: 'exercise',
+        },
+      },
+      { $unwind: '$exercise' },
+      { $unwind: '$exercise.muscleGroups' },
+      {
+        $lookup: {
+          from: this.sessionModel.collection.name,
+          localField: 'sessionId',
+          foreignField: '_id',
+          as: 'session',
+        },
+      },
+      { $unwind: '$session' },
+      {
+        $group: {
+          _id: '$exercise.muscleGroups',
+          days: { $addToSet: '$session.date' },
+          sets: { $sum: { $ifNull: ['$sets', 1] } },
+        },
+      },
+      { $project: { _id: 0, muscle: '$_id', days: 1, sets: 1 } },
+    ]);
+  }
+
   // Exercises
   async getExercisesByCategory(
     categoryId?: string,

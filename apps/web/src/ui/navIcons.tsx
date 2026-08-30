@@ -99,6 +99,15 @@ export const IconCamera = makeIcon(
   </>,
 );
 
+export const IconBody = makeIcon(
+  <>
+    <circle cx="12" cy="5" r="2.6" />
+    <path d="M12 9.5v6" />
+    <path d="M7 10.5c1.6-1 3.3-1.5 5-1.5s3.4.5 5 1.5" />
+    <path d="M12 15.5 9.5 21M12 15.5l2.5 5.5" />
+  </>,
+);
+
 export const IconMic = makeIcon(
   <>
     <rect x="9" y="3.5" width="6" height="11" rx="3" />
