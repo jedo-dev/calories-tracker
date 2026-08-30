@@ -1,8 +1,22 @@
-import { plural, t } from '../../i18n';
+import { formatDateHuman, locale, plural, t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { Text } from '../../ui/Text';
 import { workoutCardStyle, formatDuration } from '../../pages/workoutShared';
 import type { WorkoutSessionInfo } from './types';
+
+// «31 августа, 14:05» — дата человекочитаемая, время из момента старта
+// (или завершения) тренировки, в текущей локали
+function formatSessionMoment(session: WorkoutSessionInfo): string | null {
+  if (!session.date) return null;
+  const stamp = session.startedAt || session.finishedAt;
+  const time = stamp
+    ? new Date(stamp).toLocaleTimeString(locale === 'ru' ? 'ru-RU' : 'en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
+  return `${formatDateHuman(session.date)}${time ? `, ${time}` : ''}`;
+}
 
 interface WorkoutHistoryListProps {
   sessions: WorkoutSessionInfo[];
@@ -49,7 +63,7 @@ export function WorkoutHistoryList({ sessions, emptyImage, onSessionClick }: Wor
               {session.name || t('workout.activeWorkout')}
             </Text>
             <Text variant="small" muted style={{ display: 'block', marginTop: '2px' }}>
-              {session.date ? `${session.date} · ` : ''}
+              {formatSessionMoment(session) ? `${formatSessionMoment(session)} · ` : ''}
               {session.exerciseCount} {plural(session.exerciseCount, 'exercise')} · {formatDuration(session.totalDurationSec)}
             </Text>
           </div>

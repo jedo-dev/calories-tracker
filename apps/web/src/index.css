@@ -59,6 +59,11 @@ body {
   display: none; /* Chrome/Safari/Webkit */
 }
 
+/* Горизонтальные ленты со своим индикатором прокрутки */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes pulse-text {
   from {
     opacity: 0;

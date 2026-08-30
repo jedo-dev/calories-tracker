@@ -28,8 +28,14 @@ export const WorkoutProgramItemSchema = SchemaFactory.createForClass(WorkoutProg
 
 @Schema({ timestamps: true })
 export class WorkoutProgram {
-  @Prop({ required: true, unique: true })
+  // Уникальность имени снята: у пользовательских программ имена свободные.
+  // Старый unique-индекс name_1 дропается в WorkoutService.onModuleInit.
+  @Prop({ required: true })
   name: string;
+
+  // null/отсутствует — глобальная программа (admin/trainer), иначе личная
+  @Prop({ type: Types.ObjectId, ref: 'User', index: true, default: null })
+  userId?: Types.ObjectId | null;
 
   @Prop()
   description?: string;

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type UserDocument = User & Document;
 
@@ -41,6 +41,10 @@ export class User {
   // Подписка FlareonFit Plus активна, пока дата в будущем
   @Prop({ type: Date })
   premiumUntil?: Date;
+
+  // Избранные программы тренировок
+  @Prop({ type: [Types.ObjectId], ref: 'WorkoutProgram', default: [] })
+  favoritePrograms: Types.ObjectId[];
 
   // Подтверждение почты: храним только SHA-256 хеш токена активации
   @Prop({ default: false })

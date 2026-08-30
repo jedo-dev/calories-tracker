@@ -73,8 +73,19 @@ export class WorkoutController {
 
   // Programs
   @Get('programs')
-  async getPrograms(@Query('categoryId') categoryId?: string) {
-    return this.workoutService.getPrograms(categoryId);
+  async getPrograms(@Request() req: any, @Query('categoryId') categoryId?: string) {
+    return this.workoutService.getPrograms(categoryId, req.user.id);
+  }
+
+  // Избранное: до 'programs/:id', иначе «favorites» распарсится как id
+  @Get('programs/favorites')
+  async getFavoritePrograms(@Request() req: any) {
+    return this.workoutService.getFavoritePrograms(req.user.id);
+  }
+
+  @Post('programs/:id/favorite')
+  async toggleFavoriteProgram(@Param('id') id: string, @Request() req: any) {
+    return this.workoutService.toggleFavoriteProgram(req.user.id, id);
   }
 
   @Get('programs/:id')
@@ -91,22 +102,27 @@ export class WorkoutController {
     return this.workoutService.startProgram(id, dto, req.user.id);
   }
 
+  // Редакторы создают глобальные программы, обычные пользователи — личные
   @Post('programs')
-  @Roles(...CONTENT_EDITORS)
-  async createProgram(@Body(ValidationPipe) dto: CreateProgramDto) {
-    return this.workoutService.createProgram(dto);
+  async createProgram(@Body(ValidationPipe) dto: CreateProgramDto, @Request() req: any) {
+    const isEditor = CONTENT_EDITORS.includes(req.user.role);
+    return this.workoutService.createProgram(dto, isEditor ? null : req.user.id);
   }
 
   @Patch('programs/:id')
-  @Roles(...CONTENT_EDITORS)
-  async updateProgram(@Param('id') id: string, @Body(ValidationPipe) dto: UpdateProgramDto) {
-    return this.workoutService.updateProgram(id, dto);
+  async updateProgram(@Param('id') id: string, @Body(ValidationPipe) dto: UpdateProgramDto, @Request() req: any) {
+    return this.workoutService.updateProgram(id, dto, {
+      userId: req.user.id,
+      isEditor: CONTENT_EDITORS.includes(req.user.role),
+    });
   }
 
   @Delete('programs/:id')
-  @Roles(...CONTENT_EDITORS)
-  async deleteProgram(@Param('id') id: string) {
-    await this.workoutService.deleteProgram(id);
+  async deleteProgram(@Param('id') id: string, @Request() req: any) {
+    await this.workoutService.deleteProgram(id, {
+      userId: req.user.id,
+      isEditor: CONTENT_EDITORS.includes(req.user.role),
+    });
     return { ok: true };
   }
 

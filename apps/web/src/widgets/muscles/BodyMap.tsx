@@ -10,9 +10,11 @@ interface BodyMapProps {
   gender: BodyGender;
   /** Интенсивность 0–3 по слагам (дней тренировок за период) */
   intensity: Partial<Record<MuscleSlug, number>>;
-  selected: MuscleSlug | null;
+  selected?: MuscleSlug | null;
   /** rect — положение нажатой мышцы на экране, для позиционирования тултипа */
-  onSelect: (slug: MuscleSlug, rect: DOMRect) => void;
+  onSelect?: (slug: MuscleSlug, rect: DOMRect) => void;
+  /** Максимальная ширина фигуры (по умолчанию 270px) */
+  maxWidth?: number;
 }
 
 const INACTIVE_FILL = 'rgba(148, 190, 214, 0.13)';
@@ -25,7 +27,7 @@ const ALPHA = ['00', '55', '99', 'e6'];
 // Анатомическая модель тела (react-native-body-highlighter, MIT), мужская
 // или женская — по полу из профиля. Кликабельны только регионы с нашим
 // слагом, остальное — силуэт.
-export function BodyMap({ view, gender, intensity, selected, onSelect }: BodyMapProps) {
+export function BodyMap({ view, gender, intensity, selected = null, onSelect, maxWidth = 270 }: BodyMapProps) {
   const theme = useTheme();
   const model = BODY_MODELS[gender][view];
 
@@ -35,7 +37,7 @@ export function BodyMap({ view, gender, intensity, selected, onSelect }: BodyMap
       width="100%"
       style={{
         display: 'block',
-        maxWidth: '270px',
+        maxWidth: `${maxWidth}px`,
         margin: '0 auto',
         // Убираем системную синюю подсветку тапа на мобильных
         WebkitTapHighlightColor: 'transparent',
@@ -74,9 +76,13 @@ export function BodyMap({ view, gender, intensity, selected, onSelect }: BodyMap
             opacity={dimmed ? 0.3 : 1}
             stroke={isSelected ? 'rgba(255,255,255,0.9)' : SEPARATOR}
             strokeWidth={isSelected ? 2.5 : 1}
-            onClick={(e) => onSelect(region.slug as MuscleSlug, (e.currentTarget as SVGGElement).getBoundingClientRect())}
+            onClick={
+              onSelect
+                ? (e) => onSelect(region.slug as MuscleSlug, (e.currentTarget as SVGGElement).getBoundingClientRect())
+                : undefined
+            }
             style={{
-              cursor: 'pointer',
+              cursor: onSelect ? 'pointer' : 'default',
               transition: 'fill 0.25s, opacity 0.25s',
               WebkitTapHighlightColor: 'transparent',
               outline: 'none',

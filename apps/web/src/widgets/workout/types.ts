@@ -13,6 +13,8 @@ export interface ProgramListItem {
   imageUrl?: string;
   categoryId?: string;
   level: 'beginner' | 'intermediate' | 'advanced';
+  /** null — глобальная программа, иначе личная программа пользователя */
+  userId?: string | null;
   exerciseCount: number;
   estimatedDurationSec: number;
   estimatedKcal: number;

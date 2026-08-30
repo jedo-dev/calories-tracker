@@ -130,11 +130,23 @@ const Loader = () => {
 };
 
 // Compact loader for in-card / in-list loading states
-export function InlineLoader({ size = 64 }: { size?: number }) {
-  const [src] = useState(() => pick(INLINE_LOADERS));
+export function InlineLoader({ size = 64, variant }: { size?: number; variant?: 'dumbbell' | 'fox' }) {
+  const [src] = useState(() =>
+    variant === 'dumbbell' ? dumbbellLoader : variant === 'fox' ? foxLoader : pick(INLINE_LOADERS),
+  );
   return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
-      <img src={src} alt={t('common.loading')} style={{ width: size, height: size }} />
+      <style>{`
+        @keyframes inline-loader-pop {
+          from { opacity: 0; transform: scale(0.92); }
+          to { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+      <img
+        src={src}
+        alt={t('common.loading')}
+        style={{ width: size, height: size, animation: 'inline-loader-pop 0.3s ease' }}
+      />
     </div>
   );
 }

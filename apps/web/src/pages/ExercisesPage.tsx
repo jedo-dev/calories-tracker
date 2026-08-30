@@ -278,6 +278,28 @@ export function ExercisesPage() {
                   <InfoPill label="MET" value={String(ex.metValue)} />
                   {ex.equipment && <InfoPill label={t('workout.equipment')} value={ex.equipment} />}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/exercise/${ex._id}`)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    marginTop: '10px',
+                    padding: 0,
+                    background: 'none',
+                    border: 'none',
+                    color: theme.palette.primary,
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {t('workout.exerciseDetails')}
+                  <span aria-hidden="true">→</span>
+                </button>
                 {ex.muscleGroups.length > 0 && (
                   <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
                     {ex.muscleGroups.map((m) => (

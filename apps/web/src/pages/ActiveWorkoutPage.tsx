@@ -267,6 +267,15 @@ export function ActiveWorkoutPage() {
     }
   };
 
+  // Выход назад из пустой незавершённой тренировки не должен оставлять
+  // «мусорную» сессию без упражнений в списке «Сегодня»
+  const handleBack = async () => {
+    if (!session?.finishedAt && logs.length === 0) {
+      await apiClient.delete(`/workouts/sessions/${sessionId}`).catch(() => {});
+    }
+    navigate('/workouts');
+  };
+
   const handleCancel = async () => {
     setFinishing(true);
     try {
@@ -316,7 +325,7 @@ export function ActiveWorkoutPage() {
     >
       <PageHeader
         title={session.name || t('workout.activeWorkout')}
-        onBack={() => navigate('/workouts')}
+        onBack={handleBack}
         right={
           <button
             type="button"

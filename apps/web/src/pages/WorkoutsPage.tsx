@@ -1,5 +1,5 @@
 import { PageHeader } from '../ui/PageHeader';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import emptyWorkouts from '../assets/03_empty_states/empty_workouts.png';
@@ -23,6 +23,7 @@ export function WorkoutsPage() {
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
@@ -33,11 +34,18 @@ export function WorkoutsPage() {
       apiClient.get('/workouts/categories').catch(() => null),
       apiClient.get('/workouts/sessions', { params: { date: today } }).catch(() => null),
       apiClient.get('/workouts/history', { params: { limit: 5 } }).catch(() => null),
+      apiClient.get('/workouts/programs/favorites').catch(() => null),
     ])
-      .then(([programsRes, catRes, sessionsRes, historyRes]) => {
+      .then(([programsRes, catRes, sessionsRes, historyRes, favoritesRes]) => {
         if (programsRes) setPrograms(programsRes.data);
+        if (favoritesRes) setFavoriteIds(new Set<string>(favoritesRes.data));
         if (catRes) setCategories(catRes.data);
-        if (sessionsRes) setTodaySessions(sessionsRes.data.filter((s: WorkoutSessionInfo) => !s.finishedAt));
+        // Пустые незавершённые сессии (создал и вышел) не показываем
+        if (sessionsRes) {
+          setTodaySessions(
+            sessionsRes.data.filter((s: WorkoutSessionInfo) => !s.finishedAt && (s.exerciseCount || 0) > 0),
+          );
+        }
         if (historyRes) {
           setHistory(historyRes.data);
           setHistoryHasMore(historyRes.data.length === 5);
@@ -63,10 +71,49 @@ export function WorkoutsPage() {
     }
   };
 
-  const filteredPrograms = useMemo(
-    () => (activeCategoryId ? programs.filter((p) => p.categoryId === activeCategoryId) : programs),
-    [programs, activeCategoryId],
-  );
+  // Избранные программы — в начало ленты
+  const filteredPrograms = useMemo(() => {
+    const list = activeCategoryId ? programs.filter((p) => p.categoryId === activeCategoryId) : programs;
+    return [...list].sort((a, b) => Number(favoriteIds.has(b._id)) - Number(favoriteIds.has(a._id)));
+  }, [programs, activeCategoryId, favoriteIds]);
+
+  // Оптимистичный тоггл: сердечко откликается сразу, откат при ошибке
+  const toggleFavorite = (programId: string) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(programId)) next.delete(programId);
+      else next.add(programId);
+      return next;
+    });
+    apiClient.post(`/workouts/programs/${programId}/favorite`).catch(() => {
+      setFavoriteIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(programId)) next.delete(programId);
+        else next.add(programId);
+        return next;
+      });
+    });
+  };
+
+  // Горизонтальная лента программ: индикатор показывает, что справа есть ещё
+  const programsScrollRef = useRef<HTMLDivElement>(null);
+  const [scrollThumb, setScrollThumb] = useState({ visible: false, ratio: 1, progress: 0 });
+
+  const syncProgramsScroll = () => {
+    const el = programsScrollRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setScrollThumb({
+      visible: max > 8,
+      ratio: el.scrollWidth > 0 ? el.clientWidth / el.scrollWidth : 1,
+      progress: max > 0 ? el.scrollLeft / max : 0,
+    });
+  };
+
+  useEffect(() => {
+    syncProgramsScroll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredPrograms, loading]);
 
   const handleCustomWorkout = async () => {
     setCreating(true);
@@ -109,69 +156,142 @@ export function WorkoutsPage() {
         </div>
       )}
 
-      {/* Programs */}
+      {/* Своя тренировка — главная CTA страницы, сверху */}
+      <button
+        type="button"
+        onClick={handleCustomWorkout}
+        disabled={creating}
+        style={{
+          width: '100%',
+          minHeight: '52px',
+          borderRadius: '16px',
+          border: 'none',
+          background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
+          color: '#07210f',
+          fontSize: '15px',
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 14px 26px rgba(83, 212, 107, 0.2)',
+          opacity: creating ? 0.6 : 1,
+          fontFamily: 'inherit',
+          marginBottom: '16px',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        + {t('workout.customWorkout')}
+      </button>
+
+      {/* Programs: сетка 2 ряда с горизонтальной прокруткой (~4 на экран) */}
       <Text variant="h2" bold style={{ display: 'block', marginBottom: '8px', fontSize: '17px' }}>
         {t('workout.programs')}
       </Text>
       <CategoryChips categories={categories} activeCategoryId={activeCategoryId} onSelect={setActiveCategoryId} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+      <div
+        ref={programsScrollRef}
+        onScroll={syncProgramsScroll}
+        className="no-scrollbar"
+        style={{
+          display: 'grid',
+          gridAutoFlow: 'column',
+          gridTemplateRows: filteredPrograms.length > 1 ? '1fr 1fr' : '1fr',
+          gridAutoColumns: 'calc(50% - 5px)',
+          gap: '10px',
+          overflowX: 'auto',
+          scrollSnapType: 'x proximity',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          marginBottom: scrollThumb.visible ? '8px' : '14px',
+        }}
+      >
         {filteredPrograms.map((program) => (
-          <ProgramCard key={program._id} program={program} onClick={() => navigate(`/workout/program/${program._id}`)} />
+          <div key={program._id} style={{ scrollSnapAlign: 'start', minWidth: 0 }}>
+            <ProgramCard
+              program={program}
+              favorite={favoriteIds.has(program._id)}
+              onToggleFavorite={() => toggleFavorite(program._id)}
+              onClick={() => navigate(`/workout/program/${program._id}`)}
+            />
+          </div>
         ))}
+        {/* Карточка-плюс: собрать и сохранить свою программу */}
+        <div style={{ scrollSnapAlign: 'start', minWidth: 0 }}>
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/workout/program-builder${activeCategoryId ? `?categoryId=${activeCategoryId}` : ''}`)
+            }
+            style={{
+              width: '100%',
+              height: '100%',
+              minHeight: '150px',
+              borderRadius: '18px',
+              border: '1.5px dashed rgba(160, 200, 220, 0.35)',
+              background: 'rgba(255,255,255,0.03)',
+              color: theme.palette.text,
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              fontFamily: 'inherit',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <span
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: theme.palette.primary + '1f',
+                border: `1px solid ${theme.palette.primary}55`,
+                color: theme.palette.primary,
+                fontSize: '24px',
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              +
+            </span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: theme.palette.textMuted, padding: '0 10px', textAlign: 'center' }}>
+              {t('workout.createProgram')}
+            </span>
+          </button>
+        </div>
       </div>
+      {scrollThumb.visible && (
+        <div
+          style={{
+            height: '3px',
+            borderRadius: '2px',
+            background: 'rgba(160, 200, 220, 0.16)',
+            marginBottom: '14px',
+            position: 'relative',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              borderRadius: '2px',
+              background: theme.palette.primary + 'aa',
+              width: `${Math.max(scrollThumb.ratio * 100, 12)}%`,
+              left: `${scrollThumb.progress * (100 - Math.max(scrollThumb.ratio * 100, 12))}%`,
+              transition: 'left 0.05s linear',
+            }}
+          />
+        </div>
+      )}
       {filteredPrograms.length === 0 && (
         <Text variant="small" muted style={{ display: 'block', marginBottom: '14px' }}>
           {t('workout.noHistory')}
         </Text>
       )}
 
-      {/* Browse catalog / custom workout */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-        <button
-          type="button"
-          disabled={categories.length === 0}
-          onClick={() => {
-            const target = activeCategoryId || categories[0]?._id;
-            if (target) navigate(`/workout/category/${target}`);
-          }}
-          style={{
-            flex: 1,
-            height: '46px',
-            borderRadius: '16px',
-            border: '1px solid rgba(160, 200, 220, 0.24)',
-            background: 'rgba(255,255,255,0.06)',
-            color: theme.palette.text,
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: categories.length === 0 ? 'default' : 'pointer',
-            opacity: categories.length === 0 ? 0.5 : 1,
-            fontFamily: 'inherit',
-          }}
-        >
-          {t('workout.allExercises')}
-        </button>
-        <button
-          type="button"
-          onClick={handleCustomWorkout}
-          disabled={creating}
-          style={{
-            flex: 1,
-            height: '46px',
-            borderRadius: '16px',
-            border: 'none',
-            background: 'linear-gradient(180deg, rgba(83, 212, 107, 1), rgba(60, 170, 82, 1))',
-            color: '#07210f',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: '0 14px 26px rgba(83, 212, 107, 0.2)',
-            opacity: creating ? 0.6 : 1,
-            fontFamily: 'inherit',
-          }}
-        >
-          + {t('workout.customWorkout')}
-        </button>
-      </div>
 
       {/* Recent history */}
       <Text variant="h2" bold style={{ display: 'block', marginBottom: '8px', fontSize: '17px' }}>

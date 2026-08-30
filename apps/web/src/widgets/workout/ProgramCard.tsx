@@ -12,7 +12,14 @@ const LEVEL_COLORS: Record<string, { bg: string; color: string }> = {
   advanced: { bg: 'rgba(255, 122, 122, 0.16)', color: '#ff8a8a' },
 };
 
-export function ProgramCard({ program, onClick }: { program: ProgramListItem; onClick: () => void }) {
+interface ProgramCardProps {
+  program: ProgramListItem;
+  onClick: () => void;
+  favorite?: boolean;
+  onToggleFavorite?: () => void;
+}
+
+export function ProgramCard({ program, onClick, favorite = false, onToggleFavorite }: ProgramCardProps) {
   const theme = useTheme();
   const [imgFailed, setImgFailed] = useState(false);
   const level = LEVEL_COLORS[program.level] || LEVEL_COLORS.beginner;
@@ -64,6 +71,45 @@ export function ProgramCard({ program, onClick }: { program: ProgramListItem; on
         >
           {t(`workout.${program.level}`)}
         </span>
+        {onToggleFavorite && (
+          // span, а не button: карточка сама <button>, вложенные кнопки невалидны
+          <span
+            role="button"
+            aria-label={favorite ? t('workout.favoriteRemove') : t('workout.favoriteAdd')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite();
+            }}
+            style={{
+              position: 'absolute',
+              top: '6px',
+              right: '6px',
+              width: '30px',
+              height: '30px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(8, 21, 35, 0.55)',
+              backdropFilter: 'blur(6px)',
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill={favorite ? '#ff7a9a' : 'none'}
+              stroke={favorite ? '#ff7a9a' : 'rgba(255,255,255,0.8)'}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z" />
+            </svg>
+          </span>
+        )}
       </div>
       <div style={{ padding: '10px 12px 12px' }}>
         <Text bold style={{ display: 'block', fontSize: '14px', lineHeight: 1.25 }}>

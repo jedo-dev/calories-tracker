@@ -45,6 +45,8 @@ const MenuPage = lazy(() => import('./pages/MenuPage').then((m) => ({ default: m
 const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage').then((m) => ({ default: m.AdminAnalyticsPage })));
 const RunPage = lazy(() => import('./pages/RunPage').then((m) => ({ default: m.RunPage })));
 const MusclesPage = lazy(() => import('./pages/MusclesPage').then((m) => ({ default: m.MusclesPage })));
+const ExerciseDetailPage = lazy(() => import('./pages/ExerciseDetailPage').then((m) => ({ default: m.ExerciseDetailPage })));
+const ProgramBuilderPage = lazy(() => import('./pages/ProgramBuilderPage').then((m) => ({ default: m.ProgramBuilderPage })));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then((m) => ({ default: m.VerifyEmailPage })));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
@@ -149,8 +151,10 @@ function App() {
             <Route path="/workouts" element={<WorkoutsPage />} />
             <Route path="/run" element={<RunPage />} />
             <Route path="/muscles" element={<MusclesPage />} />
+            <Route path="/exercise/:exerciseId" element={<ExerciseDetailPage />} />
             <Route path="/admin/workouts" element={<AdminWorkoutsPage />} />
             <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+            <Route path="/workout/program-builder" element={<ProgramBuilderPage />} />
             <Route path="/workout/program/:programId" element={<WorkoutProgramPage />} />
             <Route path="/workout/category/:categoryId" element={<ExercisesPage />} />
             <Route path="/workout/history/:sessionId" element={<WorkoutHistoryDetailPage />} />

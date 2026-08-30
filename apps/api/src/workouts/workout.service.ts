@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { WorkoutCategory, WorkoutCategoryDocument } from './schemas/workout-category.schema';
@@ -32,7 +32,14 @@ export interface FinishSummary {
 }
 
 @Injectable()
-export class WorkoutService {
+export class WorkoutService implements OnModuleInit {
+  // Раньше имя программы было глобально уникальным; с появлением личных
+  // программ индекс мешает («Моя программа» у двух пользователей). Дропаем
+  // старый индекс один раз при старте, ошибка «индекса нет» — норма.
+  async onModuleInit() {
+    await this.programModel.collection.dropIndex('name_1').catch(() => {});
+  }
+
   constructor(
     @InjectModel(WorkoutCategory.name) private categoryModel: Model<WorkoutCategoryDocument>,
     @InjectModel(Exercise.name) private exerciseModel: Model<ExerciseDocument>,
@@ -57,8 +64,16 @@ export class WorkoutService {
   }
 
   // Programs
-  async getPrograms(categoryId?: string) {
-    const filter = categoryId ? { categoryId: new Types.ObjectId(categoryId) } : {};
+  async getPrograms(categoryId?: string, userId?: string) {
+    // Глобальные программы + личные программы запрашивающего
+    const owner = {
+      $or: [
+        { userId: null },
+        { userId: { $exists: false } },
+        ...(userId ? [{ userId: new Types.ObjectId(userId) }] : []),
+      ],
+    };
+    const filter = categoryId ? { ...owner, categoryId: new Types.ObjectId(categoryId) } : owner;
     const programs = await this.programModel.find(filter).sort({ sortOrder: 1, name: 1 }).exec();
     const exerciseIds = [...new Set(programs.flatMap((p) => p.items.map((i) => i.exerciseId.toString())))];
     const exercises = await this.exerciseModel.find({ _id: { $in: exerciseIds } }).exec();
@@ -74,6 +89,7 @@ export class WorkoutService {
         categoryId: p.categoryId,
         level: p.level,
         sortOrder: p.sortOrder,
+        userId: p.userId ?? null,
         exerciseCount: p.items.length,
         estimatedDurationSec: durationSec,
         estimatedKcal: kcal,
@@ -126,6 +142,7 @@ export class WorkoutService {
       imageUrl: program.imageUrl,
       categoryId: program.categoryId,
       level: program.level,
+      userId: program.userId ?? null,
       exerciseCount: items.length,
       estimatedDurationSec: durationSec,
       estimatedKcal: kcal,
@@ -141,7 +158,7 @@ export class WorkoutService {
     level?: string;
     sortOrder?: number;
     items: { exerciseId: string; sets: number; reps?: number; durationSec?: number; restSec?: number }[];
-  }): Promise<WorkoutProgramDocument> {
+  }, ownerId: string | null = null): Promise<WorkoutProgramDocument> {
     const items = await this.buildProgramItems(dto.items);
     return new this.programModel({
       name: dto.name,
@@ -149,8 +166,18 @@ export class WorkoutService {
       categoryId: dto.categoryId ? new Types.ObjectId(dto.categoryId) : undefined,
       level: dto.level || 'beginner',
       sortOrder: dto.sortOrder ?? 100,
+      userId: ownerId ? new Types.ObjectId(ownerId) : null,
       items,
     }).save();
+  }
+
+  // Личную программу может менять только владелец, глобальную — редакторы
+  private assertProgramAccess(program: WorkoutProgramDocument, userId: string, isEditor: boolean) {
+    if (program.userId) {
+      if (String(program.userId) !== userId) throw new ForbiddenException('Not your program');
+    } else if (!isEditor) {
+      throw new ForbiddenException('Only editors can modify global programs');
+    }
   }
 
   async updateProgram(
@@ -163,9 +190,11 @@ export class WorkoutService {
       sortOrder?: number;
       items?: { exerciseId: string; sets: number; reps?: number; durationSec?: number; restSec?: number }[];
     },
+    requester?: { userId: string; isEditor: boolean },
   ): Promise<WorkoutProgramDocument> {
     const program = await this.programModel.findById(programId).exec();
     if (!program) throw new NotFoundException('Program not found');
+    if (requester) this.assertProgramAccess(program, requester.userId, requester.isEditor);
 
     if (dto.name !== undefined) program.name = dto.name;
     if (dto.description !== undefined) program.description = dto.description;
@@ -179,10 +208,30 @@ export class WorkoutService {
     return program.save();
   }
 
-  async deleteProgram(programId: string): Promise<void> {
+  async deleteProgram(programId: string, requester?: { userId: string; isEditor: boolean }): Promise<void> {
     const program = await this.programModel.findById(programId).exec();
     if (!program) throw new NotFoundException('Program not found');
+    if (requester) this.assertProgramAccess(program, requester.userId, requester.isEditor);
     await program.deleteOne();
+  }
+
+  // Избранные программы
+  async getFavoritePrograms(userId: string): Promise<string[]> {
+    const user = await this.userModel.findById(userId).select('favoritePrograms').exec();
+    return (user?.favoritePrograms || []).map(String);
+  }
+
+  async toggleFavoriteProgram(userId: string, programId: string): Promise<{ favorite: boolean }> {
+    const program = await this.programModel.findById(programId).exec();
+    if (!program) throw new NotFoundException('Program not found');
+    const id = new Types.ObjectId(programId);
+    const user = await this.userModel.findById(userId).select('favoritePrograms').exec();
+    if (!user) throw new NotFoundException('User not found');
+    const isFavorite = (user.favoritePrograms || []).some((p) => String(p) === programId);
+    await this.userModel
+      .updateOne({ _id: userId }, isFavorite ? { $pull: { favoritePrograms: id } } : { $addToSet: { favoritePrograms: id } })
+      .exec();
+    return { favorite: !isFavorite };
   }
 
   private async buildProgramItems(
