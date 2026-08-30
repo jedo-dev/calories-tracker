@@ -122,6 +122,15 @@ export class WorkoutController {
     return { imageUrl: program.imageUrl };
   }
 
+  // Статистика по группам мышц для карты тела: какие мышцы и в какие дни
+  // тренировались за период. Названия мышц — сырые строки из Exercise,
+  // нормализация в слаги происходит на клиенте.
+  @Get('muscles/stats')
+  async getMuscleStats(@Query('days') days: string | undefined, @Request() req: any) {
+    const daysNum = Math.min(Math.max(parseInt(days || '30', 10) || 30, 1), 365);
+    return this.workoutService.getMuscleStats(req.user.id, daysNum);
+  }
+
   // Exercises. Without limit returns the full catalog (legacy builder callers);
   // admin/editor callers pass search+limit+offset for server-side paging.
   @Get('exercises')
