@@ -23,6 +23,8 @@ const FriendsPage = lazy(() => import('./pages/FriendsPage').then((m) => ({ defa
 const LeaguePage = lazy(() => import('./pages/LeaguePage').then((m) => ({ default: m.LeaguePage })));
 const AchievementsPage = lazy(() => import('./pages/AchievementsPage').then((m) => ({ default: m.AchievementsPage })));
 const ProductsPage = lazy(() => import('./pages/ProductsPage').then((m) => ({ default: m.ProductsPage })));
+const ProductEditorPage = lazy(() => import('./pages/ProductEditorPage').then((m) => ({ default: m.ProductEditorPage })));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage').then((m) => ({ default: m.ProductDetailPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage').then((m) => ({ default: m.PublicProfilePage })));
 const WorkoutsPage = lazy(() => import('./pages/WorkoutsPage').then((m) => ({ default: m.WorkoutsPage })));
@@ -43,7 +45,6 @@ const MealPlanPage = lazy(() => import('./pages/MealPlanPage').then((m) => ({ de
 const AiLimitsPage = lazy(() => import('./pages/AiLimitsPage').then((m) => ({ default: m.AiLimitsPage })));
 const MenuPage = lazy(() => import('./pages/MenuPage').then((m) => ({ default: m.MenuPage })));
 const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage').then((m) => ({ default: m.AdminAnalyticsPage })));
-const RunPage = lazy(() => import('./pages/RunPage').then((m) => ({ default: m.RunPage })));
 const MusclesPage = lazy(() => import('./pages/MusclesPage').then((m) => ({ default: m.MusclesPage })));
 const ExerciseDetailPage = lazy(() => import('./pages/ExerciseDetailPage').then((m) => ({ default: m.ExerciseDetailPage })));
 const ProgramBuilderPage = lazy(() => import('./pages/ProgramBuilderPage').then((m) => ({ default: m.ProgramBuilderPage })));
@@ -145,11 +146,13 @@ function App() {
             <Route path="/entry/new" element={<AddEntryPage />} />
             <Route path="/entry/:id" element={<AddEntryPage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/new" element={<ProductEditorPage />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
+            <Route path="/products/:id/edit" element={<ProductEditorPage />} />
             <Route path="/league" element={<LeaguePage />} />
             <Route path="/friends" element={<FriendsPage />} />
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/workouts" element={<WorkoutsPage />} />
-            <Route path="/run" element={<RunPage />} />
             <Route path="/muscles" element={<MusclesPage />} />
             <Route path="/exercise/:exerciseId" element={<ExerciseDetailPage />} />
             <Route path="/admin/workouts" element={<AdminWorkoutsPage />} />

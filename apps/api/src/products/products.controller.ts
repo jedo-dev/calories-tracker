@@ -22,10 +22,12 @@ import { ProductsService } from './products.service';
 export class ProductsController {
   constructor(private productsService: ProductsService) {}
 
-  @Public()
+  // Не @Public: нужен req.user.id, чтобы в выдаче без поиска
+  // продукты текущего пользователя шли первыми.
   @Get()
-  async findAll(@Query(ValidationPipe) query: QueryProductsDto) {
-    return this.productsService.findAll(query);
+  @UseGuards(JwtAuthGuard)
+  async findAll(@Query(ValidationPipe) query: QueryProductsDto, @Request() req: any) {
+    return this.productsService.findAll(query, req.user.id);
   }
 
   @Public()

@@ -106,7 +106,7 @@ function MacroStat({ letter, value, color, textColor }: { letter: string; value:
   );
 }
 
-function SearchIcon({ color }: { color: string }) {
+export function SearchIcon({ color }: { color: string }) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round">
       <circle cx="11" cy="11" r="7" />

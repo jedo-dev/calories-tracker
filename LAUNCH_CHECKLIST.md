@@ -57,7 +57,8 @@
 ### Дистрибуция
 - [ ] **TWA-обёртка** (Bubblewrap) → RuStore + Google Play. Требования:
       HTTPS, `assetlinks.json`, maskable-иконки (уже есть), splash.
-      Позже заменить на Capacitor ради нативного шагомера и HealthKit.
+      Позже заменить на Capacitor ради Health Connect / HealthKit
+      (нативные шаги и сон — из PWA они недоступны).
 - [x] **Гайд по установке PWA (iOS + Android).** Модалка с затемнением:
       iOS — шаги со стрелкой на «Поделиться» (не-Safari отправляем в Safari),
       Android — нативная установка одной кнопкой (`beforeinstallprompt`).

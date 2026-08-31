@@ -181,7 +181,7 @@ const MARQUEE = [
   { icon: icoStreak, label: 'Держать серию' },
   { icon: icoWater, label: 'Пить больше воды' },
   { icon: icoTarget, label: 'Интервальное голодание' },
-  { icon: icoSteps, label: 'Бегать с шагомером' },
+  { icon: icoSteps, label: 'Записывать тренировки' },
   { icon: icoTrophy, label: 'Соревноваться с друзьями' },
   { icon: icoNote, label: 'Видеть честный прогресс' },
 ];
@@ -561,8 +561,8 @@ export function LandingPage() {
             </div>
             <div className="lp-card lp-glow">
               <img className="lp-card-mascot" src={foxRun} alt="" width={238} height={240} loading="lazy" decoding="async" />
-              <h3>Беговой режим</h3>
-              <p>Шагомер прямо в телефоне: шаги, дистанция, каденс, калории.</p>
+              <h3>Тренировки</h3>
+              <p>Бег, силовые, кардио: программы, дневник и калории за каждую сессию.</p>
             </div>
             <div className="lp-card lp-glow">
               <img className="lp-card-mascot" src={foxRecipes} alt="" width={226} height={240} loading="lazy" decoding="async" />

@@ -47,12 +47,27 @@ export class ProductsService implements OnModuleInit {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-  async findAll(query: QueryProductsDto): Promise<ProductDocument[]> {
+  async findAll(query: QueryProductsDto, userId?: string): Promise<ProductDocument[]> {
     const { search, limit } = query;
     const maxResults = limit || 20;
 
     if (!search || !search.trim()) {
-      return this.productModel.find().limit(maxResults).exec();
+      // Без поиска — последние добавленные, продукты текущего пользователя первыми.
+      const own = userId
+        ? await this.productModel
+            .find({ createdBy: userId })
+            .sort({ createdAt: -1 })
+            .limit(maxResults)
+            .exec()
+        : [];
+      if (own.length >= maxResults) return own;
+
+      const others = await this.productModel
+        .find(userId ? { createdBy: { $ne: userId } } : {})
+        .sort({ createdAt: -1 })
+        .limit(maxResults - own.length)
+        .exec();
+      return [...own, ...others];
     }
 
     const searchNormalized = this.normalizeName(search);

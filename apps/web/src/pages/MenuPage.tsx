@@ -93,7 +93,6 @@ export function MenuPage() {
         { icon: <IconRuler size={20} />, tint: TINT.diaries, label: t('measurement.title'), path: '/measurements' },
         { icon: <IconDumbbell size={20} />, tint: TINT.diaries, label: t('workout.title'), path: '/workouts' },
         { icon: <IconBody size={20} />, tint: TINT.diaries, label: t('muscles.title'), path: '/muscles' },
-        { icon: <IconClock size={20} />, tint: TINT.diaries, label: t('run.title'), path: '/run' },
       ],
     },
     {
