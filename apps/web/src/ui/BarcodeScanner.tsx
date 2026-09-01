@@ -7,23 +7,42 @@ interface BarcodeScannerProps {
   onClose: () => void;
 }
 
+// Камере после запуска нужно время на автофокус/экспозицию: первые кадры
+// смазаны, и один «удачный» мусорный кадр раньше сразу завершал сканирование.
+const WARMUP_MS = 700; // игнорируем детекции, пока картинка стабилизируется
+const CONFIRMATIONS = 3; // код принимается после N одинаковых детекций подряд
+
 // Chrome on Android (and thus the Telegram webview) ships a native detector;
 // everything else falls back to ZXing. Camera needs HTTPS or localhost.
 export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   const theme = useTheme();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingCode, setConfirmingCode] = useState(false);
   const doneRef = useRef(false);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
     let rafId = 0;
     let zxingControls: { stop: () => void } | null = null;
+    let readyAt = Infinity;
+    let candidate: { code: string; hits: number } | null = null;
 
-    const finish = (code: string) => {
-      if (doneRef.current) return;
-      doneRef.current = true;
-      onDetected(code);
+    // Детекция засчитывается только после прогрева камеры и CONFIRMATIONS
+    // одинаковых чтений подряд — расфокусированный кадр даёт другой код и
+    // сбрасывает счётчик, поэтому мусор не проходит.
+    const handleDetection = (code: string) => {
+      if (doneRef.current || Date.now() < readyAt) return;
+      if (candidate?.code === code) {
+        candidate.hits += 1;
+      } else {
+        candidate = { code, hits: 1 };
+      }
+      setConfirmingCode(true);
+      if (candidate.hits >= CONFIRMATIONS) {
+        doneRef.current = true;
+        onDetected(code);
+      }
     };
 
     const start = async () => {
@@ -34,6 +53,7 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
         if (!videoRef.current) return;
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+        readyAt = Date.now() + WARMUP_MS;
 
         const NativeDetector = (window as any).BarcodeDetector;
         if (NativeDetector) {
@@ -45,8 +65,8 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
             try {
               const codes = await detector.detect(videoRef.current);
               if (codes.length > 0 && codes[0].rawValue) {
-                finish(codes[0].rawValue);
-                return;
+                handleDetection(codes[0].rawValue);
+                if (doneRef.current) return;
               }
             } catch {
               // a frame can fail to decode — just try the next one
@@ -73,7 +93,7 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
         ]);
         const reader = new BrowserMultiFormatReader(hints);
         zxingControls = await reader.decodeFromVideoElement(videoRef.current, (result) => {
-          if (result) finish(result.getText());
+          if (result) handleDetection(result.getText());
         });
       } catch (err) {
         const name = (err as Error).name;
@@ -138,8 +158,24 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
               borderRadius: '16px',
               boxShadow: '0 0 0 9999px rgba(3, 12, 20, 0.45)',
               pointerEvents: 'none',
+              overflow: 'hidden',
             }}
-          />
+          >
+            {/* бегущий градиент — показывает, что сканер работает и ждёт стабилизации */}
+            <style>{`@keyframes barcode-scanline { 0% { top: -12%; } 100% { top: 104%; } }`}</style>
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                height: '10%',
+                minHeight: '8px',
+                background: `linear-gradient(180deg, transparent, ${theme.palette.primary}, transparent)`,
+                opacity: 0.75,
+                animation: 'barcode-scanline 1.6s ease-in-out infinite alternate',
+              }}
+            />
+          </div>
         )}
         {error && (
           <div
@@ -158,8 +194,19 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
         )}
       </div>
 
-      <div style={{ color: theme.palette.textMuted, fontSize: '13px', marginTop: '14px', textAlign: 'center' }}>
-        {error ? t('barcode.enterManually') : t('barcode.hint')}
+      <div
+        style={{
+          color: confirmingCode && !error ? theme.palette.primary : theme.palette.textMuted,
+          fontSize: '13px',
+          marginTop: '14px',
+          textAlign: 'center',
+        }}
+      >
+        {error
+          ? t('barcode.enterManually')
+          : confirmingCode
+            ? t('barcode.confirming')
+            : `${t('barcode.hint')}. ${t('barcode.stabilizing')}`}
       </div>
 
       <button

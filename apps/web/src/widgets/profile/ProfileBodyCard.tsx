@@ -4,7 +4,7 @@ import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { Input } from '../../ui/Input';
 import { Text } from '../../ui/Text';
-import { formatDate, t } from '../../i18n';
+import { t } from '../../i18n';
 import type { ProfileData } from './types';
 
 interface ProfileBodyCardProps {
@@ -13,6 +13,8 @@ interface ProfileBodyCardProps {
   saving: boolean;
   /** Показать поле веса (только для первичной инициализации, когда записи в журнале ещё нет). */
   showWeightField?: boolean;
+  /** Обязательные поля, не заполненные при попытке сохранения, — подсвечиваются красным. */
+  invalidFields?: (keyof ProfileData)[];
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
   onChange: (field: keyof ProfileData, value: any) => void;
 }
@@ -54,11 +56,13 @@ function formatGender(gender?: ProfileData['gender']) {
   return '—';
 }
 
-function fieldShell(editing: boolean, theme: ReturnType<typeof useTheme>) {
+function fieldShell(editing: boolean, theme: ReturnType<typeof useTheme>, invalid?: boolean) {
   return {
     position: 'relative' as const,
     borderRadius: '16px',
-    border: editing ? `1px solid ${theme.palette.border}` : '1px solid transparent',
+    border: editing
+      ? `1px solid ${invalid ? 'rgba(255, 106, 106, 0.85)' : theme.palette.border}`
+      : '1px solid transparent',
     background: editing ? 'rgba(3, 18, 28, 0.88)' : 'transparent',
     padding: editing ? '12px 12px 10px' : '0',
     minHeight: editing ? '64px' : 'auto',
@@ -78,31 +82,10 @@ function fieldLabel(editing: boolean) {
   } as CSSProperties;
 }
 
-export function ProfileBodyCard({ formData, editing, saving, showWeightField, onSubmit, onChange }: ProfileBodyCardProps) {
+export function ProfileBodyCard({ formData, editing, saving, showWeightField, invalidFields, onSubmit, onChange }: ProfileBodyCardProps) {
   const theme = useTheme();
   const bodyFields = showWeightField ? [weightField, ...baseFields] : baseFields;
-
-  // Ячейка «Дедлайн»: в обычном режиме стоит рядом с «Пол» (на месте скрытого
-  // веса), при первичной инициализации — внизу на всю ширину.
-  const targetDateCell = (wide: boolean) => (
-    <div style={{ ...fieldShell(editing, theme), gridColumn: wide ? '1 / -1' : undefined }}>
-      <Text variant="small" muted style={fieldLabel(editing)}>
-        {t('profile.targetDate')}
-      </Text>
-      {editing ? (
-        <Input
-          type="date"
-          value={formData.targetDate || ''}
-          onChange={(e) => onChange('targetDate', e.target.value || undefined)}
-          style={{ border: 'none', background: 'transparent', padding: '4px 0 0', fontSize: '18px', fontWeight: 600 }}
-        />
-      ) : (
-        <Text bold style={{ display: 'block', fontSize: '16px', paddingTop: '0' }}>
-          {formData.targetDate ? formatDate(formData.targetDate) : '—'}
-        </Text>
-      )}
-    </div>
-  );
+  const isInvalid = (field: keyof ProfileData) => !!invalidFields?.includes(field);
 
   return (
     <Card
@@ -124,7 +107,7 @@ export function ProfileBodyCard({ formData, editing, saving, showWeightField, on
           {bodyFields.map((field) => {
             const value = formData[field.field];
             return (
-              <div key={field.field} style={fieldShell(editing, theme)}>
+              <div key={field.field} style={fieldShell(editing, theme, isInvalid(field.field))}>
                 <Text variant="small" muted style={fieldLabel(editing)}>
                   {t(field.labelKey)}
                 </Text>
@@ -153,7 +136,7 @@ export function ProfileBodyCard({ formData, editing, saving, showWeightField, on
             );
           })}
 
-          <div style={fieldShell(editing, theme)}>
+          <div style={fieldShell(editing, theme, isInvalid('gender'))}>
             <Text variant="small" muted style={fieldLabel(editing)}>
               {t('profile.gender')}
             </Text>
@@ -187,8 +170,6 @@ export function ProfileBodyCard({ formData, editing, saving, showWeightField, on
             )}
           </div>
 
-          {/* Дедлайн занимает место скрытого поля веса рядом с полом */}
-          {!showWeightField && targetDateCell(false)}
         </div>
 
         <div style={{ marginTop: '10px' }}>
@@ -202,28 +183,11 @@ export function ProfileBodyCard({ formData, editing, saving, showWeightField, on
                 ? []
                 : [{ labelKey: 'profile.startWeightKg', value: formData.startWeightKg, field: 'startWeightKg' as const }]),
               { labelKey: 'profile.targetWeightKg', value: formData.targetWeightKg, field: 'targetWeightKg' as const },
-              // Дедлайн внизу только на инициализации; в обычном режиме он выше, рядом с полом
-              ...(showWeightField
-                ? [{
-                    labelKey: 'profile.targetDate',
-                    value: formData.targetDate ? formatDate(formData.targetDate) : undefined,
-                    field: 'targetDate' as const,
-                  }]
-                : []),
             ].map((item) => {
-              const isWide = item.field === 'targetDate';
               return (
                 <div
                   key={item.field}
-                  style={{
-                    position: 'relative',
-                    borderRadius: '16px',
-                    border: editing ? `1px solid ${theme.palette.border}` : '1px solid transparent',
-                    background: editing ? 'rgba(3, 18, 28, 0.88)' : 'transparent',
-                    padding: editing ? '12px 12px 10px' : '0',
-                    minHeight: editing ? '64px' : 'auto',
-                    gridColumn: isWide ? '1 / -1' : undefined,
-                  }}
+                  style={fieldShell(editing, theme, isInvalid(item.field))}
                 >
                   <Text variant="small" muted style={fieldLabel(editing)}>
                     {t(item.labelKey)}
@@ -254,8 +218,8 @@ export function ProfileBodyCard({ formData, editing, saving, showWeightField, on
                       </select>
                     ) : item.field === 'activityLevel' ? (
                       <select
-                        value={formData.activityLevel || ''}
-                        onChange={(e) => onChange('activityLevel', e.target.value || undefined)}
+                        value={formData.activityLevel || 'medium'}
+                        onChange={(e) => onChange('activityLevel', e.target.value as ProfileData['activityLevel'])}
                         style={{
                           width: '100%',
                           border: 'none',
@@ -271,19 +235,11 @@ export function ProfileBodyCard({ formData, editing, saving, showWeightField, on
                           cursor: 'pointer',
                         }}
                       >
-                        <option value="">—</option>
                         <option value="low">{t('profile.activityLevel_low')}</option>
                         <option value="medium">{t('profile.activityLevel_medium')}</option>
                         <option value="high">{t('profile.activityLevel_high')}</option>
                         <option value="very_high">{t('profile.activityLevel_very_high')}</option>
                       </select>
-                    ) : item.field === 'targetDate' ? (
-                      <Input
-                        type="date"
-                        value={formData.targetDate || ''}
-                        onChange={(e) => onChange('targetDate', e.target.value || undefined)}
-                        style={{ border: 'none', background: 'transparent', padding: '4px 0 0', fontSize: '18px', fontWeight: 600 }}
-                      />
                     ) : (
                       <Input
                         type="number"

@@ -183,13 +183,13 @@ export function TodayPage() {
       />
 
       {/* Челлендж новичка показываем только на сегодняшнем дне */}
-      {socialStats?.stats && isToday && (
+      {/* {socialStats?.stats && isToday && (
         <OnboardingChallengeCard
           currentStreak={socialStats.stats.currentStreak}
           bestStreak={socialStats.stats.bestStreak}
           hasEntriesToday={entries.length > 0}
         />
-      )}
+      )} */}
 
       {dashboard?.targets && dashboard.progress && (
         <Card
@@ -263,7 +263,7 @@ export function TodayPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate("/profile?edit=1")}
             style={{
               width: "auto",
               minWidth: "180px",

@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { pageBackground } from '../theme/styles';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api/client";
 import { t, todayISO } from '../i18n';
 import { useTheme } from "../theme/useTheme";
@@ -23,6 +23,10 @@ import type {
 
 export function ProfilePage() {
   const navigate = useNavigate();
+  // Переход с баннера «Заполните профиль» (?edit=1) сразу открывает
+  // редактирование — чтобы новичку не пришлось искать карандаш.
+  const [searchParams] = useSearchParams();
+  const openInEdit = searchParams.get("edit") === "1";
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,14 +37,18 @@ export function ProfilePage() {
   const [streakDays, setStreakDays] = useState(0);
   const [achievements, setAchievements] = useState<AchievementState[]>([]);
   const [hasWeightLog, setHasWeightLog] = useState(true);
-  const [formData, setFormData] = useState<ProfileData>({ goal: "maintain" });
+  const [invalidFields, setInvalidFields] = useState<(keyof ProfileData)[]>([]);
+  const [formData, setFormData] = useState<ProfileData>({
+    goal: "maintain",
+    activityLevel: "medium"
+  });
   useEffect(() => {
     loadProfile();
   }, []);
 
   const loadProfile = async () => {
     setLoading(true);
-    setEditingBody(false);
+    setEditingBody(openInEdit);
     setError(null);
 
     try {
@@ -66,11 +74,10 @@ export function ProfilePage() {
           heightCm: profileRes.data.profile.heightCm,
           age: profileRes.data.profile.age,
           gender: profileRes.data.profile.gender,
-          activityLevel: profileRes.data.profile.activityLevel,
+          activityLevel: profileRes.data.profile.activityLevel || "medium",
           goal: profileRes.data.profile.goal || "maintain",
           startWeightKg: profileRes.data.profile.startWeightKg,
-          targetWeightKg: profileRes.data.profile.targetWeightKg,
-          targetDate: profileRes.data.profile.targetDate
+          targetWeightKg: profileRes.data.profile.targetWeightKg
         });
       } else {
         setFormData((prev) => ({ ...prev, avatarEmoji: loadedAvatar }));
@@ -96,10 +103,49 @@ export function ProfilePage() {
     }
   };
 
+  // Без этих полей норма калорий не считается, поэтому не даём сохранить
+  // профиль с пропусками. Цель и активность имеют дефолты и пустыми не бывают.
+  const requiredFields: { field: keyof ProfileData; labelKey: string }[] = [
+    ...(!hasWeightLog ? [{ field: "weightKg" as const, labelKey: "profile.weight" }] : []),
+    { field: "heightCm", labelKey: "profile.height" },
+    { field: "age", labelKey: "profile.age" },
+    { field: "gender", labelKey: "profile.gender" },
+    { field: "targetWeightKg", labelKey: "profile.targetWeightKg" }
+  ];
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
+
+    const missing = requiredFields.filter(({ field }) => formData[field] == null);
+    if (missing.length > 0) {
+      setInvalidFields(missing.map(({ field }) => field));
+      setError(
+        t("profile.requiredFields", {
+          fields: missing.map(({ labelKey }) => t(labelKey)).join(", ")
+        })
+      );
+      return;
+    }
+
+    // Целевой вес должен соответствовать цели: похудение — меньше стартового,
+    // набор — больше. Сравниваем со стартовым весом (или текущим, если старта нет).
+    const referenceWeight = formData.startWeightKg ?? formData.weightKg;
+    if (formData.targetWeightKg != null && referenceWeight != null) {
+      if (formData.goal === "lose" && formData.targetWeightKg >= referenceWeight) {
+        setInvalidFields(["targetWeightKg"]);
+        setError(t("profile.targetWeightLoseError"));
+        return;
+      }
+      if (formData.goal === "gain" && formData.targetWeightKg <= referenceWeight) {
+        setInvalidFields(["targetWeightKg"]);
+        setError(t("profile.targetWeightGainError"));
+        return;
+      }
+    }
+
+    setInvalidFields([]);
+    setSaving(true);
 
     try {
       const payload: ProfileData = { ...formData };
@@ -131,6 +177,9 @@ export function ProfilePage() {
       ...prev,
       [field]: value === "" ? undefined : value
     }));
+    if (value !== "" && value != null) {
+      setInvalidFields((prev) => prev.filter((f) => f !== field));
+    }
   };
 
   const displayName = user?.displayName || user?.username || "User";
@@ -157,7 +206,11 @@ export function ProfilePage() {
         league={league}
         streakDays={streakDays}
         editingBody={editingBody}
-        onToggleEdit={() => setEditingBody((prev) => !prev)}
+        onToggleEdit={() => {
+          setEditingBody((prev) => !prev);
+          setInvalidFields([]);
+          setError(null);
+        }}
         onAvatarChange={(emoji) => handleChange("avatarEmoji", emoji)}
       />
 
@@ -201,6 +254,7 @@ export function ProfilePage() {
         editing={editingBody}
         saving={saving}
         showWeightField={!hasWeightLog}
+        invalidFields={invalidFields}
         onSubmit={handleSubmit}
         onChange={handleChange}
       />

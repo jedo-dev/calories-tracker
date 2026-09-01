@@ -8,7 +8,6 @@ export interface ProfileData {
   goal?: 'lose' | 'maintain' | 'gain';
   startWeightKg?: number;
   targetWeightKg?: number;
-  targetDate?: string;
 }
 
 export interface LeagueState {

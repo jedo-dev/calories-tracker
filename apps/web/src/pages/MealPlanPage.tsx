@@ -202,7 +202,7 @@ export function MealPlanPage() {
           <Text variant="small" muted style={{ display: 'block', marginBottom: '16px', lineHeight: 1.5 }}>
             {t('mealPlan.profileRequiredDesc')}
           </Text>
-          <button type="button" onClick={() => navigate('/profile')} style={{ ...primaryBtn(false), maxWidth: '260px' }}>
+          <button type="button" onClick={() => navigate('/profile?edit=1')} style={{ ...primaryBtn(false), maxWidth: '260px' }}>
             {t('mealPlan.goToProfile')}
           </button>
         </div>
