@@ -15,8 +15,9 @@ import { showToast } from "../ui/Toast";
 import { DashboardSlider, DashboardData } from "../widgets/today/DashboardSlider";
 import { MealGroupSheet } from "../widgets/today/MealGroupSheet";
 import { WaterCard } from "../widgets/water/WaterCard";
-import { OnboardingChallengeCard } from "../widgets/today/OnboardingChallengeCard";
+// import { OnboardingChallengeCard } from "../widgets/today/OnboardingChallengeCard";
 import { calcWaterGoalMl } from "../widgets/water/waterGoal";
+import { getCompletedScenarios, isTourActive, startTour, tourEvent } from "../tour/tour";
 
 export interface Entry {
   _id: string;
@@ -103,6 +104,17 @@ export function TodayPage() {
     loadData();
   }, [date]);
 
+  // Новичку без нормы калорий один раз предлагаем тур по заполнению профиля.
+  // Тур ненавязчивый: первый же шаг содержит «Пропустить».
+  useEffect(() => {
+    if (loading || dashboard?.targets || !isToday) return;
+    if (isTourActive()) return;
+    if (getCompletedScenarios().includes("fill-profile")) return;
+    if (localStorage.getItem("tour_profile_offered")) return;
+    localStorage.setItem("tour_profile_offered", "1");
+    startTour("fill-profile");
+  }, [loading, dashboard]);
+
   const handleAddWater = async (amountMl: number) => {
     try {
       await apiClient.post("/water", { date, amountMl });
@@ -134,6 +146,7 @@ export function TodayPage() {
             }
           : current
       );
+      tourEvent("entry_deleted");
     } catch (err: any) {
       showToast(err.response?.data?.message || t("today.deleteFailed"));
     } finally {
@@ -192,6 +205,8 @@ export function TodayPage() {
       )} */}
 
       {dashboard?.targets && dashboard.progress && (
+        // div-обёртка: Card не пробрасывает data-атрибуты, а якорь нужен туру
+        <div data-tour="today-dashboard">
         <Card
           style={{
             marginBottom: theme.spacing.md,
@@ -210,6 +225,7 @@ export function TodayPage() {
             }}
           />
         </Card>
+        </div>
       )}
 
       {dashboard?.targets && !dashboard.progress && (
@@ -227,6 +243,7 @@ export function TodayPage() {
       {isToday && (
       <button
         type="button"
+        data-tour="today-add-entry"
         onClick={() => navigate("/entry/new")}
         style={{
           width: "100%",
@@ -263,6 +280,7 @@ export function TodayPage() {
           <Button
             variant="ghost"
             size="sm"
+            data-tour="today-open-profile"
             onClick={() => navigate("/profile?edit=1")}
             style={{
               width: "auto",
@@ -277,10 +295,15 @@ export function TodayPage() {
         </Card>
       )}
 
-      <FoodList
-        entries={entries}
-        onMealClick={(group) => setSelectedGroup(group)}
-      />
+      <div data-tour="today-food-list">
+        <FoodList
+          entries={entries}
+          onMealClick={(group) => {
+            setSelectedGroup(group);
+            tourEvent("meal_opened");
+          }}
+        />
+      </div>
 
       {selectedGroup && (
         <MealGroupSheet

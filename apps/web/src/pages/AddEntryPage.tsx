@@ -13,6 +13,7 @@ import { useTheme } from '../theme/useTheme';
 import { Button } from '../ui/Button';
 import { Text } from '../ui/Text';
 import { PageHeader } from '../ui/PageHeader';
+import { tourEvent } from '../tour/tour';
 
 interface Product {
   _id: string;
@@ -103,6 +104,8 @@ export function AddEntryPage() {
   useEffect(() => {
     if (isEdit) {
       loadEntry();
+    } else {
+      tourEvent('add_entry_opened');
     }
   }, [id]);
 
@@ -162,6 +165,7 @@ export function AddEntryPage() {
     setProducts([]);
     setFoundInOff(false);
     if (product.servingGrams) setGrams(String(product.servingGrams));
+    tourEvent('product_selected');
   };
 
   const handleSave = async () => {
@@ -190,6 +194,7 @@ export function AddEntryPage() {
         await apiClient.patch(`/entries/${id}`, data);
       } else {
         await apiClient.post('/entries', data);
+        tourEvent('entry_saved');
       }
 
       navigate('/today');
@@ -318,7 +323,9 @@ export function AddEntryPage() {
       </div>
 
       {!selectedProduct && (
-      <div style={{ marginBottom: theme.spacing.md }}>
+      // data-tour на обёртке, а не на инпуте: вырез затемнения тура должен
+      // накрывать и выпадающий список результатов
+      <div data-tour="entry-search" style={{ marginBottom: theme.spacing.md }}>
         <label style={{ display: 'block', marginBottom: '4px', fontWeight: 600, color: theme.palette.textMuted, fontSize: '12px' }}>
           {t('entry.product')}
         </label>
@@ -391,6 +398,9 @@ export function AddEntryPage() {
       </div>
       )}
 
+      {/* data-tour на обёртке карточки и кнопок: в вырезе затемнения тура
+          должны быть и граммы, и «Сохранить» */}
+      <div data-tour="entry-save">
       {/* Selected product: KBJU per 100g + live total for the entered grams */}
       {selectedProduct && (() => {
         const g = parseFloat(grams) || 0;
@@ -518,6 +528,7 @@ export function AddEntryPage() {
         >
           {saving ? t('common.saving') : t('common.save')}
         </button>
+      </div>
       </div>
 
       {/* Quick add: recent products, one tap straight into the diary */}

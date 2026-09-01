@@ -16,6 +16,7 @@ import { ToastHost } from './ui/Toast';
 import { normalizePath, track } from './utils/analytics';
 import { FeedbackButton } from './widgets/feedback/FeedbackButton';
 import { InstallGuide } from './widgets/pwa/InstallGuide';
+import { TourOverlay } from './tour/TourOverlay';
 
 const AddEntryPage = lazy(() => import('./pages/AddEntryPage').then((m) => ({ default: m.AddEntryPage })));
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
@@ -82,6 +83,7 @@ function AppLayout() {
         <Footer />
         <InstallGuide />
         <FeedbackButton />
+        <TourOverlay />
       </div>
     </ProtectedRoute>
   );

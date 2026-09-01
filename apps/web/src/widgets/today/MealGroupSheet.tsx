@@ -156,6 +156,7 @@ export function MealGroupSheet({ group, onClose, onEditEntry, onDeleteEntry, rea
                   <Button
                     variant="ghost"
                     size="sm"
+                    data-tour="meal-entry-delete"
                     onClick={() => onDeleteEntry(entry._id)}
                     style={{
                       width: "auto",

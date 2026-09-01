@@ -1,16 +1,21 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../api/client';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { track } from '../../utils/analytics';
 import { getErrorLog } from '../../utils/errorLog';
+import { TOUR_SCENARIOS, getCompletedScenarios, startTour } from '../../tour/tour';
+import mascotTour from '../../assets/08_mascot/mascot_tour_sm.png';
 
-// Плавающая фидбек-кнопка: мелкая полупрозрачная, по нажатию — модалка
-// с textarea. Вместе с текстом на почту уходит буфер последних ошибок
-// (utils/errorLog) — диагностика без Sentry.
+// Плавающая кнопка помощи: по нажатию — меню с чеклистом обучающих туров
+// и пунктом «Сообщить о проблеме» (textarea; вместе с текстом на почту
+// уходит буфер последних ошибок из utils/errorLog — диагностика без Sentry).
 export function FeedbackButton() {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<'menu' | 'form'>('menu');
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
@@ -18,8 +23,17 @@ export function FeedbackButton() {
 
   const close = () => {
     setOpen(false);
+    setView('menu');
     setDone(false);
     setError(false);
+  };
+
+  const handleStartTour = (id: string) => {
+    close();
+    // Уводим на стартовую страницу сценария до включения подсветки
+    const scenario = TOUR_SCENARIOS.find((s) => s.id === id);
+    navigate(scenario?.startPath || '/today');
+    startTour(id);
   };
 
   const send = async () => {
@@ -50,7 +64,8 @@ export function FeedbackButton() {
     <>
       <button
         type="button"
-        aria-label={t('feedback.title')}
+        data-tour="help-button"
+        aria-label={t('feedback.menuTitle')}
         onClick={() => {
           setOpen(true);
           track('feedback_opened');
@@ -104,6 +119,93 @@ export function FeedbackButton() {
               marginBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
             }}
           >
+            {view === 'menu' ? (() => {
+              const completed = getCompletedScenarios();
+              return (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: theme.palette.text, marginBottom: '4px' }}>
+                        {t('tour.listTitle')}
+                      </div>
+                      <div style={{ fontSize: '12px', color: theme.palette.textMuted }}>
+                        {t('tour.listSubtitle')}
+                      </div>
+                    </div>
+                    <img
+                      src={mascotTour}
+                      alt=""
+                      style={{
+                        width: '100px',
+                        height: '100px',
+                        flexShrink: 0,
+                        objectFit: 'contain',
+                        // лис чуть выступает за верх карточки — живее, чем строго в сетке
+                        marginTop: '-24px',
+                        marginBottom: '-8px',
+                      }}
+                    />
+                  </div>
+
+                  {TOUR_SCENARIOS.map((scenario) => {
+                    const isDone = completed.includes(scenario.id);
+                    return (
+                      <button
+                        key={scenario.id}
+                        type="button"
+                        onClick={() => handleStartTour(scenario.id)}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '12px 14px',
+                          marginBottom: '8px',
+                          borderRadius: '14px',
+                          border: '1px solid rgba(160, 200, 220, 0.22)',
+                          background: 'rgba(3, 14, 22, 0.5)',
+                          color: theme.palette.text,
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span style={{ fontSize: '16px', flexShrink: 0 }}>{isDone ? '✅' : '⬜'}</span>
+                        <span style={{ flex: 1 }}>{t(scenario.titleKey)}</span>
+                        <span style={{ color: theme.palette.textMuted, fontSize: '16px' }}>›</span>
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => setView('form')}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '12px 14px',
+                      marginTop: '4px',
+                      borderRadius: '14px',
+                      border: '1px solid rgba(160, 200, 220, 0.22)',
+                      background: 'transparent',
+                      color: theme.palette.textMuted,
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ fontSize: '15px', flexShrink: 0 }}>💬</span>
+                    <span style={{ flex: 1 }}>{t('feedback.title')}</span>
+                    <span style={{ fontSize: '16px' }}>›</span>
+                  </button>
+                </>
+              );
+            })() : (
+            <>
             <div style={{ fontSize: '16px', fontWeight: 800, color: theme.palette.text, marginBottom: '4px' }}>
               {t('feedback.title')}
             </div>
@@ -183,6 +285,8 @@ export function FeedbackButton() {
                   </button>
                 </div>
               </>
+            )}
+            </>
             )}
           </div>
         </div>

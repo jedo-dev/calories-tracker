@@ -20,6 +20,7 @@ import type {
   LeagueState,
   ProfileData
 } from "../widgets/profile/types";
+import { tourEvent } from "../tour/tour";
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -45,6 +46,10 @@ export function ProfilePage() {
   useEffect(() => {
     loadProfile();
   }, []);
+
+  useEffect(() => {
+    if (editingBody) tourEvent("profile_edit_opened");
+  }, [editingBody]);
 
   const loadProfile = async () => {
     setLoading(true);
@@ -161,6 +166,7 @@ export function ProfilePage() {
       }
 
       await apiClient.patch("/profile", payload);
+      tourEvent("profile_saved");
       setEditingBody(false);
       navigate("/today");
     } catch (err: any) {
@@ -249,15 +255,17 @@ export function ProfilePage() {
         />
       )}
 
-      <ProfileBodyCard
-        formData={formData}
-        editing={editingBody}
-        saving={saving}
-        showWeightField={!hasWeightLog}
-        invalidFields={invalidFields}
-        onSubmit={handleSubmit}
-        onChange={handleChange}
-      />
+      <div data-tour="profile-body-card">
+        <ProfileBodyCard
+          formData={formData}
+          editing={editingBody}
+          saving={saving}
+          showWeightField={!hasWeightLog}
+          invalidFields={invalidFields}
+          onSubmit={handleSubmit}
+          onChange={handleChange}
+        />
+      </div>
 
       {!editingBody && <DangerZoneCard />}
     </div>
