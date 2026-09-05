@@ -5,6 +5,7 @@ import { ActivityEvent, ActivityEventDocument } from '../social/schemas/activity
 import { Follow, FollowDocument } from '../social/schemas/follow.schema';
 import { UserStats, UserStatsDocument } from '../social/schemas/user-stats.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
+import { AchievementsService } from '../social/achievements.service';
 
 @Injectable()
 export class FriendsService {
@@ -13,6 +14,7 @@ export class FriendsService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(ActivityEvent.name) private activityEventModel: Model<ActivityEventDocument>,
     @InjectModel(UserStats.name) private userStatsModel: Model<UserStatsDocument>,
+    private achievementsService: AchievementsService,
   ) {}
 
   private getLeague(xpTotal: number): { name: string; color: string } {
@@ -102,6 +104,9 @@ export class FriendsService {
         date: new Date().toISOString().split('T')[0],
         payload: { targetUserId: followingId },
       });
+      // «В кругу друзей» (5 подписок) — иначе ачивка проверялась бы только
+      // при следующей записи еды
+      this.achievementsService.checkAndUnlock(followerId).catch(() => {});
     }
   }
 

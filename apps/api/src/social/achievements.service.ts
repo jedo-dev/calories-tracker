@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Achievement, AchievementDocument } from './schemas/achievement.schema';
 import { UserStats, UserStatsDocument } from './schemas/user-stats.schema';
 import { ActivityEvent, ActivityEventDocument } from './schemas/activity-event.schema';
+import { Follow, FollowDocument } from './schemas/follow.schema';
 
 const ACHIEVEMENT_DEFS = [
   // Онбординговые: лёгкие победы в первые дни резко поднимают ретеншн,
@@ -66,7 +67,7 @@ export class AchievementsService {
         newlyUnlocked.push('3day_streak');
       }
 
-      if (stats.currentStreak >= 7 && !existingSet.has('7day_streak')) {
+      if (stats.bestStreak >= 7 && !existingSet.has('7day_streak')) {
         await this.unlock(userId, '7day_streak');
         newlyUnlocked.push('7day_streak');
       }

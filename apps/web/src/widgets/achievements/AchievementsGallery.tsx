@@ -11,7 +11,7 @@ interface AchievementsGalleryProps {
 
 function isUnlocked(achievements: AchievementState[], key: string) {
   const found = achievements.find((item) => item.key === key);
-  return found ? found.unlocked : key === '7day_streak';
+  return found ? found.unlocked : false;
 }
 
 function resolveText(value: string, fallback: string) {

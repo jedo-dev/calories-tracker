@@ -7,6 +7,7 @@ import { useTheme } from "../theme/useTheme";
 import Loader from "../ui/Loader";
 import { PageHeader } from "../ui/PageHeader";
 import { AchievementsGallery } from "../widgets/achievements/AchievementsGallery";
+import { ACHIEVEMENT_ITEMS } from "../widgets/achievements/constants";
 import type { AchievementState } from "../widgets/profile/types";
 
 export function AchievementsPage() {
@@ -51,8 +52,11 @@ export function AchievementsPage() {
     };
   }, []);
 
+  // Считаем по карточкам галереи: ачивки, которых нет в ответе API, показать
+  // как полученные нельзя, а знаменатель должен совпадать с числом карточек
   const unlockedCount = useMemo(
-    () => achievements.filter((item) => item.unlocked).length,
+    () =>
+      ACHIEVEMENT_ITEMS.filter((item) => achievements.find((a) => a.key === item.key)?.unlocked).length,
     [achievements]
   );
 
@@ -71,7 +75,7 @@ export function AchievementsPage() {
     >
       <PageHeader
         title={t("achievements.title")}
-        subtitle={`${unlockedCount}/${Math.max(achievements.length, 6)} ${t("achievements.progress")}`}
+        subtitle={`${unlockedCount}/${ACHIEVEMENT_ITEMS.length} ${t("achievements.progress")}`}
         onBack={() => navigate("/profile")}
       />
 

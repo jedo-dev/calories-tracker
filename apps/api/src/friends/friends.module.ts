@@ -6,6 +6,7 @@ import { Follow, FollowSchema } from '../social/schemas/follow.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { ActivityEvent, ActivityEventSchema } from '../social/schemas/activity-event.schema';
 import { UserStats, UserStatsSchema } from '../social/schemas/user-stats.schema';
+import { SocialModule } from '../social/social.module';
 
 @Module({
   imports: [

@@ -77,19 +77,30 @@ export function VoiceFoodSection({ date, time, mealType, autoStart = false }: Pr
     recognition.continuous = true;
     recognition.interimResults = true;
 
+    // Текст, который был в поле до старта записи — к нему дописываем речь
     finalTextRef.current = text ? text.trim() + ' ' : '';
 
     recognition.onresult = (event: any) => {
+      // Не накапливаем финальные куски инкрементально: Android Chrome шлёт
+      // один и тот же финальный результат по несколько раз и с resultIndex=0,
+      // из-за чего фраза дублировалась. Пересобираем текст из всего
+      // event.results каждый раз — это полная история текущей сессии.
+      let finals = '';
       let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const chunk = event.results[i][0]?.transcript ?? '';
+      let prevChunk = '';
+      for (let i = 0; i < event.results.length; i++) {
+        const chunk = String(event.results[i][0]?.transcript ?? '').trim();
+        if (!chunk) continue;
         if (event.results[i].isFinal) {
-          finalTextRef.current += chunk + ' ';
+          // Подряд идущий точный повтор — тоже артефакт Android, пропускаем
+          if (chunk === prevChunk) continue;
+          finals += chunk + ' ';
+          prevChunk = chunk;
         } else {
-          interim += chunk;
+          interim += chunk + ' ';
         }
       }
-      setText((finalTextRef.current + interim).trimStart());
+      setText((finalTextRef.current + finals + interim).trimStart());
     };
     recognition.onerror = (event: any) => {
       if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') {

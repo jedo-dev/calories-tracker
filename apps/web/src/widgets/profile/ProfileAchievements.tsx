@@ -44,7 +44,7 @@ export function ProfileAchievements({ achievements, onAllClick, limit = 4, compa
 
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${visibleItems.length}, minmax(0, 1fr))`, gap: badgeGap, marginBottom: '12px' }}>
         {visibleItems.map((item) => {
-          const unlocked = achievements.find((a) => a.key === item.key)?.unlocked ?? item.key === '7day_streak';
+          const unlocked = achievements.find((a) => a.key === item.key)?.unlocked ?? false;
           return (
             <div key={item.key} style={{ textAlign: 'center', minWidth: 0 }}>
               <div

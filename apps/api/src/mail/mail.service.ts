@@ -45,6 +45,16 @@ export class MailService {
     return raw.replace(/[\r\n]/g, '').trim().replace(/^"(.*)"$/, '$1');
   }
 
+  // Успешную отправку тоже пишем в лог: без этого «письмо не дошло» не
+  // отличить от «письмо не отправлялось». accepted/rejected и ответ SMTP —
+  // единственное, что видно с нашей стороны до попадания в ящик получателя.
+  private logSent(info: nodemailer.SentMessageInfo): void {
+    const to = Array.isArray(info.envelope?.to) ? info.envelope.to.join(', ') : '?';
+    this.logger.log(
+      `Письмо отправлено → ${to}; accepted=${JSON.stringify(info.accepted)} rejected=${JSON.stringify(info.rejected)} id=${info.messageId} smtp="${String(info.response || '').replace(/[\r\n]/g, ' ')}"`,
+    );
+  }
+
   private get supportEmail(): string {
     return this.configService.get<string>('SUPPORT_EMAIL') || 'megamanok99@gmail.com';
   }
@@ -66,7 +76,7 @@ export class MailService {
       UNSUBSCRIBE_URL: `${this.appUrl}/profile`,
     };
     try {
-      await this.transporter.sendMail({
+      const info = await this.transporter.sendMail({
         from: this.from,
         to,
         replyTo: this.supportEmail,
@@ -74,6 +84,7 @@ export class MailService {
         text: render(CONFIRM_ACCOUNT_TEXT, vars),
         html: render(CONFIRM_ACCOUNT_HTML, vars),
       });
+      this.logSent(info);
       return true;
     } catch (err: any) {
       this.logger.warn(`Не удалось отправить письмо на ${to}: ${err?.message}`);
@@ -92,7 +103,7 @@ export class MailService {
     // Имя идёт в заголовок письма — переводы строк там запрещены SMTP
     const who = (user.name || user.email || user.id).replace(/[\r\n]/g, ' ').slice(0, 80);
     try {
-      await this.transporter.sendMail({
+      const info = await this.transporter.sendMail({
         from: this.from,
         to: this.supportEmail,
         replyTo: user.email || undefined,
@@ -100,6 +111,7 @@ export class MailService {
         text: `${message}\n\n--- Диагностика ---\nuserId: ${user.id}\nemail: ${user.email || '—'}\n${diagnostics}`,
         attachments,
       });
+      this.logSent(info);
       return true;
     } catch (err: any) {
       this.logger.warn(`Не удалось отправить фидбек: ${err?.message}`);
@@ -115,7 +127,7 @@ export class MailService {
       SUPPORT_EMAIL: this.supportEmail,
     };
     try {
-      await this.transporter.sendMail({
+      const info = await this.transporter.sendMail({
         from: this.from,
         to,
         replyTo: this.supportEmail,
@@ -123,6 +135,7 @@ export class MailService {
         text: render(RESET_PASSWORD_TEXT, vars),
         html: render(RESET_PASSWORD_HTML, vars),
       });
+      this.logSent(info);
       return true;
     } catch (err: any) {
       this.logger.warn(`Не удалось отправить письмо на ${to}: ${err?.message}`);
