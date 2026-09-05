@@ -10,6 +10,7 @@ import { SocialModule } from '../social/social.module';
 
 @Module({
   imports: [
+    SocialModule,
     MongooseModule.forFeature([
       { name: Follow.name, schema: FollowSchema },
       { name: User.name, schema: UserSchema },

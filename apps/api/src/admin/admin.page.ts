@@ -104,7 +104,7 @@ export const ADMIN_PAGE_HTML = `<!DOCTYPE html>
   var TOKEN_KEY = 'admin_token';
   // На проде API живёт за nginx под префиксом /api/, локально — в корне.
   // Берём префикс из адреса самой страницы (…/admin), чтобы не зашивать его.
-  var BASE = location.pathname.replace(/\/admin\/?$/, '');
+  var BASE = location.pathname.replace(new RegExp('[/]admin[/]?$'), '');
   var roles = ['admin', 'trainer', 'user'];
 
   function el(id) { return document.getElementById(id); }
