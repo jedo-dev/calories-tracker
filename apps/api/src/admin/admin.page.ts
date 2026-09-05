@@ -102,6 +102,9 @@ export const ADMIN_PAGE_HTML = `<!DOCTYPE html>
 <script>
 (function () {
   var TOKEN_KEY = 'admin_token';
+  // На проде API живёт за nginx под префиксом /api/, локально — в корне.
+  // Берём префикс из адреса самой страницы (…/admin), чтобы не зашивать его.
+  var BASE = location.pathname.replace(/\/admin\/?$/, '');
   var roles = ['admin', 'trainer', 'user'];
 
   function el(id) { return document.getElementById(id); }
@@ -114,7 +117,7 @@ export const ADMIN_PAGE_HTML = `<!DOCTYPE html>
       token() ? { Authorization: 'Bearer ' + token() } : {},
       opts.headers || {}
     );
-    return fetch(path, opts).then(function (res) {
+    return fetch(BASE + path, opts).then(function (res) {
       if (res.status === 401 || res.status === 403) {
         throw new Error(res.status === 401 ? 'Не авторизован' : 'Нужна роль admin');
       }
@@ -198,7 +201,7 @@ export const ADMIN_PAGE_HTML = `<!DOCTYPE html>
 
   el('loginBtn').onclick = function () {
     el('loginMsg').innerHTML = '';
-    fetch('/auth/login', {
+    fetch(BASE + '/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: el('email').value.trim(), password: el('password').value })

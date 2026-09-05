@@ -86,11 +86,11 @@ export class MailService {
     user: { id: string; email?: string; name?: string },
     message: string,
     diagnostics: string,
+    attachments: { filename: string; content: Buffer; contentType: string }[] = [],
   ): Promise<boolean> {
     if (!this.transporter) return false;
     // Имя идёт в заголовок письма — переводы строк там запрещены SMTP
     const who = (user.name || user.email || user.id).replace(/[\r\n]/g, ' ').slice(0, 80);
-    console.log(`Отправка фидбека от ${who} на ${this.supportEmail}:\n${message}\n--- Диагностика ---\n${diagnostics}`);
     try {
       await this.transporter.sendMail({
         from: this.from,
@@ -98,6 +98,7 @@ export class MailService {
         replyTo: user.email || undefined,
         subject: `FlareonFit: фидбек от ${who}`,
         text: `${message}\n\n--- Диагностика ---\nuserId: ${user.id}\nemail: ${user.email || '—'}\n${diagnostics}`,
+        attachments,
       });
       return true;
     } catch (err: any) {

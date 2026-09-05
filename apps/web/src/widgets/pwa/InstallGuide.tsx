@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/useTheme';
 import { track } from '../../utils/analytics';
+import { isTourActive } from '../../tour/tour';
+import { setInstallGuideBusy } from '../../utils/overlays';
 import {
   hasNativeInstall,
   isAndroid,
@@ -36,28 +38,45 @@ export function InstallGuide() {
 
   useEffect(() => {
     if (!isEligible()) return;
-    // Не встречать пользователя попапом: даём осмотреться
-    const timer = window.setTimeout(() => {
+    // С этого момента экран «занят»: автотуры ждут, пока пользователь ответит
+    setInstallGuideBusy(true);
+    let timer = 0;
+    const show = () => {
+      // Если тур уже запущен вручную — не лезем поверх, ждём его конца
+      if (isTourActive()) {
+        timer = window.setTimeout(show, 2000);
+        return;
+      }
       setVisible(true);
       track('pwa_guide_shown', {
         platform: isIOS() ? 'ios' : 'android',
         inApp: isIOSInAppBrowser(),
       });
-    }, 6000);
-    return () => window.clearTimeout(timer);
+    };
+    // Не встречать пользователя попапом: даём осмотреться
+    timer = window.setTimeout(show, 6000);
+    return () => {
+      window.clearTimeout(timer);
+      setInstallGuideBusy(false);
+    };
   }, []);
 
   if (!visible) return null;
 
+  const dismiss = () => {
+    setVisible(false);
+    setInstallGuideBusy(false);
+  };
+
   const snooze = () => {
     localStorage.setItem(SNOOZE_KEY, String(Date.now()));
-    setVisible(false);
+    dismiss();
   };
 
   const never = () => {
     localStorage.setItem(NEVER_KEY, '1');
     track('pwa_guide_never');
-    setVisible(false);
+    dismiss();
   };
 
   const install = async () => {
@@ -66,7 +85,7 @@ export function InstallGuide() {
     if (accepted) {
       track('pwa_installed');
       setDone(true);
-      window.setTimeout(() => setVisible(false), 2000);
+      window.setTimeout(dismiss, 2000);
     }
   };
 

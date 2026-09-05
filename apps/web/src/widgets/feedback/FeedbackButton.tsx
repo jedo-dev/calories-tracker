@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../api/client';
 import { t } from '../../i18n';
@@ -11,21 +11,75 @@ import mascotTour from '../../assets/08_mascot/mascot_tour_sm.png';
 // Плавающая кнопка помощи: по нажатию — меню с чеклистом обучающих туров
 // и пунктом «Сообщить о проблеме» (textarea; вместе с текстом на почту
 // уходит буфер последних ошибок из utils/errorLog — диагностика без Sentry).
+// Лимиты вложений — зеркало серверных (feedback.controller.ts): вложения
+// идут прямо в письмо, поэтому суммарный объём ограничен жёстко.
+const MAX_FILES = 5;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_TOTAL_SIZE = 20 * 1024 * 1024;
+const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/quicktime,video/webm';
+
 export function FeedbackButton() {
   const theme = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<'menu' | 'form'>('menu');
   const [text, setText] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Object URL для превью картинок; отзываем при смене списка, чтобы не текла память
+  const previews = useMemo(
+    () => files.map((f) => (f.type.startsWith('image/') ? URL.createObjectURL(f) : null)),
+    [files],
+  );
+  useEffect(() => () => previews.forEach((u) => u && URL.revokeObjectURL(u)), [previews]);
 
   const close = () => {
     setOpen(false);
     setView('menu');
     setDone(false);
-    setError(false);
+    setError(null);
+    setFiles([]);
+    setFileError(null);
+  };
+
+  const addFiles = (list: FileList | null) => {
+    if (!list) return;
+    setFileError(null);
+    const next = [...files];
+    let total = next.reduce((s, f) => s + f.size, 0);
+    for (const f of Array.from(list)) {
+      if (next.length >= MAX_FILES) {
+        setFileError(t('feedback.tooManyFiles'));
+        break;
+      }
+      if (!ACCEPT.split(',').includes(f.type)) {
+        setFileError(t('feedback.badFileType'));
+        continue;
+      }
+      if (f.size > MAX_FILE_SIZE) {
+        setFileError(t('feedback.fileTooBig'));
+        continue;
+      }
+      if (total + f.size > MAX_TOTAL_SIZE) {
+        setFileError(t('feedback.totalTooBig'));
+        break;
+      }
+      total += f.size;
+      next.push(f);
+    }
+    setFiles(next);
+    // Сбрасываем input, иначе повторный выбор того же файла не сработает
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (idx: number) => {
+    setFiles(files.filter((_, i) => i !== idx));
+    setFileError(null);
   };
 
   const handleStartTour = (id: string) => {
@@ -39,22 +93,32 @@ export function FeedbackButton() {
   const send = async () => {
     if (text.trim().length < 5 || sending) return;
     setSending(true);
-    setError(false);
+    setError(null);
     try {
-      await apiClient.post('/feedback', {
-        message: text.trim(),
-        meta: {
+      // multipart: текст + meta JSON-строкой + вложения
+      const form = new FormData();
+      form.append('message', text.trim());
+      form.append(
+        'meta',
+        JSON.stringify({
           url: window.location.pathname,
           userAgent: navigator.userAgent,
           errors: getErrorLog(),
-        },
+        }),
+      );
+      files.forEach((f) => form.append('files', f, f.name));
+      await apiClient.post('/feedback', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120_000,
       });
-      track('feedback_sent');
+      track('feedback_sent', { attachments: files.length });
       setText('');
+      setFiles([]);
       setDone(true);
       window.setTimeout(close, 2000);
-    } catch {
-      setError(true);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message;
+      setError(typeof msg === 'string' ? msg : t('feedback.error'));
     } finally {
       setSending(false);
     }
@@ -241,9 +305,86 @@ export function FeedbackButton() {
                     fontFamily: 'inherit',
                   }}
                 />
-                {error && (
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPT}
+                  multiple
+                  onChange={(e) => addFiles(e.target.files)}
+                  style={{ display: 'none' }}
+                />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                  {files.map((f, i) => (
+                    <div
+                      key={`${f.name}-${i}`}
+                      style={{
+                        position: 'relative',
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        border: '1px solid rgba(160, 200, 220, 0.25)',
+                        background: 'rgba(3, 14, 22, 0.5)',
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontSize: '22px',
+                      }}
+                    >
+                      {previews[i] ? (
+                        <img src={previews[i]!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        '🎬'
+                      )}
+                      <button
+                        type="button"
+                        aria-label={t('feedback.removeFile')}
+                        onClick={() => removeFile(i)}
+                        style={{
+                          position: 'absolute',
+                          top: '2px',
+                          right: '2px',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          border: 'none',
+                          background: 'rgba(0,0,0,0.65)',
+                          color: '#fff',
+                          fontSize: '11px',
+                          lineHeight: '18px',
+                          padding: 0,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {files.length < MAX_FILES && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '10px',
+                        border: '1px dashed rgba(160, 200, 220, 0.35)',
+                        background: 'transparent',
+                        color: theme.palette.textMuted,
+                        fontSize: '20px',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                    >
+                      📎
+                    </button>
+                  )}
+                </div>
+                <div style={{ fontSize: '11px', color: theme.palette.textMuted, marginTop: '6px' }}>
+                  {t('feedback.attachHint')}
+                </div>
+                {(fileError || error) && (
                   <div style={{ fontSize: '13px', color: '#FF8A80', marginTop: '8px' }}>
-                    {t('feedback.error')}
+                    {fileError || error}
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>

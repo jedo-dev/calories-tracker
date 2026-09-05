@@ -18,6 +18,7 @@ import { WaterCard } from "../widgets/water/WaterCard";
 // import { OnboardingChallengeCard } from "../widgets/today/OnboardingChallengeCard";
 import { calcWaterGoalMl } from "../widgets/water/waterGoal";
 import { getCompletedScenarios, isTourActive, startTour, tourEvent } from "../tour/tour";
+import { useInstallGuideBusy } from "../utils/overlays";
 
 export interface Entry {
   _id: string;
@@ -70,6 +71,7 @@ export function TodayPage() {
   const [water, setWater] = useState<WaterState>({ totalMl: 0 });
   const [selectedGroup, setSelectedGroup] = useState<MealGroup | null>(null);
   const [loading, setLoading] = useState(true);
+  const installGuideBusy = useInstallGuideBusy();
   const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
@@ -108,12 +110,12 @@ export function TodayPage() {
   // Тур ненавязчивый: первый же шаг содержит «Пропустить».
   useEffect(() => {
     if (loading || dashboard?.targets || !isToday) return;
-    if (isTourActive()) return;
+    if (isTourActive() || installGuideBusy) return;
     if (getCompletedScenarios().includes("fill-profile")) return;
     if (localStorage.getItem("tour_profile_offered")) return;
     localStorage.setItem("tour_profile_offered", "1");
     startTour("fill-profile");
-  }, [loading, dashboard]);
+  }, [loading, dashboard, installGuideBusy]);
 
   const handleAddWater = async (amountMl: number) => {
     try {
